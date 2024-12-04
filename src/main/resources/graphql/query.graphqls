@@ -1,0 +1,176 @@
+scalar Long
+scalar Date
+
+type Query {
+    songSearch(criteria: SongSearchCriteria! = {}): [SongSearchResult!]!
+    artistSearch(criteria: ArtistSearchCriteria! = {}): [ArtistSearchResult!]!
+    pubSearch(criteria: PubSearchCriteria! = {}): [PubSearchResult!]!
+    albumSearch(criteria: AlbumSearchCriteria! = {}): [AlbumSearchResult!]!
+    transcriberSearch(searchName: String): [Transcriber!]!
+}
+
+input ArtistMatchCriteria {
+    id: Long!
+    roles: [ArtistSearchRole!]!
+}
+
+input SongSearchCriteria {
+    # Fuzzy match on song title
+    titleSearch: String
+    # Fuzzy match publications' names in which a song appears
+    pubNameSearch: String
+    # Fuzzy match on the name of artists' names with any association to a song
+    artistSearch: String
+    # Fuzzy match on the name of albums on which a song appears
+    albumSearch: String
+    # Return songs matching the supplied artist match criteria
+    artists: [ArtistMatchCriteria!]
+    # Return songs appearing on the supplied albums
+    albums: [Long!]
+    # Return songs appearing in the supplied publications
+    pubs: [Long!]
+}
+
+type SongSearchResult {
+    id: Long!
+    title: String!
+    album: SongAlbum
+    artists: [SongArtist!]
+    transcriptions: [Transcription!]
+}
+
+type Song {
+    id: Long!
+    title: String!
+    album: SongAlbum
+    artists: [SongArtist!]
+}
+
+type SongAlbum {
+    id: Long!
+    title: String!
+    trackNumber: Int
+    releaseDate: Date
+    albumArtUrl: String
+    artist: Artist
+}
+
+enum SongArtistRole {
+    WORDS_BY
+    MUSIC_BY
+    PERFORMED_BY
+}
+
+type SongArtist {
+    id: Long!
+    name: String!
+    type: ArtistType!
+    roles: [SongArtistRole!]!
+}
+
+enum ArtistType {
+    BAND
+    PERSON
+}
+
+type Transcription {
+    id: Long!
+    url: String
+    pageNumber: Int
+    pub: PubSearchResult
+    transcribers: [Transcriber!]
+}
+
+type PubTranscription {
+    id: Long!
+    url: String
+    pageNumber: Int
+    song: Song!
+    transcribers: [Transcriber!]
+}
+
+enum ArtistSearchRole {
+    WORDS_BY
+    MUSIC_BY
+    PERFORMED_BY
+    ALBUM_ARTIST
+}
+
+input ArtistSearchCriteria {
+    searchName: String
+    type: ArtistType
+    roles: [ArtistSearchRole!]
+}
+
+type ArtistSearchResult {
+    id: Long!
+    name: String!
+    type: ArtistType!
+    matchedRoles: [ArtistSearchRole!]!
+}
+
+enum PubType {
+    BOOK
+    MAG
+}
+
+input PubSearchCriteria {
+    searchName: String
+    type: PubType
+    dateStart: Date
+    dateEnd: Date
+    hasTranscriptions: Boolean
+}
+
+interface PubDetails {
+    cover: String
+}
+
+type MagDetails implements PubDetails {
+    cover: String
+    volume: String
+    issue: String
+    issueName: String
+}
+
+type BookDetails implements PubDetails {
+    cover: String
+    edition: String
+}
+
+type PubSearchResult {
+    id: Long!
+    name: String!
+    type: PubType!
+    details: PubDetails
+    pubDate: Date
+    serialNumber: String!
+    transcriptions: [PubTranscription!]
+}
+
+input AlbumSearchCriteria {
+    searchName: String
+    dateStart: Date
+    dateEnd: Date
+}
+
+type AlbumSearchResult {
+    id: Long!
+    title: String!
+    releaseDate: Date
+    albumArtUrl: String
+    artist: Artist
+}
+
+type Artist {
+    id: Long!
+    name: String!
+    type: ArtistType!
+}
+
+type Transcriber {
+    id: Long!
+    name: String!
+}
+
+

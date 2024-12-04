@@ -1,0 +1,32 @@
+spring:
+  application:
+    name: gmdb
+  datasource:
+    url: jdbc:postgresql://meyernas01.local:1970/gmdb
+    username: gmdbuser
+    password: ${GMDB_APP_USER_PASSWORD}
+    hikari:
+      connection-timeout: 30000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 60000
+      max-lifetime: 180000
+  threads:
+    virtual:
+      enabled: true
+
+  graphql:
+    graphiql:
+      enabled: true
+
+mybatis:
+  configuration:
+    jdbc-type-for-null: null
+  type-handlers-package: com.yellowmoon.gmdb.mappers.typehandler
+
+logging:
+  level:
+    com.yellowmoon.gmdb.mappers: debug
+    org.springframework.graphql: debug
+file-service:
+  root: ${FILE_SERVICE_ROOT}
