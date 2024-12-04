@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yellowmoon.gmdb.mappers.DataResolversMapper">
+
+    <select id="getAlbumsFromIds" parameterType="java.util.Set" resultType="com.yellowmoon.gmdb.dto.output.AlbumSearchResult">
+        select
+            a.id,
+            a.title,
+            d.release_date,
+            d.album_cover_url,
+            case when a.primary_artist_id is not null then
+                     json_build_object('id', aa.id, 'name', aa.name, 'type', aa.type)
+                end artist
+        from album a
+                 join lateral (select
+                                   case
+                                       when (a.details->>'releaseDate') ~ '^\d\d\d\d-\d\d-\d\d$' then (a.details->>'releaseDate')::date
+                                       end release_date,
+                                   a.details->>'albumCoverUrl' album_cover_url
+            ) as d on true
+                 left join artist aa on a.primary_artist_id = aa.id
+        where
+        <foreach collection="albumIds" item="id" open="a.id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getSongArtistBySongIds" parameterType="java.util.Set" resultType="com.yellowmoon.gmdb.dto.output.SongArtist" >
+        select
+            a.id,
+            a.name,
+            a.type,
+            sa.song_id,
+            sa.roles
+        from song_artist sa
+            inner join artist a on sa.artist_id = a.id
+        where
+        <foreach collection="songIds" item="id" open="sa.song_id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getSongTranscriptionBySongIds"  parameterType="java.util.Set" resultType="com.yellowmoon.gmdb.dto.output.Transcription">
+        select
+            t.id,
+            td.url,
+            td.page_number,
+            t.song_id,
+            t.pub_id
+        from transcription t
+                 join lateral (select
+                                   t.details->>'url' url,
+                                   t.details->>'pageNumber' page_number
+            ) as td on true
+        where
+        <foreach collection="songIds" item="id" open="t.song_id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getSongTranscriptionsByPubIds" parameterType="java.util.Set" resultType="com.yellowmoon.gmdb.dto.output.Transcription">
+        select
+            t.id,
+            td.url,
+            td.page_number,
+            t.song_id,
+            t.pub_id
+        from transcription t
+                 join lateral (select
+                                   t.details->>'url' url,
+                                   t.details->>'pageNumber' page_number
+            ) as td on true
+        where
+        <foreach collection="pubIds" item="id" open="t.pub_id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getTranscribersByTranscriptionIds" parameterType="java.util.Set" resultType="com.yellowmoon.gmdb.dto.output.TranscriptionTranscriber">
+        select t.id, t.name, tt.transcription_id from transcriber t
+            inner join transcripton_transcriber tt on t.id = tt.transcriber_id
+        where
+        <foreach collection="transcriptionIds" item="id" open="tt.transcription_id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getPublicationByTranscriptionIds" parameterType="java.util.Set" resultType="com.yellowmoon.gmdb.dto.output.TranscriptionPublication">
+        select
+            p.id,
+            pi.name,
+            pi.type,
+            p.details || jsonb_build_object('@type', pi.type::text) as details,
+            p.pub_date,
+            pi.serial_number,
+            t.id transcription_id
+        from pub p
+            inner join pub_idx pi on p.pub_idx_id = pi.id
+            inner join transcription t on p.id = t.pub_id
+        where
+        <foreach collection="transcriptionIds" item="id" open="t.id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getSongsBySongIds" parameterType="java.util.Set" resultType="com.yellowmoon.gmdb.dto.output.SongSearchResult">
+        select
+            s.id,
+            s.title,
+            case when (s.details->>'trackNumber' ~ '^\d+$') then (s.details->>'trackNumber')::int end track_number,
+            s.album_id
+        from song s
+        where
+        <foreach collection="songIds" item="id" open="s.id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+</mapper>

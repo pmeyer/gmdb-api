@@ -1,0 +1,92 @@
+scalar JSON
+scalar Upload
+
+type Mutation {
+    # Adds a transcription do the GMag Database
+    addTranscription(transcriptionInput: TranscriptionInput!): JSON!
+    # Adds a magazine issue to the GMag Database
+    addMagazineIssue(magInput: MagazineInput!): PubSearchResult!
+    # Associates a cover image with an existing publication
+    addPubCoverImage(imgInput: PubCoverImageInput!): PubSearchResult!
+}
+
+input MagazineInput {
+    pubDate: Date
+    index: PubIndexInput!
+    issueInfo: MagazineIssueInput! = { }
+}
+
+input MagazineIssueInput {
+    volume: String,
+    issue: String,
+    issueName: String,
+    cover: Upload
+}
+
+enum PubIndexFlag {
+    LOOKUP
+    UPSERT
+}
+
+input PubIndexInput {
+    id: Long
+    name: String
+    type: PubType
+    serial: String
+    flag: PubIndexFlag! = LOOKUP
+}
+
+input PubCoverImageInput {
+    id: Long!
+    cover: Upload!
+}
+
+######
+
+input TranscriptionInput {
+    song: SongInput!
+    pub: PubInput!
+    pageNumber: Int!
+    file: Upload
+}
+
+input SongInput {
+    id: Long
+    title: String
+    artists: [SongArtistInput!]
+    albumTrack: AlbumTrackInput
+}
+
+input SongArtistInput {
+    id: Long
+    name: String
+    type: ArtistType
+    roles: [SongArtistRole!]
+}
+
+input AlbumTrackInput {
+    trackNumber: Int!
+    album: AlbumInput!
+}
+
+input AlbumInput {
+    id: Long
+    title: String
+    coverArt: Upload
+    releaseDate: Date
+    primaryArtist: ArtistInput
+}
+
+input ArtistInput {
+    id: Long
+    name: String
+    type: ArtistType
+}
+
+input PubInput {
+    id: Long
+    pubDate: Date
+    index: PubIndexInput
+    cover: Upload
+    details: JSON
+}
