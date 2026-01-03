@@ -28,5 +28,6 @@ logging:
   level:
     com.yellowmoon.gmdb.mappers: debug
     org.springframework.graphql: debug
+    com.yellowmoonsoftware.graphql.multipart: debug
 file-service:
   root: ${FILE_SERVICE_ROOT}
