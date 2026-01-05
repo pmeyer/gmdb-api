@@ -8,7 +8,7 @@
         <version>3.5.9</version>
         <relativePath/> <!-- lookup parent from the repository -->
     </parent>
-    <groupId>com.yellowmoon</groupId>
+    <groupId>com.yellowmoonsoftware</groupId>
     <artifactId>gmdb</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>gmdb</name>

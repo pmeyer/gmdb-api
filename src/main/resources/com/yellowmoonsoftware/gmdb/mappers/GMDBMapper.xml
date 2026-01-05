@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yellowmoonsoftware.gmdb.mappers.GMDBMapper">
+    <select id="getTranscribers" resultType="com.yellowmoonsoftware.gmdb.dto.output.Transcriber" parameterType="string">
+        select id, name from transcriber
+        <where>
+            <if test="searchName != null">
+                name ~* #{searchName}
+            </if>
+        </where>
+    </select>
+
+    <select id="songSearch" parameterType="com.yellowmoonsoftware.gmdb.dto.input.SongSearchCriteria" resultType="com.yellowmoonsoftware.gmdb.dto.output.SongSearchResult">
+        select
+            id,
+            title,
+            case when (details->>'trackNumber' ~ '^\d+$') then (details->>'trackNumber')::int end track_number,
+            album_id
+        from song
+    </select>
+
+    <select id="artistSearch" parameterType="com.yellowmoonsoftware.gmdb.dto.input.ArtistSearchCriteria" resultType="com.yellowmoonsoftware.gmdb.dto.output.ArtistSearchResult">
+        with artists as (
+            select
+                a.id,
+                a.name,
+                a.type,
+                role,
+                sa.song_id
+            from artist a
+                     inner join song_artist sa on a.id = sa.artist_id
+                     join lateral jsonb_array_elements_text(sa.roles) as role on true
+            union all
+            select
+                a.id,
+                a.name,
+                a.type,
+                'ALBUM_ARTIST' role,
+                s.id song_id
+            from artist a
+                     inner join album al on a.id = al.primary_artist_id
+                     inner join song s on al.id = s.album_id
+        )
+        select
+            id,
+            name,
+            type,
+            jsonb_agg(distinct role) matched_roles
+        from artists
+        where
+            exists(select * from transcription t where t.song_id = artists.song_id)
+          <if test="criteria.roles != null">
+            <foreach collection="criteria.roles" item="role" open="and role in(" separator="," close=")">
+                #{role}
+            </foreach>
+          </if>
+          <if test="criteria.searchName != null and criteria.searchName != ''">
+              and name ~* #{criteria.searchName}
+          </if>
+          <if test="criteria.type != null">
+              and type = #{criteria.type}
+          </if>
+        group by id, name, type
+    </select>
+
+    <select id="pubSearch" parameterType="com.yellowmoonsoftware.gmdb.dto.input.PubSearchCriteria" resultType="com.yellowmoonsoftware.gmdb.dto.output.PubSearchResult">
+        select
+            p.id,
+            pi.name,
+            pi.type,
+            p.details || jsonb_build_object('@type', pi.type::text) as details,
+            p.pub_date,
+            pi.serial_number
+        from pub p
+            inner join pub_idx pi on p.pub_idx_id = pi.id
+        <where>
+            <if test="criteria.hasTranscriptions">
+                exists(select * from transcription t where t.pub_id = p.id)
+            </if>
+            <if test="criteria.searchName != null and criteria.searchName != ''">
+                and (name ~* #{criteria.searchName} or coalesce(details->>'issueName', details->>'edition') ~* #{criteria.searchName})
+            </if>
+            <if test="criteria.type != null">
+                and pi.type = #{criteria.type}
+            </if>
+            <trim prefix="and (p.pub_date is null or (" prefixOverrides="AND " suffix="))">
+                <if test="criteria.dateStart != null">
+                    p.pub_date &gt;= #{criteria.dateStart}
+                </if>
+                <if test="criteria.dateEnd != null">
+                    and p.pub_date &lt;= #{criteria.dateEnd}
+                </if>
+            </trim>
+        </where>
+        order by p.pub_date nulls first,
+            pi.name,
+            p.details->>'volume' nulls first,
+            p.details->>'issue' nulls first,
+            p.details->>'issueName' nulls first,
+            p.details->>'edition' nulls first,
+            p.id
+    </select>
+
+    <select id="albumSearch" parameterType="com.yellowmoonsoftware.gmdb.dto.input.AlbumSearchCriteria" resultType="com.yellowmoonsoftware.gmdb.dto.output.AlbumSearchResult">
+        select
+            a.id,
+            a.title,
+            d.release_date,
+            d.album_cover_url,
+            case when a.primary_artist_id is not null then
+                json_build_object('id', aa.id, 'name', aa.name, 'type', aa.type)
+            end artist
+        from album a
+                join lateral (select
+                    case
+                        when (a.details->>'releaseDate') ~ '^\d\d\d\d-\d\d-\d\d$' then (a.details->>'releaseDate')::date
+                    end release_date,
+                    a.details->>'albumCoverUrl' album_cover_url
+                ) as d on true
+                 left join artist aa on a.primary_artist_id = aa.id
+        where
+            exists(select * from transcription t inner join song s on t.song_id = s.id where s.album_id = a.id)
+        <if test="criteria.searchName != null and criteria.searchName != ''">
+            and (a.title ~* #{criteria.searchName} or aa.name ~* #{criteria.searchName})
+        </if>
+        <trim prefix="and (d.release_date is null or (" prefixOverrides="AND " suffix="))">
+            <if test="criteria.dateStart != null">
+                d.release_date &gt;= #{criteria.dateStart}
+            </if>
+            <if test="criteria.dateEnd != null">
+                and d.release_date &lt;= #{criteria.dateEnd}
+            </if>
+        </trim>
+        order by d.release_date nulls first,
+            a.title,
+            aa.name nulls first,
+            a.id
+    </select>
+</mapper>
