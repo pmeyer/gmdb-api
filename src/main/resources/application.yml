@@ -22,11 +22,11 @@ spring:
 mybatis:
   configuration:
     jdbc-type-for-null: null
-  type-handlers-package: com.yellowmoon.gmdb.mappers.typehandler
+  type-handlers-package: com.yellowmoonsoftware.gmdb.mappers.typehandler
 
 logging:
   level:
-    com.yellowmoon.gmdb.mappers: debug
+    com.yellowmoonsoftware.gmdb.mappers: debug
     org.springframework.graphql: debug
     com.yellowmoonsoftware.graphql.multipart: debug
 file-service:

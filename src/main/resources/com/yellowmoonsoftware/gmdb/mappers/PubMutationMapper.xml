@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yellowmoonsoftware.gmdb.mappers.PubMutationMapper">
+
+    <select id="addPub" resultType="com.yellowmoonsoftware.gmdb.dto.output.PubSearchResult">
+        with pid as (
+        <choose>
+            <when test="pubIdx.flag.name() == 'UPSERT'">
+                insert into pub_idx (name, type, serial_number)
+                values (#{pubIdx.name}, #{pubType}, #{pubIdx.serial})
+                on conflict serial_number do update set name = COALESCE(#{pubIdx.name}, name)
+                returning *
+            </when>
+            <otherwise>
+                select pidx.id, pidx.name, pidx.type, pidx.serial_number
+                from pub_idx pidx
+                where pidx.type = #{pubType} and
+                <choose>
+                    <when test="pubIdx.id != null">
+                        pidx.id = #{pubIdx.id}
+                    </when>
+                    <when test="pubIdx.serial != null">
+                        pidx.serial_number = #{pubIdx.serial}
+                    </when>
+                    <otherwise>
+                        1=0
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+        ),
+        ins_pub as (
+        insert into pub (pub_date, pub_idx_id, details)
+        values (#{pubDate}, (select id from pid), #{pubDetails})
+        returning *
+        )
+        select
+        p.id,
+        pi.name,
+        pi.type,
+        p.details || jsonb_build_object('@type', pi.type::text) as details,
+        p.pub_date,
+        pi.serial_number
+        from ins_pub p
+        inner join pid pi on p.pub_idx_id = pi.id
+    </select>
+
+    <select id="updatePubCoverImage" resultType="com.yellowmoonsoftware.gmdb.dto.output.PubSearchResult">
+        with upd_pub as (
+            update pub
+                set details = details || jsonb_build_object('cover', #{cover})
+                where id = #{id}
+                returning *
+        )
+        select
+            p.id,
+            pi.name,
+            pi.type,
+            p.details || jsonb_build_object('@type', pi.type::text) as details,
+            p.pub_date,
+            pi.serial_number
+        from upd_pub p
+                 inner join pub_idx pi on p.pub_idx_id = pi.id
+    </select>
+
+</mapper>
