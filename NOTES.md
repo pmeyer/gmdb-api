@@ -22,7 +22,7 @@ from that album.
 # Defined Use Cases Analysis
 
 Transcribed Songs are the primary data element.  The _browse_ use cases all effectively provide a means of searching for
-songs indirectly.  E.g. Browsing by publication - you would fetch (filtered) list of publications and display.  Clicking 
+songs indirectly.  E.g., Browsing by publication — you would fetch (a filtered) list of publications and display.  Clicking 
 on a publication would result in a song search with criteria of the clicked publication applied.
 
 ## Implications
