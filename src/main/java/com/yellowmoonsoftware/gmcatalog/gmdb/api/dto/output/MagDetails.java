@@ -22,7 +22,7 @@ public class MagDetails extends PubDetails {
 
     @JsonCreator
     public MagDetails(String cover, String volume, String issue, String issueName) {
-        super(cover);
+        super(cover, null);
         this.volume = volume;
         this.issue = issue;
         this.issueName = issueName;
