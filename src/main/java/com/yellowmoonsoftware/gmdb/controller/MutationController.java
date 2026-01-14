@@ -3,19 +3,16 @@ package com.yellowmoonsoftware.gmdb.controller;
 import com.yellowmoonsoftware.gmdb.dto.PubType;
 import com.yellowmoonsoftware.gmdb.dto.input.*;
 import com.yellowmoonsoftware.gmdb.dto.output.PubSearchResult;
-import com.yellowmoonsoftware.gmdb.mappers.PubMutationMapper;
+import com.yellowmoonsoftware.gmdb.mybatis.mappers.PubMutationMapper;
 import com.yellowmoonsoftware.gmdb.service.FileService;
 import com.yellowmoonsoftware.gmdb.service.ResourceSlug;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
-import org.springframework.http.codec.multipart.FilePart;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
-
-import static com.yellowmoonsoftware.gmdb.util.ReactiveUtils.async;
 
 @Controller
 @RequiredArgsConstructor
@@ -36,16 +33,18 @@ public class MutationController {
         // validation
         return validate(magInput)
                 .flatMap(i -> {
-                    final PubSearchResult pubSearchResult = mapper.addPub(PubType.MAG, i.pubDate(), i.issueInfo().toDetails(), i.index());
-                    return fileService.put(i.issueInfo().cover(), ResourceSlug.COVER_IMAGE,
-                            Map.of("id", pubSearchResult.id()))
-                            .thenReturn(pubSearchResult);
+                    return mapper.addPub(PubType.MAG, i.pubDate(), i.issueInfo().toDetails(), i.index())
+                            .flatMap(pubSearchResult -> {
+                                return fileService.put(i.issueInfo().cover(), ResourceSlug.COVER_IMAGE,
+                                                Map.of("id", pubSearchResult.id()))
+                                        .thenReturn(pubSearchResult);
+                            });
                 });
     }
 
     @MutationMapping("addPubCoverImage")
     public Mono<PubSearchResult> addPubCoverImage(@Argument("imgInput") final PubCoverImageInput imgInput) {
-        return async(() -> mapper.updatePubCoverImage(imgInput.id(), imgInput.cover().filename()))
+        return mapper.updatePubCoverImage(imgInput.id(), imgInput.cover().filename())
                 .flatMap(r -> fileService
                         .put(imgInput.cover(), ResourceSlug.COVER_IMAGE, Map.of("id", r.id()))
                         .thenReturn(r));

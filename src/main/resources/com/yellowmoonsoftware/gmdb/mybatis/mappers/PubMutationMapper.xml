@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yellowmoonsoftware.gmdb.mappers.PubMutationMapper">
+<mapper namespace="com.yellowmoonsoftware.gmdb.mybatis.mappers.PubMutationMapper">
 
     <select id="addPub" resultType="com.yellowmoonsoftware.gmdb.dto.output.PubSearchResult">
         with pid as (

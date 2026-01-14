@@ -1,13 +1,9 @@
 package com.yellowmoonsoftware.gmdb.controller;
 
-import com.yellowmoonsoftware.gmdb.dto.output.SongAlbum;
-import com.yellowmoonsoftware.gmdb.dto.output.SongArtist;
-import com.yellowmoonsoftware.gmdb.dto.output.SongSearchResult;
-import com.yellowmoonsoftware.gmdb.dto.output.Transcription;
-import com.yellowmoonsoftware.gmdb.mappers.DataResolversMapper;
+import com.yellowmoonsoftware.gmdb.dto.output.*;
+import com.yellowmoonsoftware.gmdb.mybatis.mappers.DataResolversMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
-import org.springframework.graphql.data.method.annotation.SchemaMapping;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
@@ -17,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.yellowmoonsoftware.gmdb.util.ReactiveUtils.async;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
@@ -37,17 +32,16 @@ public class SongController {
     }
 
     private Mono<Map<SongSearchResult, SongAlbum>> commonAlbumFetch(final Set<SongSearchResult> songs) {
-        return async(() -> {
             final Map<Long, List<SongSearchResult>> albumSongMap = songs.stream()
                     .collect(groupingBy(SongSearchResult::albumId));
             return mapper.getAlbumsFromIds(albumSongMap.keySet())
-                    .entrySet()
-                    .stream()
-                    .flatMap(e -> albumSongMap.get(e.getKey())
+                    .collectMap(AlbumSearchResult::id)
+                    .map(m -> m.entrySet()
                             .stream()
-                            .map(s -> Tuples.of(s, new SongAlbum(e.getValue(), s))))
-                    .collect(toMap(Tuple2::getT1, Tuple2::getT2));
-        });
+                            .flatMap(e -> albumSongMap.get(e.getKey())
+                                    .stream()
+                                    .map(s -> Tuples.of(s, new SongAlbum(e.getValue(), s))))
+                            .collect(toMap(Tuple2::getT1, Tuple2::getT2)));
     }
 
     @BatchMapping(typeName = "Song", field = "artists")
@@ -61,26 +55,20 @@ public class SongController {
     }
 
     private Mono<Map<SongSearchResult, List<SongArtist>>> commonArtistFetch(final Set<SongSearchResult> songs) {
-        return async(() -> {
-            Map<Long, SongSearchResult> songMap = songs.stream()
-                    .collect(toMap(SongSearchResult::id, s -> s));
+        final Map<Long, SongSearchResult> songMap = songs.stream()
+                .collect(toMap(SongSearchResult::id, s -> s));
 
-            return mapper.getSongArtistBySongIds(songMap.keySet())
-                    .stream()
-                    .collect(groupingBy(a -> songMap.get(a.songId())));
-        });
+        return mapper.getSongArtistBySongIds(songMap.keySet())
+                .collect(groupingBy(a -> songMap.get(a.songId())));
     }
 
     @BatchMapping(typeName = "SongSearchResult", field = "transcriptions")
     public Mono<Map<SongSearchResult, List<Transcription>>> transcriptions(final Set<SongSearchResult> songs) {
-        return async(() -> {
-            Map<Long, SongSearchResult> songMap = songs.stream()
-                    .collect(toMap(SongSearchResult::id, s -> s));
+        final Map<Long, SongSearchResult> songMap = songs.stream()
+                .collect(toMap(SongSearchResult::id, s -> s));
 
-            return mapper.getSongTranscriptionBySongIds(songMap.keySet())
-                    .stream()
-                    .collect(groupingBy(a -> songMap.get(a.songId())));
-        });
+        return mapper.getSongTranscriptionBySongIds(songMap.keySet())
+                .collect(groupingBy(a -> songMap.get(a.songId())));
     }
 }
 

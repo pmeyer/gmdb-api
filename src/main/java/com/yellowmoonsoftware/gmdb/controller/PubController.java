@@ -2,7 +2,7 @@ package com.yellowmoonsoftware.gmdb.controller;
 
 import com.yellowmoonsoftware.gmdb.config.FileResourceConfiguration;
 import com.yellowmoonsoftware.gmdb.dto.output.*;
-import com.yellowmoonsoftware.gmdb.mappers.DataResolversMapper;
+import com.yellowmoonsoftware.gmdb.mybatis.mappers.DataResolversMapper;
 import com.yellowmoonsoftware.gmdb.service.ResourceSlug;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.yellowmoonsoftware.gmdb.util.ReactiveUtils.async;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toMap;
 
@@ -48,12 +47,9 @@ public class PubController {
 
     @BatchMapping(field = "transcriptions")
     public Mono<Map<PubSearchResult, List<Transcription>>> transcriptions(final Set<PubSearchResult> pubs) {
-        return async(() -> {
-            final Map<Long, PubSearchResult> pubIdMap = pubs.stream().collect(toMap(PubSearchResult::id, p -> p));
+        final Map<Long, PubSearchResult> pubIdMap = pubs.stream().collect(toMap(PubSearchResult::id, p -> p));
 
-            return mapper.getSongTranscriptionsByPubIds(pubIdMap.keySet())
-                    .stream()
-                    .collect(groupingBy(t -> pubIdMap.get(t.pubId())));
-        });
+        return mapper.getSongTranscriptionsByPubIds(pubIdMap.keySet())
+                .collect(groupingBy(t -> pubIdMap.get(t.pubId())));
     }
 }
