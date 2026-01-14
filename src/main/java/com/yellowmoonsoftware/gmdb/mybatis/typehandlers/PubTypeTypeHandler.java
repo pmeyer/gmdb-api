@@ -1,16 +1,15 @@
-package com.yellowmoonsoftware.gmdb.mappers.typehandler;
+package com.yellowmoonsoftware.gmdb.mybatis.typehandlers;
 
 import com.yellowmoonsoftware.gmdb.dto.PubType;
-import lombok.extern.slf4j.Slf4j;
+import com.yellowmoonsoftware.gmdb.mybatis.typehandlers.base.PGCustomEnumTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
 import org.apache.ibatis.type.MappedTypes;
 
-@Slf4j
 @MappedTypes(PubType.class)
 @MappedJdbcTypes(JdbcType.OTHER)
-public class PubTypeTypeHandler extends PGCustomTypeHandler<PubType, String> {
+public class PubTypeTypeHandler extends PGCustomEnumTypeHandler<PubType> {
     public PubTypeTypeHandler() {
-        super("pub_type", Enum::name, String.class, s -> Enum.valueOf(PubType.class, s));
+        super("pub_type", PubType.class);
     }
 }

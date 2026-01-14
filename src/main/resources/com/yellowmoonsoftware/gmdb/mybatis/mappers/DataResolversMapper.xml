@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.yellowmoonsoftware.gmdb.mappers.DataResolversMapper">
+<mapper namespace="com.yellowmoonsoftware.gmdb.mybatis.mappers.DataResolversMapper">
 
     <select id="getAlbumsFromIds" parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmdb.dto.output.AlbumSearchResult">
         select
@@ -50,7 +50,7 @@
         from transcription t
                  join lateral (select
                                    t.details->>'url' url,
-                                   t.details->>'pageNumber' page_number
+                                   (t.details->>'pageNumber')::int page_number
             ) as td on true
         where
         <foreach collection="songIds" item="id" open="t.song_id in(" separator="," close=")">
@@ -68,7 +68,7 @@
         from transcription t
                  join lateral (select
                                    t.details->>'url' url,
-                                   t.details->>'pageNumber' page_number
+                                   (t.details->>'pageNumber')::int page_number
             ) as td on true
         where
         <foreach collection="pubIds" item="id" open="t.pub_id in(" separator="," close=")">

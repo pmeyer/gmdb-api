@@ -1,16 +1,17 @@
 spring:
   application:
     name: gmdb
-  datasource:
-    url: jdbc:postgresql://meyernas01.local:1970/gmdb
-    username: gmdbuser
-    password: ${GMDB_APP_USER_PASSWORD}
-    hikari:
-      connection-timeout: 30000
-      maximum-pool-size: 10
-      minimum-idle: 5
-      idle-timeout: 60000
-      max-lifetime: 180000
+  r2dbc:
+    pool:
+      max-acquire-time: 30000
+      max-size: 10
+      min-idle: 5
+      max-idle-time: 60000
+      max-life-time: 180000
+    mybatis:
+      r2dbc-url: r2dbc:postgresql://meyernas01.local:1970/gmdb
+      username: gmdbuser
+      password: ${GMDB_APP_USER_PASSWORD}
   threads:
     virtual:
       enabled: true
@@ -19,14 +20,16 @@ spring:
     graphiql:
       enabled: true
 
-mybatis:
-  configuration:
-    jdbc-type-for-null: null
-  type-handlers-package: com.yellowmoonsoftware.gmdb.mappers.typehandler
+r2dbc:
+  mybatis:
+    configuration:
+      jdbc-type-for-null: null
+    type-handlers-package: com.yellowmoonsoftware.gmdb.mybatis.typehandlers
 
 logging:
   level:
-    com.yellowmoonsoftware.gmdb.mappers: debug
+    com.yellowmoonsoftware.gmdb.mybatis.mappers: debug
+    com.yellowmoonsoftware.gmdb.mybatis.typehandlers: info
     org.springframework.graphql: debug
     com.yellowmoonsoftware.graphql.multipart: debug
 file-service:

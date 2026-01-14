@@ -1,16 +1,15 @@
-package com.yellowmoonsoftware.gmdb.mappers.typehandler;
+package com.yellowmoonsoftware.gmdb.mybatis.typehandlers;
 
 import com.yellowmoonsoftware.gmdb.dto.ArtistType;
-import lombok.extern.slf4j.Slf4j;
+import com.yellowmoonsoftware.gmdb.mybatis.typehandlers.base.PGCustomEnumTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
 import org.apache.ibatis.type.MappedTypes;
 
-@Slf4j
 @MappedTypes(ArtistType.class)
 @MappedJdbcTypes(JdbcType.OTHER)
-public class ArtistTypeTypeHandler extends PGCustomTypeHandler<ArtistType, String> {
+public class ArtistTypeTypeHandler extends PGCustomEnumTypeHandler<ArtistType> {
     public ArtistTypeTypeHandler() {
-        super("artist_type", Enum::name, String.class, s -> Enum.valueOf(ArtistType.class, s));
+        super("artist_type", ArtistType.class);
     }
 }
