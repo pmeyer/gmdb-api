@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- Primary source lives in `src/main/java/com/yellowmoon/gmdb`. Controllers expose GraphQL endpoints in `controller/`; GraphQL adapters sit under `graphql/`; cross-cutting config is in `config/`; services and mappers drive persistence and file IO.
+- Primary source lives in `src/main/java/com/yellowmoonsoftware/gmcatalog/gmdb/api`. Controllers expose GraphQL endpoints in `controller/`; GraphQL adapters sit under `graphql/`; cross-cutting config is in `config/`; services and mappers drive persistence and file IO.
 - Shared DTO records reside in `dto` subpackages; `util/` provides Reactor helpers.
 - GraphQL schemas are defined in `src/main/resources/graphql/*.graphqls`; adjust them alongside Java resolvers.
 - Static assets and configuration (`application.yml`, GraphiQL assets) also sit under `src/main/resources`. Build output collects in `target/` and should remain untracked.
