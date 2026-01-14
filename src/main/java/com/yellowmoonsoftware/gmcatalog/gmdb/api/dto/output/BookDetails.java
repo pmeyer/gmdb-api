@@ -18,7 +18,7 @@ public class BookDetails extends PubDetails {
 
     @JsonCreator
     public BookDetails(String cover, String edition) {
-        super(cover);
+        super(cover, null);
         this.edition = edition;
     }
 }

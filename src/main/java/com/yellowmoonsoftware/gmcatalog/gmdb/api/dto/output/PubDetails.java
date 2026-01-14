@@ -9,6 +9,8 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
+import java.util.UUID;
+
 @Getter
 @ToString
 @SuperBuilder(toBuilder = true)
@@ -22,4 +24,6 @@ import lombok.experimental.SuperBuilder;
 public abstract class PubDetails {
     @JsonProperty
     private final String cover;
+    @JsonProperty
+    private final UUID resourceId;
 }
