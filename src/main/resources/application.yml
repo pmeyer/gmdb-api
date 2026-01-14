@@ -10,7 +10,7 @@ spring:
       max-life-time: 180000
     mybatis:
       r2dbc-url: r2dbc:postgresql://meyernas01.local:1970/gmdb
-      username: gmdbuser
+      username: gmdb_app_user
       password: ${GMDB_APP_USER_PASSWORD}
   threads:
     virtual:
@@ -24,12 +24,12 @@ r2dbc:
   mybatis:
     configuration:
       jdbc-type-for-null: null
-    type-handlers-package: com.yellowmoonsoftware.gmdb.mybatis.typehandlers
+    type-handlers-package: com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.typehandlers
 
 logging:
   level:
-    com.yellowmoonsoftware.gmdb.mybatis.mappers: debug
-    com.yellowmoonsoftware.gmdb.mybatis.typehandlers: info
+    com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers: debug
+    com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.typehandlers: info
     org.springframework.graphql: debug
     com.yellowmoonsoftware.graphql.multipart: debug
 file-service:
