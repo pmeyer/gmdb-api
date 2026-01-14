@@ -7,11 +7,6 @@
 - Static assets and configuration (`application.yml`, GraphiQL assets) also sit under `src/main/resources`. Build output collects in `target/` and should remain untracked.
 - Tests belong in `src/test/java`; mirror the main package structure when adding fixtures.
 
-## Build, Test, and Development Commands
-- `./mvnw clean package` builds the Spring Boot artifact and runs unit tests.
-- `./mvnw spring-boot:run` starts the API with GraphQL and WebFlux endpoints; use `SPRING_PROFILES_ACTIVE` to switch configs.
-- `./mvnw test` executes the current test suite; `./mvnw verify` adds integration checks when defined.
-
 ## Coding Style & Naming Conventions
 - Use Java 23, four-space indentation, and keep imports ordered via IDE defaults. Prefer immutable `record` types for DTOs, matching existing code.
 - Controllers return Reactor `Mono`/`Flux`; avoid blocking calls and lean on `ReactiveUtils.async(...)` when bridging blocking mappers.
