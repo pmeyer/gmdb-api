@@ -36,7 +36,7 @@ public class MutationController {
                     return mapper.addPub(PubType.MAG, i.pubDate(), i.issueInfo().toDetails(), i.index())
                             .flatMap(pubSearchResult -> {
                                 return fileService.put(i.issueInfo().cover(), ResourceSlug.COVER_IMAGE,
-                                                Map.of("id", pubSearchResult.id()))
+                                                Map.of("id", pubSearchResult.details().resourceId()))
                                         .thenReturn(pubSearchResult);
                             });
                 });
@@ -44,9 +44,9 @@ public class MutationController {
 
     @MutationMapping("addPubCoverImage")
     public Mono<PubSearchResult> addPubCoverImage(@Argument("imgInput") final PubCoverImageInput imgInput) {
-        return mapper.updatePubCoverImage(imgInput.id(), imgInput.cover().filename())
+        return mapper.updatePubCoverImage(imgInput.id(), imgInput.toDetails())
                 .flatMap(r -> fileService
-                        .put(imgInput.cover(), ResourceSlug.COVER_IMAGE, Map.of("id", r.id()))
+                        .put(imgInput.cover(), ResourceSlug.COVER_IMAGE, Map.of("id", r.details().resourceId()))
                         .thenReturn(r));
     }
 

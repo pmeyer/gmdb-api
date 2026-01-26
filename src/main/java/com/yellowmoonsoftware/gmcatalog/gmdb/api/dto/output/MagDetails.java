@@ -7,6 +7,8 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
+import java.util.UUID;
+
 @Getter
 @ToString
 @SuperBuilder(toBuilder = true)
@@ -21,8 +23,8 @@ public class MagDetails extends PubDetails {
     private final String issueName;
 
     @JsonCreator
-    public MagDetails(String cover, String volume, String issue, String issueName) {
-        super(cover, null);
+    public MagDetails(final String volume, final String issue, final String issueName) {
+        super((UUID) null);
         this.volume = volume;
         this.issue = issue;
         this.issueName = issueName;

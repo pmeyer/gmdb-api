@@ -45,10 +45,13 @@
         inner join pid pi on p.pub_idx_id = pi.id
     </select>
 
-    <select id="updatePubCoverImage" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult">
+    <select id="updatePubCoverImage"
+
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult"><![CDATA[
         with upd_pub as (
             update pub
-                set details = details || jsonb_build_object('cover', #{cover})
+                set details = details || jsonb_build_object('resources',
+                                                            coalesce(details->'resources', '{}') || #{cover}->'resources')
                 where id = #{id}
                 returning *
         )
@@ -61,6 +64,6 @@
             pi.serial_number
         from upd_pub p
                  inner join pub_idx pi on p.pub_idx_id = pi.id
-    </select>
+    ]]></select>
 
 </mapper>

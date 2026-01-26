@@ -7,6 +7,8 @@ import lombok.ToString;
 import lombok.experimental.Accessors;
 import lombok.experimental.SuperBuilder;
 
+import java.util.UUID;
+
 @Getter
 @ToString
 @SuperBuilder(toBuilder = true)
@@ -17,8 +19,8 @@ public class BookDetails extends PubDetails {
     private final String edition;
 
     @JsonCreator
-    public BookDetails(String cover, String edition) {
-        super(cover, null);
+    public BookDetails(final String edition) {
+        super((UUID) null);
         this.edition = edition;
     }
 }
