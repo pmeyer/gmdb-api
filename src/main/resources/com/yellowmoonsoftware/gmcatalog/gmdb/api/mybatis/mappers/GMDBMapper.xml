@@ -63,7 +63,9 @@
         group by id, name, type
     </select>
 
-    <select id="pubSearch" parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubSearchCriteria" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult">
+    <select id="pubSearch"
+            parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubSearchCriteria"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult">
         select
             p.id,
             pi.name,
