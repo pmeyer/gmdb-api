@@ -109,8 +109,11 @@ type ArtistSearchResult {
     matchedRoles: [ArtistSearchRole!]!
 }
 
+# Specifies the type of publication
 enum PubType {
+    # Book
     BOOK
+    # Periodically issued magazine
     MAG
 }
 
@@ -145,6 +148,7 @@ type PubSearchResult {
     details: PubDetails
     pubDate: Date
     serialNumber: String!
+    pubIndexId: Long!
     transcriptions: [PubTranscription!]
 }
 

@@ -1,9 +1,11 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.config;
 
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.MergeAction;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.type.JsonTypeHandlerRegistrar;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.defaults.EnumR2dbcTypeHandlerAdapter;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.annotation.R2dbcMapperScan;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.spring.support.R2dbcMybatisConfigurationCustomizer;
 
@@ -15,6 +17,7 @@ public class MybatisConfiguration {
     @Bean
     public R2dbcMybatisConfigurationCustomizer r2dbcMybatisConfigurationCustomizer(final JsonTypeHandlerRegistrar registrar) {
         return configuration -> {
+            configuration.addR2dbcTypeHandlerAdapter(new EnumR2dbcTypeHandlerAdapter<>(MergeAction.class));
             registrar.withConfig(configuration)
                     .register("com.yellowmoonsoftware.gmcatalog.gmdb.api.dto");
         };
