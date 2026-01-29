@@ -1,11 +1,14 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.controller;
 
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.PubType;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.*;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMutationMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.PublicationIndexService;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.PublicationService;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.FileService;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.ResourceSlug;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -20,26 +23,24 @@ public class MutationController {
 
     private final FileService fileService;
     private final PubMutationMapper mapper;
+    private final PublicationService publicationService;
+    private final PublicationIndexService pubIndexService;
 
     @MutationMapping("addTranscription")
-    public Mono<Object> addTranscription(@Argument("transcriptionInput") final GqlInputTypes.TranscriptionInput input) {
+    public Mono<Object> addTranscription(@Argument("pubId") Long pubId, @Valid @Argument("transcriptionInput") final TranscriptionInput input) {
 
 
         return Mono.just(input);
     }
 
     @MutationMapping("addMagazineIssue")
-    public Mono<PubSearchResult> addMagazineIssue(@Argument("magInput") final MagazineInput magInput) {
-        // validation
-        return validate(magInput)
-                .flatMap(i -> {
-                    return mapper.addPub(PubType.MAG, i.pubDate(), i.issueInfo().toDetails(), i.index())
-                            .flatMap(pubSearchResult -> {
-                                return fileService.put(i.issueInfo().cover(), ResourceSlug.COVER_IMAGE,
-                                                Map.of("id", pubSearchResult.details().resourceId()))
-                                        .thenReturn(pubSearchResult);
-                            });
-                });
+    public Mono<PubSearchResult> addMagazineIssue(@Argument("magInput") @Valid final MagazineInput magInput) {
+        return publicationService.addPub(magInput);
+    }
+
+    @MutationMapping("addBookEdition")
+    public Mono<PubSearchResult> addBookEdition(@Argument("bookInput") @Valid final BookInput bookInput) {
+        return publicationService.addPub(bookInput);
     }
 
     @MutationMapping("addPubCoverImage")
@@ -50,19 +51,9 @@ public class MutationController {
                         .thenReturn(r));
     }
 
-    private static Mono<MagazineInput> validate(final MagazineInput magInput) {
-        final PubIndexInput index = magInput.index();
-        if (index.flag() == PubIndexInputFlag.LOOKUP) {
-            if (index.id() == null && index.serial() == null) {
-                return Mono.error(new RuntimeException("PubIndex lookup mode, at least one of ID, serial number or name is required."));
-            }
-        } else {
-            if (index.name() == null) {
-                return Mono.error(new RuntimeException("PubIndex upsert mode, name is required."));
-            }
-        }
-
-        return Mono.just(magInput);
+    @MutationMapping("upsertPubIndex")
+    public Mono<PubIndexOut> upsertPubIndex(@Valid @Argument("pubIndexInput") final PubIndexInput pubIndexInput) {
+        return pubIndexService.upsertPublicationIndex(pubIndexInput);
     }
 }
 

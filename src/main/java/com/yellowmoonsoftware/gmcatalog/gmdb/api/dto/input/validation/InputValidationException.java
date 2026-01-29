@@ -1,4 +1,4 @@
-package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input;
+package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation;
 
 public class InputValidationException extends RuntimeException {
     public InputValidationException(String message) {
