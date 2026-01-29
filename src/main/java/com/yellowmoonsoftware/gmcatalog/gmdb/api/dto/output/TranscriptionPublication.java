@@ -16,8 +16,8 @@ public class TranscriptionPublication extends PubSearchResult {
     @EqualsAndHashCode.Include
     private final Long transcriptionId;
 
-    public TranscriptionPublication(Long id, String name, PubType type, PubDetails details, LocalDate pubDate, String serialNumber, Long transcriptionId) {
-        super(id, name, type, details, pubDate, serialNumber);
+    public TranscriptionPublication(Long id, String name, PubType type, PubDetails details, LocalDate pubDate, String serialNumber, Long pubIndexId, Long transcriptionId) {
+        super(id, name, type, details, pubDate, serialNumber, pubIndexId);
         this.transcriptionId = transcriptionId;
     }
 }

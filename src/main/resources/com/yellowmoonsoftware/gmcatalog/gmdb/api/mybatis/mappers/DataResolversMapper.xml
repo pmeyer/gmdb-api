@@ -93,6 +93,7 @@
             p.details || jsonb_build_object('@type', pi.type::text) as details,
             p.pub_date,
             pi.serial_number,
+            pi.id as pub_index_id,
             t.id transcription_id
         from pub p
             inner join pub_idx pi on p.pub_idx_id = pi.id
