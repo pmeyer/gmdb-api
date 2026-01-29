@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.AlbumMapper">
+    <select id="upsertAlbum" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.AlbumOut">
+        merge into album
+        using (
+            values (#{input.id}::bigint, #{input.title}::text, #{input.details}::jsonb, #{input.primaryArtistId}::bigint)
+        ) as s(id, title, details, primary_artist_id)
+        on (album.id = s.id) or (album.title = s.name and album.primary_artist_id = s.primary_artist_id)
+        when matched then
+            update set title = coalesce(s.title, album.title),
+                       details = merge_details(album.details, s.details),
+                       primary_artist_id = coalesce(s.primary_artist_id, album.primary_artist_id)
+        when not matched then
+            insert (title, details, primary_artist_id) values (s.title, s.details, s.primary_artist_id)
+            returning
+                album.id, album.title, album.details, album.primary_artist_id, merge_action() as action
+    </select>
+
+    <select id="getAlbumById" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.AlbumOut">
+        select id, title, details, primary_artist_id, null as action from album where id = #{id}
+    </select>
+</mapper>
