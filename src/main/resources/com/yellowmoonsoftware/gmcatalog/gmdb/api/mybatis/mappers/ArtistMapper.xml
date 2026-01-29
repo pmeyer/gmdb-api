@@ -19,4 +19,20 @@
     <select id="getArtistById" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.ArtistOut">
         select id, name, type, null as action from artist where id = #{id}
     </select>
+
+    <select id="upsertSongArtists" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.SongArtistOut">
+        merge into song_artist sa
+        using (
+            values
+            <foreach item="item" collection="songArtists" separator=",">
+                (#{item.songId}::bigint, #{item.artistId}::bigint, #{item.roles}::jsonb)
+            </foreach>
+        ) as s(song_id, artist_id, roles)
+        on (sa.song_id = s.song_id and sa.artist_id = s.artist_id)
+        when matched then
+            update set roles = s.roles
+        when not matched then
+            insert (song_id, artist_id, roles) values (s.song_id, s.artist_id, s.roles)
+        returning sa.song_id, sa.artist_id, sa.roles, merge_action() as action
+    </select>
 </mapper>

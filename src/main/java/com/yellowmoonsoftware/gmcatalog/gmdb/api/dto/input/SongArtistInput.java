@@ -1,5 +1,6 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input;
 
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.IdAndDataContainer;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.SongArtistRole;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.ConditionalNotNull;
 
@@ -10,5 +11,4 @@ public record SongArtistInput(
         Long id,
         ArtistData data,
         Set<SongArtistRole> roles
-) {
-}
+) implements IdAndDataContainer<ArtistData> { }
