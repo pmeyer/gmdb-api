@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.ArtistMapper">
+    <select id="upsertArtist" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.ArtistOut">
+        merge into artist
+        using (
+            values (#{input.id}::bigint, #{input.data.name}::text, #{input.data.type}::artist_type)
+        ) as s(id, name, type)
+        on (artist.id = s.id) or (artist.name = s.name and artist.type = s.type)
+        when matched then
+            update set name = coalesce(s.name, artist.name),
+                       type = coalesce(s.type, artist.type)
+        when not matched then
+            insert (name, type) values (s.name, s.type)
+        returning
+            artist.id, artist.name, artist.type, merge_action() as action
+    </select>
+
+    <select id="getArtistById" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.ArtistOut">
+        select id, name, type, null as action from artist where id = #{id}
+    </select>
+</mapper>
