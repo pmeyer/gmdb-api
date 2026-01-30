@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriberMapper">
+    <select id="upsertTranscriber" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriberOut">
+        merge into transcriber t
+        using (
+            values (#{input.id}::bigint, #{input.name}::text)
+        ) as s(id, name)
+        on (t.id = s.id) or (t.name = s.name)
+        when matched then
+            update set name = coalesce(s.name, t.name)
+        when not matched then
+            insert (name) values (s.name)
+            returning
+                t.id, t.name, merge_action() as action
+    </select>
+
+    <select id="getTranscriberById" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriberOut">
+        select id, name, null as action from transcriber where id = #{id}
+    </select>
+
+    <select id="upsertTranscriptionTranscribers" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionTranscriber">
+        with t_add as (
+            select transcription_id, transcriber_id, op
+            from ( values
+                    <foreach item="tt" collection="transcriptionTranscribers" separator=",">
+                        (#{tt.transcriptionId}::bigint, #{tt.transcriberId}::bigint, 'ADD')
+                    </foreach>
+                ) as t(transcription_id, transcriber_id, op)
+        ),
+        t_del as (
+            select transcription_id, transcriber_id, 'DEL' as op
+            from transcription_transcriber tt
+            where exists (select * from t_add where t_add.transcription_id = tt.transcription_id)
+        )
+        merge into transcription_transcriber tt
+        using (
+            select transcription_id, transcriber_id, op
+                from t_del where not exists (select * from t_add
+                                                      where t_add.transcription_id = t_del.transcription_id
+                                                        and t_add.transcriber_id = t_del.transcriber_id)
+            union all select transcription_id, transcriber_id, op from t_add
+        ) as s
+        on (tt.transcription_id = s.transcription_id)
+        when matched and s.op = 'ADD' then
+            do nothing
+        when matched and s.op = 'DEL' then
+            delete
+        when not matched then
+            insert (transcription_id, transcriber_id) values (s.transcription_id, s.transcriber_id)
+        returning tt.transcription_id, tt.transcriber_id, merge_action() as action
+    </select>
+</mapper>
