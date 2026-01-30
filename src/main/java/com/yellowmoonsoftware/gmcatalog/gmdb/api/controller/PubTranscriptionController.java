@@ -22,11 +22,13 @@ public class PubTranscriptionController {
 
     @BatchMapping(typeName = "PubTranscription", field = "song")
     public Mono<Map<Transcription, SongSearchResult>> song(final Set<Transcription> transcriptions) {
-        final Map<Long, Transcription> transcriptionMap = transcriptions.stream()
-                .collect(toMap(Transcription::songId, t -> t));
+        final Map<Long, List<Transcription>> transcriptionMap = transcriptions.stream()
+                .collect(groupingBy(Transcription::songId));
 
         return mapper.getSongsBySongIds(transcriptionMap.keySet())
-                .collect(toMap(s -> transcriptionMap.get(s.id()), t -> t));
+                .flatMapIterable(s -> transcriptionMap.get(s.id())
+                        .stream().map(t -> Map.entry(t, s)).toList())
+                .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     @BatchMapping(typeName = "PubTranscription", field = "transcribers")

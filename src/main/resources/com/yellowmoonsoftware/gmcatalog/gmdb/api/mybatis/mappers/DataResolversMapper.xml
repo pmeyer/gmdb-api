@@ -78,7 +78,7 @@
 
     <select id="getTranscribersByTranscriptionIds" parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.TranscriptionTranscriber">
         select t.id, t.name, tt.transcription_id from transcriber t
-            inner join transcripton_transcriber tt on t.id = tt.transcriber_id
+            inner join transcription_transcriber tt on t.id = tt.transcriber_id
         where
         <foreach collection="transcriptionIds" item="id" open="tt.transcription_id in(" separator="," close=")">
             #{id}
