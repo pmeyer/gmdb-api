@@ -3,11 +3,9 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.controller;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.*;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcription;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMutationMapper;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.PublicationIndexService;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.PublicationService;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.FileService;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.ResourceSlug;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -25,12 +23,12 @@ public class MutationController {
     private final PubMutationMapper mapper;
     private final PublicationService publicationService;
     private final PublicationIndexService pubIndexService;
+    private final TranscriptionService transcriptionService;
 
     @MutationMapping("addTranscription")
-    public Mono<Object> addTranscription(@Argument("pubId") Long pubId, @Valid @Argument("transcriptionInput") final TranscriptionInput input) {
-
-
-        return Mono.just(input);
+    public Mono<Transcription> addTranscription(@Argument("pubId") Long pubId, @Valid @Argument("transcriptionInput") final TranscriptionInput input) {
+        return transcriptionService.upsertTranscription(pubId, input)
+                .map(t -> new Transcription(t.id(), t.details().transcriptionUrl(), t.details().pageNumber(), t.songId(), t.pubId()));
     }
 
     @MutationMapping("addMagazineIssue")
