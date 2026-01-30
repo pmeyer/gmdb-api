@@ -12,18 +12,15 @@ import org.springframework.http.codec.multipart.FilePart;
 import java.util.Map;
 import java.util.function.Supplier;
 
-@RequiredArgsConstructor
-@Getter
 @Accessors(fluent = true)
 public abstract class AbstractPubSpecificInput<T extends PubDetails> extends AbstractResourceDetailsConverter<T> {
     private final FilePart cover;
 
-    @Getter(lazy = true, value = AccessLevel.PROTECTED)
-    @Accessors(fluent = false)
-    private final Map<ResourceSlug, Supplier<FilePart>> resources = Map.of(
-            ResourceSlug.COVER_IMAGE, () -> cover
-    );
+    public AbstractPubSpecificInput(final FilePart cover) {
+        super(ResourceSlug.COVER_IMAGE, cover);
+        this.cover = cover;
+    }
 
-    abstract protected T getDetails();
+    public FilePart cover() { return cover; }
 }
 

@@ -117,6 +117,8 @@ input TranscriptionInput {
     pageNumber: Int!
     # The transcription file
     file: Upload
+    # The transcribers
+    transcribers: [TranscriberInput!]
 }
 
 # Song input
@@ -202,3 +204,10 @@ input ArtistData {
     type: ArtistType!
 }
 
+# Transcriber input
+# An existing transcriber ID or name for a new or updated transcriber must be provided.
+# This is validated prior to execution of the mutation.
+input TranscriberInput {
+    id: Long
+    name: String
+}

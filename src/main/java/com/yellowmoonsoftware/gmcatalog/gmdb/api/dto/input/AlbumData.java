@@ -17,7 +17,6 @@ import java.util.function.Supplier;
 
 @Getter
 @Accessors(fluent = true)
-@RequiredArgsConstructor
 public class AlbumData extends AbstractResourceDetailsConverter<AlbumDetails> {
     @NonNull
     private final String title;
@@ -25,14 +24,16 @@ public class AlbumData extends AbstractResourceDetailsConverter<AlbumDetails> {
     private final LocalDate releaseDate;
     @Valid
     private final ArtistInput primaryArtist;
-    
+
     @Getter(lazy = true, value = AccessLevel.PROTECTED)
     @Accessors(fluent = false)
-    private final Map<ResourceSlug, Supplier<FilePart>> resources = Map.of(
-            ResourceSlug.ALBUM_ART, () -> coverArt
-    );
-
-    @Getter(lazy = true)
-    @Accessors(fluent = false)
     private final AlbumDetails details = new AlbumDetails(releaseDate);
+
+    public AlbumData(@NonNull String title, FilePart coverArt, LocalDate releaseDate, @Valid ArtistInput primaryArtist) {
+        super(ResourceSlug.ALBUM_ART, coverArt);
+        this.title = title;
+        this.coverArt = coverArt;
+        this.releaseDate = releaseDate;
+        this.primaryArtist = primaryArtist;
+    }
 }

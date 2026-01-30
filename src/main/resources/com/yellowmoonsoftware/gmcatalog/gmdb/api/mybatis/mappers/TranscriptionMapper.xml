@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriptionMapper">
+    <select id="upsertTranscription"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut">
+        merge into transcription t
+        using (
+            values (#{transcription.id}::bigint, #{transcription.songId}::bigint, #{transcription.pubId}::bigint, #{transcription.details})
+        ) as s(id, song_id, pub_id, details)
+        on (t.id = s.id) or (t.song_id = s.song_id and t.pub_id = s.pub_id)
+        when matched then
+            update set song_id = s.song_id,
+                       pub_id = s.pub_id,
+                       details = merge_details(t.details, s.details)
+        when not matched then
+            insert (song_id, pub_id, details) values (s.song_id, s.pub_id, s.details)
+        returning
+            t.id, t.name, merge_action() as action
+    </select>
+
+    <select id="getTranscriptionById"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut">
+        select id, song_id, pub_id, details, null as action from transcription where id = #{id}
+    </select>
+</mapper>

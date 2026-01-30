@@ -2,6 +2,7 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.MagDetails;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 import org.springframework.http.codec.multipart.FilePart;
@@ -13,8 +14,8 @@ public class MagazineIssueInput extends AbstractPubSpecificInput<MagDetails> {
     private final String issue;
     private final String issueName;
 
-    @Getter(lazy = true)
     @Accessors(fluent = false)
+    @Getter(lazy = true, value = AccessLevel.PROTECTED)
     private final MagDetails details = new MagDetails(volume, issue, issueName);
 
     @JsonCreator
