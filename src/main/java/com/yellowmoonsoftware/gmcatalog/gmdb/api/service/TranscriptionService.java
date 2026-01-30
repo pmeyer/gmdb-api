@@ -8,11 +8,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class TranscriptionService {
     private final SongService songService;
     private final TranscriptionTranscriberService transcriptionTranscriberService;
+    private final FileService fileService;
     private final TranscriptionMapper transcriptionMapper;
 
     @Transactional
@@ -20,9 +23,17 @@ public class TranscriptionService {
         return songService.upsertSong(input.song())
                 .flatMap(s -> transcriptionMapper
                         .upsertTranscription(TranscriptionInOut.forNewTranscription(s.id(), pubId, input.toDetails())))
-                .flatMap(tOut -> transcriptionTranscriberService
-                        .addTranscriptionTranscribers(tOut.id(), input.transcribers())
-                        .thenReturn(tOut));
+                .flatMap(tOut -> {
+                    final Mono<ResourceReference> fileSignal = Mono.justOrEmpty(input.file())
+                            .flatMap(blob -> fileService.put(blob, ResourceSlug.TRANSCRIPTION,
+                                    Map.of("id", tOut.details().resourceId())));
+
+                    final Mono<Void> transcribersSignal = transcriptionTranscriberService
+                            .addTranscriptionTranscribers(tOut.id(), input.transcribers());
+
+                    return Mono.when(fileSignal, transcribersSignal)
+                            .thenReturn(tOut);
+                });
     }
 }
 
