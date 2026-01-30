@@ -1,6 +1,7 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.service;
 
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.PubType;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.AbstractPubInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InputValidationException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubDetails;
@@ -12,10 +13,13 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMutationMapp
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.SynchronousSink;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 @Service
@@ -26,16 +30,23 @@ public class PublicationService {
 
     private final PublicationIndexService pubIndexService;
     private final FileService fileService;
+    private final TranscriptionService transcriptionService;
 
     @Transactional
     public Mono<PubSearchResult> addPub(final AbstractPubInput<?, ? extends PubDetails> pubInput) {
         return pubIndexService.upsertPublicationIndex(pubInput.index())
                 .handle(Validation.expectedPubIndexPubType(pubInput.supportedPubType()))
                 .flatMap(pubIdx -> pubMutationMapper.upsertPublication(PubIn.forNewPub(pubIdx.id(), pubInput)))
-                .flatMap(out -> Mono.justOrEmpty(pubInput.info().cover())
-                        .flatMap(blob -> fileService.put(blob, ResourceSlug.COVER_IMAGE, Map.of("id", out.details().resourceId())))
-                        .thenReturn(out.id()))
-                .flatMap(gmdbMapper::getPub);
+                .flatMap(out -> {
+                    final Mono<ResourceReference> fileSignal = Mono.justOrEmpty(pubInput.info().cover())
+                            .flatMap(blob -> fileService.put(blob, ResourceSlug.COVER_IMAGE, Map.of("id", out.details().resourceId())));
+
+                    final Flux<TranscriptionInOut> transcriptionSignal = Flux.fromIterable(Optional.ofNullable(pubInput.transcriptions()).orElse(List.of()))
+                            .flatMap(t -> transcriptionService.upsertTranscription(out.id(), t));
+
+                    return Mono.when(fileSignal, transcriptionSignal)
+                            .then(gmdbMapper.getPub(out.id()));
+                });
     }
 
     static class Validation {
