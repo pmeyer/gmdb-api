@@ -19,7 +19,6 @@ public final class TranscriptionInput extends AbstractResourceDetailsConverter<T
     private final SongInput song;
     @NotNull
     private final Integer pageNumber;
-    @NotNull
     private final FilePart file;
     private final List<@Valid TranscriberInput> transcribers;
 
