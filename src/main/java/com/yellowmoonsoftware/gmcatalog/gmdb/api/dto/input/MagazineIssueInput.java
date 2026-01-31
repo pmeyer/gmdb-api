@@ -1,16 +1,29 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.MagDetails;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubDetails;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import org.springframework.http.codec.multipart.FilePart;
 
-public record MagazineIssueInput(
-        String volume,
-        String issue,
-        String issueName,
-        FilePart cover) implements PubSpecificInput<MagDetails> {
+@Getter
+@Accessors(fluent = true)
+public class MagazineIssueInput extends AbstractPubSpecificInput<MagDetails> {
+    private final String volume;
+    private final String issue;
+    private final String issueName;
 
-    public MagDetails toDetails() {
-        return new MagDetails(cover.filename(), volume, issue, issueName);
+    @Accessors(fluent = false)
+    @Getter(lazy = true, value = AccessLevel.PROTECTED)
+    private final MagDetails details = new MagDetails(volume, issue, issueName);
+
+    @JsonCreator
+    public MagazineIssueInput(final String volume, final String issue, final String issueName, final FilePart cover) {
+        super(cover);
+        this.volume = volume;
+        this.issue = issue;
+        this.issueName = issueName;
     }
 }
+

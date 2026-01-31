@@ -1,29 +1,27 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.ResourceSlug;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Accessors;
-import lombok.experimental.SuperBuilder;
-
-import java.util.UUID;
 
 @Getter
 @ToString
-@SuperBuilder(toBuilder = true)
 @Accessors(fluent = true)
-@RequiredArgsConstructor
 @JsonSubTypes({
         @JsonSubTypes.Type(value = MagDetails.class, name = "MAG"),
         @JsonSubTypes.Type(value = BookDetails.class, name = "BOOK")
 })
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "@type", include = JsonTypeInfo.As.PROPERTY)
-public abstract class PubDetails {
-    @JsonProperty
-    private final String cover;
-    @JsonProperty
-    private final UUID resourceId;
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public abstract class PubDetails extends AbstractResourceBundle {
+    protected PubDetails() {
+        super(null);
+    }
+
+    @Getter(lazy = true)
+    private final String cover = getResourceUrl(ResourceSlug.COVER_IMAGE).orElse(null);
 }

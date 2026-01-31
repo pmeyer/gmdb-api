@@ -63,16 +63,29 @@
         group by id, name, type
     </select>
 
-    <select id="pubSearch" parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubSearchCriteria" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult">
+    <sql id="pubSearchSelect">
         select
             p.id,
             pi.name,
             pi.type,
             p.details || jsonb_build_object('@type', pi.type::text) as details,
             p.pub_date,
-            pi.serial_number
+            pi.serial_number,
+            pi.id as pub_index_id
         from pub p
-            inner join pub_idx pi on p.pub_idx_id = pi.id
+                 inner join pub_idx pi on p.pub_idx_id = pi.id
+    </sql>
+
+    <select id="getPub"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult">
+        <include refid="pubSearchSelect"/>
+        where p.id = #{pubId}
+    </select>
+
+    <select id="pubSearch"
+            parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubSearchCriteria"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult">
+        <include refid="pubSearchSelect"/>
         <where>
             <if test="criteria.hasTranscriptions">
                 exists(select * from transcription t where t.pub_id = p.id)
@@ -135,5 +148,16 @@
             a.title,
             aa.name nulls first,
             a.id
+    </select>
+
+    <select id="getPubIndex" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut">
+        select
+            id,
+            name,
+            type,
+            serial_number,
+            null as action
+        from pub_idx
+        where id = #{pubIdxId}
     </select>
 </mapper>

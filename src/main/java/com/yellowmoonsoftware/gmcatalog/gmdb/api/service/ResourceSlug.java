@@ -3,12 +3,10 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.service;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.Accessors;
+import org.springframework.http.MediaType;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static java.util.stream.Collectors.toMap;
 
@@ -16,7 +14,7 @@ import static java.util.stream.Collectors.toMap;
 @Accessors(fluent = true)
 @RequiredArgsConstructor
 public enum ResourceSlug {
-    COVER_IMAGE("cover_img", "pub/{id}"),
+    COVER_IMAGE("cover-img", "pub/{id}"),
     ALBUM_ART("album-art", "album/{id}"),
     TRANSCRIPTION("transcription", "transcription/{id}"),;
 
@@ -28,13 +26,20 @@ public enum ResourceSlug {
             .collect(toMap(ResourceSlug::slugName, v -> v));
 
     public String getPath(final Map<String, ?> variables) {
-        return getPath(variables, null);
+        return getPath(variables, null, null, null);
     }
 
-    public String getPath(final Map<String, ?> variables, final String fileName) {
-        return UriComponentsBuilder.fromPath(pathPattern)
+    public String getPath(final UUID resourceId, final String fileName, final MediaType mediaType, final String rootPath) {
+        return getPath(Collections.singletonMap("id", resourceId), fileName, mediaType, rootPath);
+    }
+
+    public String getPath(final Map<String, ?> variables, final String fileName, final MediaType mediaType, final String rootPath) {
+        return Optional.ofNullable(rootPath)
+                .map(root -> UriComponentsBuilder.fromPath(root).pathSegment(pathPattern))
+                .orElseGet(() -> UriComponentsBuilder.fromPath(pathPattern))
                 .pathSegment(slugName())
                 .queryParamIfPresent("_f", Optional.ofNullable(fileName))
+                .queryParamIfPresent("_mt", Optional.ofNullable(mediaType))
                 .buildAndExpand(variables)
                 .toString();
     }

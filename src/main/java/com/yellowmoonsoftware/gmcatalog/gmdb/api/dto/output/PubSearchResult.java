@@ -22,5 +22,6 @@ public class PubSearchResult {
     private final PubDetails details;
     private final LocalDate pubDate;
     private final String serialNumber;
+    private final Long pubIndexId;
 }
 

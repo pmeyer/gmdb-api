@@ -3,37 +3,100 @@ scalar Upload
 
 type Mutation {
     # Adds a transcription do the GMag Database
-    addTranscription(transcriptionInput: TranscriptionInput!): JSON!
+    addTranscription(pubId: Long, transcriptionInput: TranscriptionInput!): PubTranscription!
     # Adds a magazine issue to the GMag Database
     addMagazineIssue(magInput: MagazineInput!): PubSearchResult!
+    # Adds a book edition to the GMag Database
+    addBookEdition(bookInput: BookInput!): PubSearchResult!
     # Associates a cover image with an existing publication
     addPubCoverImage(imgInput: PubCoverImageInput!): PubSearchResult!
+
+    upsertPubIndex(pubIndexInput: PubIndexInput!): PubIndexResult!
 }
 
+enum UpsertAction { INSERT, UPDATE }
+
+type PubIndexResult {
+    id: Long!
+    name: String!
+    type: PubType!
+    serialNumber: String
+    action: UpsertAction!
+}
+
+# Magazine issue input
 input MagazineInput {
+    # Date of issue publication
     pubDate: Date
+    # The publication data (e.g. ISBN, etc)
     index: PubIndexInput!
-    issueInfo: MagazineIssueInput! = { }
+    # Magazine issue information
+    info: MagazineIssueInput!
+    # Song transcriptions appearing in the magazine issue
+    transcriptions: [TranscriptionInput!]
 }
-
+# Magazine issue information
+# In order to upload a the magazine cover image, the request must be made
+# using the GraphQL multipart request specification:
+# https://github.com/jaydenseric/graphql-multipart-request-spec
 input MagazineIssueInput {
-    volume: String,
-    issue: String,
-    issueName: String,
+    # Magazine volume (typically a number)
+    volume: String
+    # Magazine issue (typically a number denoting its sequence in a volume)
+    issue: String
+    # The name of the issue
+    issueName: String!
+    # Magazine cover image
     cover: Upload
 }
 
-enum PubIndexFlag {
-    LOOKUP
-    UPSERT
+# Book input
+input BookInput {
+    # Date of edition publication
+    pubDate: Date
+    # The publication data (e.g. ISBN, etc)
+    index: PubIndexInput!
+    # Edition specific info
+    info: BookEditionInput! = { }
+    # Song transcriptions appearing in the book edition
+    transcriptions: [TranscriptionInput!]
 }
 
+# Book edition information
+# In order to upload a the book cover image, the request must be made
+# using the GraphQL multipart request specification:
+# https://github.com/jaydenseric/graphql-multipart-request-spec
+input BookEditionInput {
+    # The edition name or number
+    edition: String
+    # Book cover image
+    cover: Upload
+}
+
+# Publication index input
+# A publication "index" is general data about a publication.  It describes the type of
+# publication (e.g. a Book or Magazine), name and serial number (i.e. typically ISBN).
+# A publication will have one or more publications (e.g. magazine issues or book editions).
+# An existing publication index ID or data for a new or updated index must be provided.
+# This is validated prior to execution of the mutation.
 input PubIndexInput {
+    # Existing publication index ID
     id: Long
-    name: String
-    type: PubType
-    serial: String
-    flag: PubIndexFlag! = LOOKUP
+    # Data for a new publication index (or update to an existing publication index, if ID is provided)
+    data: PubIndexData
+}
+
+# Detailed data for a publication index.
+# A publication "index" is general data about a publication.  It describes the type of
+# publication (e.g. a Book or Magazine), name and serial number (i.e. typically ISBN).
+# A publication will have one or more publications (e.g. magazine issues or book editions).
+input PubIndexData {
+    # Publication name - typically the name of a book or a periodically printed magazine
+    name: String!
+    # The type of publication
+    type: PubType!
+    # Typically ISBN for a book or magazine
+    serial: String!
 }
 
 input PubCoverImageInput {
@@ -43,50 +106,108 @@ input PubCoverImageInput {
 
 ######
 
+# Song transcription input.
+# In order to upload a file of the transcription, the request must be made
+# using the GraphQL multipart request specification:
+# https://github.com/jaydenseric/graphql-multipart-request-spec
 input TranscriptionInput {
+    # Song being transcribed
     song: SongInput!
-    pub: PubInput!
+    # First page of the transcription within the transcript's publication
     pageNumber: Int!
+    # The transcription file
     file: Upload
+    # The transcribers
+    transcribers: [TranscriberInput!]
 }
 
+# Song input
+# An existing song ID or data for a new or updated song must be provided.
+# This is validated prior to execution of the mutation.
 input SongInput {
+    # Existing song ID
     id: Long
-    title: String
+    # Data for a new song (or update an existing song, if ID is provided)
+    data: SongData
+}
+
+# Data describing a song
+input SongData {
+    # Song title
+    title: String!
+    # Artists and their roles on a song
     artists: [SongArtistInput!]
+    # Album track information for the song
     albumTrack: AlbumTrackInput
 }
 
+# Input specification for an artist on a song.
+# An existing artist ID or data for a new or updated artist must be provided.
+# This is validated prior to execution of the mutation.
 input SongArtistInput {
+    # Existing artist ID
     id: Long
-    name: String
-    type: ArtistType
-    roles: [SongArtistRole!]
+    # Data for a new artist (or update to an existing artist, if ID is provided)
+    data: ArtistData
+    # Artists role on the song
+    roles: [SongArtistRole!]!
 }
 
+# Input for an album on which a song rendition is heard
 input AlbumTrackInput {
+    # Track number on the album for the song
     trackNumber: Int!
+    # Album information
     album: AlbumInput!
 }
 
+# Album input
+# An existing album ID or data for a new or updated album must be provided.
+# This is validated prior to execution of the mutation.
 input AlbumInput {
+    # Existing album ID
     id: Long
-    title: String
+    # Data for a new album (or update to an existing album, if ID is provided)
+    data: AlbumData
+}
+
+# Data describing an album
+# In order to upload album cover-art, the request must be made
+# using the GraphQL multipart request specification:
+# https://github.com/jaydenseric/graphql-multipart-request-spec
+input AlbumData {
+    # Album title
+    title: String!
+    # Album cover-art file
     coverArt: Upload
+    # Album release date
     releaseDate: Date
+    # Primary artist associated with the album
     primaryArtist: ArtistInput
 }
 
+# Artist input
+# An existing artist ID or data for a new or updated artist must be provided.
+# This is validated prior to execution of the mutation.
 input ArtistInput {
+    # Existing album ID
     id: Long
-    name: String
-    type: ArtistType
+    # Data for a new artist (or update to an existing artist, if ID is provided)
+    data: ArtistData
 }
 
-input PubInput {
+# Data describing an artist
+input ArtistData {
+    # The artist name
+    name: String!
+    # The type of the artist
+    type: ArtistType!
+}
+
+# Transcriber input
+# An existing transcriber ID or name for a new or updated transcriber must be provided.
+# This is validated prior to execution of the mutation.
+input TranscriberInput {
     id: Long
-    pubDate: Date
-    index: PubIndexInput
-    cover: Upload
-    details: JSON
+    name: String
 }

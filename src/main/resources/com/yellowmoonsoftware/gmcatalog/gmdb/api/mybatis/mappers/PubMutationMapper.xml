@@ -12,7 +12,7 @@
                 returning *
             </when>
             <otherwise>
-                select pidx.id, pidx.name, pidx.type, pidx.serial_number
+                select pidx.id, pidx.name, pidx.type, pidx.serial_number, pidx.id as pub_index_id
                 from pub_idx pidx
                 where pidx.type = #{pubType} and
                 <choose>
@@ -45,10 +45,12 @@
         inner join pid pi on p.pub_idx_id = pi.id
     </select>
 
-    <select id="updatePubCoverImage" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult">
+    <select id="updatePubCoverImage"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult"><![CDATA[
         with upd_pub as (
             update pub
-                set details = details || jsonb_build_object('cover', #{cover})
+                set details = details || jsonb_build_object('resources',
+                                                            coalesce(details->'resources', '{}') || #{cover}->'resources')
                 where id = #{id}
                 returning *
         )
@@ -58,9 +60,41 @@
             pi.type,
             p.details || jsonb_build_object('@type', pi.type::text) as details,
             p.pub_date,
-            pi.serial_number
+            pi.serial_number,
+            pi.id as pub_index_id
         from upd_pub p
                  inner join pub_idx pi on p.pub_idx_id = pi.id
+    ]]></select>
+
+    <select id="upsertPubIndex" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut">
+        merge into pub_idx as t
+        using (
+            values (#{pubIdx.id}::bigint, #{pubIdx.data.name}::text, #{pubIdx.data.type}::pub_type, #{pubIdx.data.serial}::text)
+        ) as s(id, name, type, serial_number)
+        on (t.id = s.id) or (t.serial_number = s.serial_number) or (t.name = s.name and t.type = s.type)
+        when matched then
+            update set name = COALESCE(s.name, t.name),
+                       type = COALESCE(s.type, t.type),
+                       serial_number = COALESCE(s.serial_number, t.serial_number)
+        when not matched then
+            insert (name, type, serial_number) values (s.name, s.type, s.serial_number)
+        returning
+            t.id, t.name, t.type, t.serial_number, merge_action()
     </select>
 
+    <select id="upsertPublication" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubOut">
+        merge into pub
+        using (
+            values (#{pubIn.id}::bigint, #{pubIn.pubDate}::date, #{pubIn.pubIdxId}::bigint, #{pubIn.details}::jsonb)
+        ) as s(id, pub_date, pub_idx_id, details)
+        on (pub.id = s.id)
+        when matched then
+            update set pub_date = COALESCE(s.pub_date, pub.pub_date),
+                       pub_idx_id = COALESCE(s.pub_idx_id, pub.pub_idx_id),
+                       details = merge_details(pub.details, s.details)
+        when not matched then
+            insert (pub_date, pub_idx_id, details) values (s.pub_date, s.pub_idx_id, s.details)
+            returning
+                pub.id, pub.pub_date, pub.pub_idx_id, pub.details, merge_action()
+    </select>
 </mapper>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.ArtistMapper">
+    <select id="upsertArtist" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.ArtistOut">
+        merge into artist
+        using (
+            values (#{input.id}::bigint, #{input.data.name}::text, #{input.data.type}::artist_type)
+        ) as s(id, name, type)
+        on (artist.id = s.id) or (artist.name = s.name and artist.type = s.type)
+        when matched then
+            update set name = coalesce(s.name, artist.name),
+                       type = coalesce(s.type, artist.type)
+        when not matched then
+            insert (name, type) values (s.name, s.type)
+        returning
+            artist.id, artist.name, artist.type, merge_action() as action
+    </select>
+
+    <select id="getArtistById" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.ArtistOut">
+        select id, name, type, null as action from artist where id = #{id}
+    </select>
+
+    <select id="upsertSongArtists" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.SongArtistOut">
+        merge into song_artist sa
+        using (
+            values
+            <foreach item="item" collection="songArtists" separator=",">
+                (#{item.songId}::bigint, #{item.artistId}::bigint, #{item.roles}::jsonb)
+            </foreach>
+        ) as s(song_id, artist_id, roles)
+        on (sa.song_id = s.song_id and sa.artist_id = s.artist_id)
+        when matched then
+            update set roles = s.roles
+        when not matched then
+            insert (song_id, artist_id, roles) values (s.song_id, s.artist_id, s.roles)
+        returning sa.song_id, sa.artist_id, sa.roles, merge_action() as action
+    </select>
+</mapper>

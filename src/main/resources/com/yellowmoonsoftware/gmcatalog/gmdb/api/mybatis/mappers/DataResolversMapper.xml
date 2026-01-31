@@ -78,7 +78,7 @@
 
     <select id="getTranscribersByTranscriptionIds" parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.TranscriptionTranscriber">
         select t.id, t.name, tt.transcription_id from transcriber t
-            inner join transcripton_transcriber tt on t.id = tt.transcriber_id
+            inner join transcription_transcriber tt on t.id = tt.transcriber_id
         where
         <foreach collection="transcriptionIds" item="id" open="tt.transcription_id in(" separator="," close=")">
             #{id}
@@ -93,6 +93,7 @@
             p.details || jsonb_build_object('@type', pi.type::text) as details,
             p.pub_date,
             pi.serial_number,
+            pi.id as pub_index_id,
             t.id transcription_id
         from pub p
             inner join pub_idx pi on p.pub_idx_id = pi.id
