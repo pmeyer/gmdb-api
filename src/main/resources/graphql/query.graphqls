@@ -145,7 +145,7 @@ type PubSearchResult {
     id: Long!
     name: String!
     type: PubType!
-    details: PubDetails
+    details: PubDetails!
     pubDate: Date
     serialNumber: String!
     pubIndexId: Long!
