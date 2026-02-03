@@ -94,7 +94,7 @@
                 and (name ~* #{criteria.searchName} or coalesce(details->>'issueName', details->>'edition') ~* #{criteria.searchName})
             </if>
             <if test="criteria.type != null">
-                and pi.type = #{criteria.type}
+                and pi.type = #{criteria.type}::pub_type
             </if>
             <trim prefix="and (p.pub_date is null or (" prefixOverrides="AND " suffix="))">
                 <if test="criteria.dateStart != null">
