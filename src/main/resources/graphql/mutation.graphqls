@@ -10,18 +10,8 @@ type Mutation {
     addBookEdition(bookInput: BookInput!): PubSearchResult!
     # Associates a cover image with an existing publication
     addPubCoverImage(imgInput: PubCoverImageInput!): PubSearchResult!
-
+    # Inserts/updates a pub index
     upsertPubIndex(pubIndexInput: PubIndexInput!): PubIndexResult!
-}
-
-enum UpsertAction { INSERT, UPDATE }
-
-type PubIndexResult {
-    id: Long!
-    name: String!
-    type: PubType!
-    serialNumber: String
-    action: UpsertAction!
 }
 
 # Magazine issue input

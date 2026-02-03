@@ -12,6 +12,10 @@ public class PubIndexOut extends UpsertResult {
     private final PubType type;
     private final String serialNumber;
 
+    public PubIndexOut(final Long id, final String name, final PubType type, final String serialNumber) {
+        this(id, name, type, serialNumber, null);
+    }
+
     public PubIndexOut(final Long id, final String name, final PubType type, final String serialNumber, final MergeAction action) {
         super(action);
         this.id = id;

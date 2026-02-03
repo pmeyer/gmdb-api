@@ -97,4 +97,21 @@
             returning
                 pub.id, pub.pub_date, pub.pub_idx_id, pub.details, merge_action()
     </select>
+
+    <select id="getPubIndices"
+            parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubIndexCriteria"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut">
+        select
+            pi.id,
+            pi.name,
+            pi.type,
+            pi.serial_number
+        from pub_idx pi
+        <where>
+            <if test="criteria.type != null">
+                pi.type = #{criteria.type}::pub_type
+            </if>
+        </where>
+        order by name asc
+    </select>
 </mapper>
