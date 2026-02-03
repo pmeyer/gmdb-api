@@ -7,7 +7,7 @@ type Query {
     pubSearch(criteria: PubSearchCriteria! = {}): [PubSearchResult!]!
     albumSearch(criteria: AlbumSearchCriteria! = {}): [AlbumSearchResult!]!
     transcriberSearch(searchName: String): [Transcriber!]!
-    getPubIndices(criteria: PubIndexCriteria! = {}): [PubIndexResult]
+    getPubIndices(criteria: PubIndexCriteria! = {}): [PubIndexResult!]!
 }
 
 input ArtistMatchCriteria {
