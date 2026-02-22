@@ -9,9 +9,7 @@ import pro.chenggang.project.reactive.mybatis.support.r2dbc.delegate.R2dbcMybati
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.support.ForceToUseR2dbcTypeHandlerAdapter;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.AccessibleObject;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
+import java.lang.reflect.*;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -44,7 +42,8 @@ public class JsonTypeHandlerRegistrar {
                         .flatMap(c -> c.getAnnotation(JsonTypeHandler.class).mapDescendants()
                                 ? resolveClassesMatching(new ResolverUtil.IsA(c), packageName)
                                 : Stream.of(c)),
-                        resolveMemberCandidates(packageName))
+                        Stream.concat(resolveMemberCandidates(packageName),
+                                resolveConstructorArgCandidates(packageName)))
                 .distinct();
     }
 
@@ -63,6 +62,39 @@ public class JsonTypeHandlerRegistrar {
                 .find(test, packageName)
                 .getClasses()
                 .stream();
+    }
+
+    protected Stream<? extends Class<?>> resolveConstructorArgCandidates(final String packageName) {
+        ConstructorArgAnnotatedWith jsonTypeHandlerAnnotationTest = ConstructorArgAnnotatedWith.annotation(JsonTypeHandler.class);
+
+        return new ResolverUtil<>()
+                .find(jsonTypeHandlerAnnotationTest, packageName)
+                .getClasses()
+                .stream()
+                .flatMap(jsonTypeHandlerAnnotationTest::getAnnotatedConstructorArgsTypes);
+    }
+
+    @RequiredArgsConstructor(staticName = "annotation")
+    static class ConstructorArgAnnotatedWith implements ResolverUtil.Test {
+        private final Class<? extends Annotation> annotation;
+
+        @Override
+        public boolean matches(Class<?> type) {
+            return getConstructorArgsForType(type)
+                    .anyMatch(f -> f.isAnnotationPresent(annotation));
+        }
+
+        public Stream<? extends Class<?>> getAnnotatedConstructorArgsTypes(Class<?> type) {
+            return getConstructorArgsForType(type)
+                    .filter(m -> m.isAnnotationPresent(annotation))
+                    .map(Parameter::getType)
+                    .filter(Objects::nonNull);
+        }
+
+        protected Stream<? extends Parameter> getConstructorArgsForType(Class<?> type) {
+            return Arrays.stream(type.getDeclaredConstructors())
+                    .flatMap(c -> Arrays.stream(c.getParameters()));
+        }
     }
 
     @RequiredArgsConstructor(staticName = "annotation")
