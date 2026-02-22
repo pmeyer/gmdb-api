@@ -61,6 +61,7 @@
               and type = #{criteria.type}
           </if>
         group by id, name, type
+        order by name, type
     </select>
 
     <sql id="pubSearchSelect">
