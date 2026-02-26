@@ -1,6 +1,10 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.controller;
 
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.AlbumOut;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.ArtistOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.*;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.AlbumMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.ArtistMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.DataResolversMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
@@ -11,6 +15,7 @@ import reactor.util.function.Tuples;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -20,6 +25,8 @@ import static java.util.stream.Collectors.toMap;
 @RequiredArgsConstructor
 public class SongController {
     private final DataResolversMapper mapper;
+    private final AlbumMapper albumMapper;
+    private final ArtistMapper artistMapper;
 
     @BatchMapping(typeName = "Song", field = "album")
     public Mono<Map<SongSearchResult, SongAlbum>> albumForSong(final Set<SongSearchResult> songs) {
@@ -31,11 +38,29 @@ public class SongController {
         return commonAlbumFetch(songs);
     }
 
+    @BatchMapping(typeName = "SongAlbum", field = "artist")
+    public Mono<Map<SongAlbum, ArtistOut>> artistForSongAlbum(final Set<SongAlbum> songAlbums) {
+        Map<Long, List<SongAlbum>> artistAlbumMap = songAlbums.stream()
+                .filter(a -> Objects.nonNull(a.primaryArtistId()))
+                .collect(groupingBy(SongAlbum::primaryArtistId));
+
+        return artistMapper.getArtistsByIds(artistAlbumMap.keySet())
+                .collectMap(ArtistOut::id)
+                .map(m -> m.entrySet()
+                        .stream()
+                        .flatMap(e -> artistAlbumMap.get(e.getKey())
+                                .stream()
+                                .map(a -> Tuples.of(a, e.getValue())))
+                        .collect(toMap(Tuple2::getT1, Tuple2::getT2)));
+    }
+
     private Mono<Map<SongSearchResult, SongAlbum>> commonAlbumFetch(final Set<SongSearchResult> songs) {
             final Map<Long, List<SongSearchResult>> albumSongMap = songs.stream()
+                    .filter(s -> Objects.nonNull(s.albumId()))
                     .collect(groupingBy(SongSearchResult::albumId));
-            return mapper.getAlbumsFromIds(albumSongMap.keySet())
-                    .collectMap(AlbumSearchResult::id)
+
+            return albumMapper.getAlbumsByIds(albumSongMap.keySet())
+                    .collectMap(AlbumOut::id)
                     .map(m -> m.entrySet()
                             .stream()
                             .flatMap(e -> albumSongMap.get(e.getKey())

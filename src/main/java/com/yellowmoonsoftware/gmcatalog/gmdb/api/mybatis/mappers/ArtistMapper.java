@@ -10,10 +10,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
+import java.util.Set;
 
 @Mapper
 public interface ArtistMapper {
     Mono<ArtistOut> getArtistById(@Param("id") final Long id);
     Mono<ArtistOut> upsertArtist(@Param("input") final ArtistInput input);
     Flux<SongArtistOut> upsertSongArtists(@Param("songArtists") final List<SongArtistIn> songArtists);
+    Flux<ArtistOut> getArtistsByIds(@Param("artistIds") final Set<Long> artistIds);
 }

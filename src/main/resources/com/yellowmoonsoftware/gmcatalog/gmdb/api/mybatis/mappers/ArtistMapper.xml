@@ -20,6 +20,13 @@
         select id, name, type, null as action from artist where id = #{id}
     </select>
 
+    <select id="getArtistsByIds" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.ArtistOut">
+        select id, name, type, null as action from artist where
+        <foreach collection="artistIds" item="id" open="id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
     <select id="upsertSongArtists" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.SongArtistOut">
         merge into song_artist sa
         using (

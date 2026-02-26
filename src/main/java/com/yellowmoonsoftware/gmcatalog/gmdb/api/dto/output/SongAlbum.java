@@ -1,5 +1,7 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output;
 
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.AlbumOut;
+
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -9,12 +11,12 @@ public record SongAlbum(
         Integer trackNumber,
         LocalDate releaseDate,
         String albumArtUrl,
-        Artist artist
+        Long primaryArtistId
 ) {
 
-    public SongAlbum(AlbumSearchResult album, SongSearchResult song) {
+    public SongAlbum(AlbumOut album, SongSearchResult song) {
         this(album.id(), album.title(), song.trackNumber(),
-                album.releaseDate(), album.albumArtUrl(), album.artist());
+                album.details().releaseDate(), album.details().albumArtUrl(), album.primaryArtistId());
     }
 
     @Override
