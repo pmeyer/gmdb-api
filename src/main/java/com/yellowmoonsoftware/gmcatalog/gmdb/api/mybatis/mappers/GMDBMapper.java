@@ -18,6 +18,5 @@ public interface GMDBMapper {
     Flux<ArtistSearchResult> artistSearch(@Param("criteria") final ArtistSearchCriteria criteria);
     Mono<PubSearchResult> getPub(@Param("pubId") final Long pubId);
     Flux<PubSearchResult> pubSearch(@Param("criteria") final PubSearchCriteria criteria);
-    Flux<AlbumSearchResult> albumSearch(@Param("criteria") final AlbumSearchCriteria criteria);
     Mono<PubIndexOut> getPubIndex(@Param("pubIdxId") final Long pubIdxId);
 }

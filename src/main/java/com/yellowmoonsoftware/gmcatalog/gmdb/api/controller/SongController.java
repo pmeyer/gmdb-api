@@ -27,6 +27,7 @@ public class SongController {
     private final DataResolversMapper mapper;
     private final AlbumMapper albumMapper;
     private final ArtistMapper artistMapper;
+    private final SharedDataResolvers sharedDataResolvers;
 
     @BatchMapping(typeName = "Song", field = "album")
     public Mono<Map<SongSearchResult, SongAlbum>> albumForSong(final Set<SongSearchResult> songs) {
@@ -40,18 +41,7 @@ public class SongController {
 
     @BatchMapping(typeName = "SongAlbum", field = "artist")
     public Mono<Map<SongAlbum, ArtistOut>> artistForSongAlbum(final Set<SongAlbum> songAlbums) {
-        Map<Long, List<SongAlbum>> artistAlbumMap = songAlbums.stream()
-                .filter(a -> Objects.nonNull(a.primaryArtistId()))
-                .collect(groupingBy(SongAlbum::primaryArtistId));
-
-        return artistMapper.getArtistsByIds(artistAlbumMap.keySet())
-                .collectMap(ArtistOut::id)
-                .map(m -> m.entrySet()
-                        .stream()
-                        .flatMap(e -> artistAlbumMap.get(e.getKey())
-                                .stream()
-                                .map(a -> Tuples.of(a, e.getValue())))
-                        .collect(toMap(Tuple2::getT1, Tuple2::getT2)));
+       return sharedDataResolvers.artistsForAlbumArtistIdContainer(songAlbums);
     }
 
     private Mono<Map<SongSearchResult, SongAlbum>> commonAlbumFetch(final Set<SongSearchResult> songs) {

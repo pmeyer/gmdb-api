@@ -115,42 +115,6 @@
             p.id
     </select>
 
-    <select id="albumSearch" parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.AlbumSearchCriteria" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.AlbumSearchResult">
-        select
-            a.id,
-            a.title,
-            d.release_date,
-            d.album_cover_url,
-            case when a.primary_artist_id is not null then
-                json_build_object('id', aa.id, 'name', aa.name, 'type', aa.type)
-            end artist
-        from album a
-                join lateral (select
-                    case
-                        when (a.details->>'releaseDate') ~ '^\d\d\d\d-\d\d-\d\d$' then (a.details->>'releaseDate')::date
-                    end release_date,
-                    a.details->>'albumCoverUrl' album_cover_url
-                ) as d on true
-                 left join artist aa on a.primary_artist_id = aa.id
-        where
-            exists(select * from transcription t inner join song s on t.song_id = s.id where s.album_id = a.id)
-        <if test="criteria.searchName != null and criteria.searchName != ''">
-            and (a.title ~* #{criteria.searchName} or aa.name ~* #{criteria.searchName})
-        </if>
-        <trim prefix="and (d.release_date is null or (" prefixOverrides="AND " suffix="))">
-            <if test="criteria.dateStart != null">
-                d.release_date &gt;= #{criteria.dateStart}
-            </if>
-            <if test="criteria.dateEnd != null">
-                and d.release_date &lt;= #{criteria.dateEnd}
-            </if>
-        </trim>
-        order by d.release_date nulls first,
-            a.title,
-            aa.name nulls first,
-            a.id
-    </select>
-
     <select id="getPubIndex" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut">
         select
             id,

@@ -12,7 +12,7 @@ public record SongAlbum(
         LocalDate releaseDate,
         String albumArtUrl,
         Long primaryArtistId
-) {
+) implements HasAlbumPrimaryArtistId {
 
     public SongAlbum(AlbumOut album, SongSearchResult song) {
         this(album.id(), album.title(), song.trackNumber(),

@@ -1,0 +1,9 @@
+enum OrderByDirection {
+    ASC
+    DESC
+}
+
+enum OrderByNulls {
+    NULLS_FIRST
+    NULLS_LAST
+}

@@ -1,5 +1,6 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output;
 
+import javax.naming.directory.SearchResult;
 import java.time.LocalDate;
 
 public record AlbumSearchResult(
@@ -7,5 +8,5 @@ public record AlbumSearchResult(
     String title,
     LocalDate releaseDate,
     String albumArtUrl,
-    Artist artist
-) { }
+    Long primaryArtistId
+) implements HasAlbumPrimaryArtistId { }

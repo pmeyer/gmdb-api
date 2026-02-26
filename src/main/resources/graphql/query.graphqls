@@ -153,10 +153,25 @@ type PubSearchResult {
     transcriptions: [PubTranscription!]
 }
 
+enum AlbumOrderBy {
+    RELEASE_DATE
+    TITLE
+    ARTIST
+}
+
+input AlbumOrderBySpec {
+    column: AlbumOrderBy!
+    # Default to DB sort order (typ. ASC)
+    direction: OrderByDirection
+    # Default to DB sort order (typ. NULLS LAST for ASC, NULLS FIRST for DESC
+    nullsOrder: OrderByNulls
+}
+
 input AlbumSearchCriteria {
     searchName: String
     dateStart: Date
     dateEnd: Date
+    orderBy: [AlbumOrderBySpec!]
 }
 
 type AlbumSearchResult {

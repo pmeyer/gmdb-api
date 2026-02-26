@@ -27,4 +27,49 @@
             #{id}
         </foreach>
     </select>
+
+    <select id="albumSearch" parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.AlbumSearchCriteria" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.AlbumOut">
+        select a.id, a.title, a.details, a.primary_artist_id, null as action, d.release_date
+        from album a
+            join lateral (select
+                            case when (a.details->>'releaseDate') ~ '^\d\d\d\d-\d\d-\d\d$'
+                                then (a.details->>'releaseDate')::date
+                            end release_date
+                          ) as d on true
+            left join artist aa on a.primary_artist_id = aa.id
+        <where>
+            <if test="criteria.searchName != null and criteria.searchName != ''">
+                (a.title ~* #{criteria.searchName} or aa.name ~* #{criteria.searchName})
+            </if>
+            <trim prefix="and (d.release_date is null or (" prefixOverrides="AND " suffix="))">
+                <if test="criteria.dateStart != null">
+                    d.release_date &gt;= #{criteria.dateStart}
+                </if>
+                <if test="criteria.dateEnd != null">
+                    and d.release_date &lt;= #{criteria.dateEnd}
+                </if>
+            </trim>
+        </where>
+        <trim prefix="ORDER BY" prefixOverrides=",">
+            <foreach collection="criteria.orderBy" item="ord" separator=",">
+                <bind name="direction" value="ord.direction.clause"/>
+                <bind name="nulls" value="ord.nullsOrder.clause"/>
+                <choose>
+                    <when test="ord.column.name() == 'TITLE'">
+                        a.title
+                    </when>
+                    <when test="ord.column.name() == 'RELEASE_DATE'">
+                        d.release_date
+                    </when>
+                </choose>
+                <if test="ord.direction.clause != null">
+                    ${ord.direction.clause}
+                </if>
+                <if test="ord.nullsOrder.clause != null">
+                    ${ord.nullsOrder.clause}
+                </if>
+            </foreach>
+            ,a.id
+        </trim>
+    </select>
  </mapper>
