@@ -42,4 +42,76 @@
             insert (song_id, artist_id, roles) values (s.song_id, s.artist_id, s.roles)
         returning sa.song_id, sa.artist_id, sa.roles, merge_action() as action
     </select>
+
+    <select id="artistSearch" parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistSearchCriteria" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.ArtistSearchResult">
+        with artists as (
+            select
+                a.id,
+                a.name,
+                a.type,
+                role,
+                sa.song_id
+            from artist a
+                inner join song_artist sa on a.id = sa.artist_id
+                join lateral jsonb_array_elements_text(sa.roles) as role on true
+        union all
+            select
+                a.id,
+                a.name,
+                a.type,
+                'ALBUM_ARTIST' role,
+                s.id song_id
+            from artist a
+                inner join album al on a.id = al.primary_artist_id
+                inner join song s on al.id = s.album_id
+        )
+        select
+            id,
+            name,
+            type,
+            jsonb_agg(distinct role) matched_roles
+        from artists
+        <where>
+            <if test="criteria.restrictToTranscribedArtists != null and criteria.restrictToTranscribedArtists">
+                exists(select * from transcription t where t.song_id = artists.song_id)
+            </if>
+            <if test="criteria.roles != null">
+                <foreach collection="criteria.roles" item="role" open="and role in(" separator="," close=")">
+                    #{role}
+                </foreach>
+            </if>
+            <if test="criteria.searchName != null and criteria.searchName != ''">
+                and name ~* #{criteria.searchName}
+            </if>
+            <if test="criteria.type != null">
+                and type = #{criteria.type}
+            </if>
+        </where>
+        group by id, name, type
+        <if test="criteria.orderBy != null">
+            <trim prefix="ORDER BY" prefixOverrides=",">
+                <foreach collection="criteria.orderBy" item="ord" separator=",">
+                    <bind name="direction" value="ord.direction.clause"/>
+                    <bind name="nulls" value="ord.nullsOrder.clause"/>
+                    <choose>
+                        <when test="ord.column.name() == 'NAME'">
+                            name
+                        </when>
+                        <when test="ord.column.name() == 'NAME_TITLE_SORT'">
+                            REGEXP_REPLACE(name, '^(The|A|An)\s+', '', 'i')
+                        </when>
+                        <when test="ord.column.name() == 'TYPE'">
+                            type
+                        </when>
+                    </choose>
+                    <if test="ord.direction.clause != null">
+                        ${ord.direction.clause}
+                    </if>
+                    <if test="ord.nullsOrder.clause != null">
+                        ${ord.nullsOrder.clause}
+                    </if>
+                </foreach>
+            </trim>
+        </if>
+    </select>
 </mapper>

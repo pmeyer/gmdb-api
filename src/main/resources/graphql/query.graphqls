@@ -90,6 +90,23 @@ type PubTranscription {
     transcribers: [Transcriber!]
 }
 
+enum ArtistOrderBy {
+    # Sort by Artist name, alphabetical
+    NAME
+    # Sort by Artist name, title sort semantics (ignoring The, A, An, etc.)
+    NAME_TITLE_SORT
+    # Sort by Artist type
+    TYPE
+}
+
+input ArtistOrderBySpec {
+    column: ArtistOrderBy!
+    # Default to DB sort order (typ. ASC)
+    direction: OrderByDirection
+    # Default to DB sort order (typ. NULLS LAST for ASC, NULLS FIRST for DESC
+    nullsOrder: OrderByNulls
+}
+
 enum ArtistSearchRole {
     WORDS_BY
     MUSIC_BY
@@ -101,6 +118,8 @@ input ArtistSearchCriteria {
     searchName: String
     type: ArtistType
     roles: [ArtistSearchRole!]
+    restrictToTranscribedArtists: Boolean
+    orderBy: [ArtistOrderBySpec!]
 }
 
 type ArtistSearchResult {

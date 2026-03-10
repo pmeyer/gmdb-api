@@ -4,6 +4,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.*;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.*;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.AlbumMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.ArtistMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.GMDBMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.PublicationIndexService;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ public class QueryController {
     private final GMDBMapper gmdbMapper;
     private final PublicationIndexService publicationIndexService;
     private final AlbumMapper albumMapper;
+    private final ArtistMapper artistMapper;
 
     @QueryMapping
     public Flux<SongSearchResult> songSearch(@Argument final SongSearchCriteria criteria) {
@@ -27,7 +29,7 @@ public class QueryController {
 
     @QueryMapping
     public Flux<ArtistSearchResult> artistSearch(@Argument final ArtistSearchCriteria criteria) {
-        return gmdbMapper.artistSearch(criteria);
+        return artistMapper.artistSearch(criteria);
     }
 
     @QueryMapping

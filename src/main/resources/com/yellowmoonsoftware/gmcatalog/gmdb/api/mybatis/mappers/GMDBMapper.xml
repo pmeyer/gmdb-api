@@ -19,51 +19,6 @@
         from song
     </select>
 
-    <select id="artistSearch" parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistSearchCriteria" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.ArtistSearchResult">
-        with artists as (
-            select
-                a.id,
-                a.name,
-                a.type,
-                role,
-                sa.song_id
-            from artist a
-                     inner join song_artist sa on a.id = sa.artist_id
-                     join lateral jsonb_array_elements_text(sa.roles) as role on true
-            union all
-            select
-                a.id,
-                a.name,
-                a.type,
-                'ALBUM_ARTIST' role,
-                s.id song_id
-            from artist a
-                     inner join album al on a.id = al.primary_artist_id
-                     inner join song s on al.id = s.album_id
-        )
-        select
-            id,
-            name,
-            type,
-            jsonb_agg(distinct role) matched_roles
-        from artists
-        where
-            exists(select * from transcription t where t.song_id = artists.song_id)
-          <if test="criteria.roles != null">
-            <foreach collection="criteria.roles" item="role" open="and role in(" separator="," close=")">
-                #{role}
-            </foreach>
-          </if>
-          <if test="criteria.searchName != null and criteria.searchName != ''">
-              and name ~* #{criteria.searchName}
-          </if>
-          <if test="criteria.type != null">
-              and type = #{criteria.type}
-          </if>
-        group by id, name, type
-        order by name, type
-    </select>
-
     <sql id="pubSearchSelect">
         select
             p.id,
