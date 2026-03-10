@@ -50,26 +50,28 @@
                 </if>
             </trim>
         </where>
-        <trim prefix="ORDER BY" prefixOverrides=",">
-            <foreach collection="criteria.orderBy" item="ord" separator=",">
-                <bind name="direction" value="ord.direction.clause"/>
-                <bind name="nulls" value="ord.nullsOrder.clause"/>
-                <choose>
-                    <when test="ord.column.name() == 'TITLE'">
-                        a.title
-                    </when>
-                    <when test="ord.column.name() == 'RELEASE_DATE'">
-                        d.release_date
-                    </when>
-                </choose>
-                <if test="ord.direction.clause != null">
-                    ${ord.direction.clause}
-                </if>
-                <if test="ord.nullsOrder.clause != null">
-                    ${ord.nullsOrder.clause}
-                </if>
-            </foreach>
-            ,a.id
-        </trim>
+        <if test="criteria.orderBy != null">
+            <trim prefix="ORDER BY" prefixOverrides=",">
+                <foreach collection="criteria.orderBy" item="ord" separator=",">
+                    <bind name="direction" value="ord.direction.clause"/>
+                    <bind name="nulls" value="ord.nullsOrder.clause"/>
+                    <choose>
+                        <when test="ord.column.name() == 'TITLE'">
+                            a.title
+                        </when>
+                        <when test="ord.column.name() == 'RELEASE_DATE'">
+                            d.release_date
+                        </when>
+                    </choose>
+                    <if test="ord.direction.clause != null">
+                        ${ord.direction.clause}
+                    </if>
+                    <if test="ord.nullsOrder.clause != null">
+                        ${ord.nullsOrder.clause}
+                    </if>
+                </foreach>
+                ,a.id
+            </trim>
+        </if>
     </select>
  </mapper>

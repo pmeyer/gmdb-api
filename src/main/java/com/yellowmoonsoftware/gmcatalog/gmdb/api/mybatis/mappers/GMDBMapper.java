@@ -1,7 +1,5 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers;
 
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.AlbumSearchCriteria;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistSearchCriteria;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubSearchCriteria;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongSearchCriteria;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.*;
