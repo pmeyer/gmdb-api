@@ -1,10 +1,10 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input;
 
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.ArtistType;
-import org.springframework.lang.NonNull;
+import jakarta.validation.constraints.NotNull;
 
 public record ArtistData(
-        @NonNull String name,
-        @NonNull ArtistType type
+        @NotNull String name,
+        @NotNull ArtistType type
 ) {
 }
