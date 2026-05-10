@@ -36,15 +36,18 @@ class ArtistSearchResultTest {
     }
 
     @Test
-    void equalityCurrentlyIgnoresArtistState() {
+    void equalityUsesArtistBaseIdentityAndIgnoresMatchedRoles() {
         ArtistSearchResult result = new ArtistSearchResult(1L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.PERFORMED_BY));
         ArtistSearchResult sameId = new ArtistSearchResult(1L, "Different", ArtistType.PERSON, Set.of(ArtistSearchRole.WORDS_BY));
+        ArtistSearchResult sameArtistDifferentRoles = new ArtistSearchResult(1L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.ALBUM_ARTIST));
         ArtistSearchResult differentId = new ArtistSearchResult(2L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.PERFORMED_BY));
 
         assertThat(result)
             .isEqualTo(sameId)
             .hasSameHashCodeAs(sameId)
-            .isEqualTo(differentId);
+            .isEqualTo(sameArtistDifferentRoles)
+            .hasSameHashCodeAs(sameArtistDifferentRoles)
+            .isNotEqualTo(differentId);
     }
 
     @Test
