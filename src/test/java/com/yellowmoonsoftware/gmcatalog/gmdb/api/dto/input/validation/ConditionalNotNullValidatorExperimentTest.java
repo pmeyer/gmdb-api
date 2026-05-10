@@ -1,6 +1,8 @@
-package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input;
+package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation;
 
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.ArtistType;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistData;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistInput;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
@@ -10,7 +12,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class ConditionalNotNullValidatorTest {
+class ConditionalNotNullValidatorExperimentTest {
 
     @Test
     void testValid() {
