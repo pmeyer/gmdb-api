@@ -2,6 +2,7 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input;
 
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.IdAndDataContainer;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.PubType;
+import jakarta.validation.ConstraintViolation;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,5 +41,23 @@ class PubIndexInputTest {
             .hasSameHashCodeAs(sameValues)
             .isNotEqualTo(differentData);
         assertThat(input.toString()).contains("id=1", "Guide");
+    }
+
+    @Test
+    void validatesWhenIdOrDataIsPresent() {
+        final PubIndexInput idOnly = new PubIndexInput(1L, null);
+        final PubIndexInput dataOnly = new PubIndexInput(null, new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1"));
+
+        assertThat(ValidationTestSupport.validate(idOnly)).isEmpty();
+        assertThat(ValidationTestSupport.validate(dataOnly)).isEmpty();
+    }
+
+    @Test
+    void validatesIdOrDataRequirement() {
+        final PubIndexInput input = new PubIndexInput(null, null);
+
+        assertThat(ValidationTestSupport.validate(input))
+            .extracting(ConstraintViolation::getMessage)
+            .containsExactly("PubIndexInput must have an ID or data");
     }
 }

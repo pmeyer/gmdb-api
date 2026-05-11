@@ -1,6 +1,7 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input;
 
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.IdAndDataContainer;
+import jakarta.validation.ConstraintViolation;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,5 +30,23 @@ class TranscriberInputTest {
             .hasSameHashCodeAs(sameValues)
             .isNotEqualTo(differentName);
         assertThat(input.toString()).contains("id=1", "name=Alice");
+    }
+
+    @Test
+    void validatesWhenIdOrNameIsPresent() {
+        final TranscriberInput idOnly = new TranscriberInput(1L, null);
+        final TranscriberInput nameOnly = new TranscriberInput(null, "Alice");
+
+        assertThat(ValidationTestSupport.validate(idOnly)).isEmpty();
+        assertThat(ValidationTestSupport.validate(nameOnly)).isEmpty();
+    }
+
+    @Test
+    void validatesIdOrNameRequirement() {
+        final TranscriberInput input = new TranscriberInput(null, null);
+
+        assertThat(ValidationTestSupport.validate(input))
+            .extracting(ConstraintViolation::getMessage)
+            .containsExactly("TranscriberInput must have an ID or data (or both)");
     }
 }

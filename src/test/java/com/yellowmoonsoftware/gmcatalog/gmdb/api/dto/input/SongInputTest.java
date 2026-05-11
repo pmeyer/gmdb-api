@@ -3,6 +3,7 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.ArtistType;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.IdAndDataContainer;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.SongArtistRole;
+import jakarta.validation.ConstraintViolation;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 class SongInputTest {
 
@@ -59,6 +61,49 @@ class SongInputTest {
             .hasSameHashCodeAs(sameValues)
             .isNotEqualTo(differentId);
         assertThat(input.toString()).contains("id=1", "Opener");
+    }
+
+    @Test
+    void validatesWhenIdOrDataIsPresent() {
+        final SongInput idOnly = new SongInput(1L, null);
+        final SongInput dataOnly = new SongInput(null, songData());
+
+        assertThat(ValidationTestSupport.validate(idOnly)).isEmpty();
+        assertThat(ValidationTestSupport.validate(dataOnly)).isEmpty();
+    }
+
+    @Test
+    void validatesIdOrDataRequirement() {
+        final SongInput input = new SongInput(null, null);
+
+        assertThat(ValidationTestSupport.validate(input))
+            .extracting(ConstraintViolation::getMessage)
+            .containsExactly("SongInput must have an ID or data");
+    }
+
+    @Test
+    void cascadesValidationToSongArtists() {
+        final SongInput.SongData data = new SongInput.SongData(
+            "Opener",
+            List.of(new SongArtistInput(null, null, Set.of())),
+            null
+        );
+        final SongInput input = new SongInput(null, data);
+
+        assertThat(ValidationTestSupport.validate(input))
+            .extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
+            .containsExactly(tuple("data.artists[0]", "SongArtistInput must have an ID or data"));
+    }
+
+    @Test
+    void cascadesValidationToAlbumTrackAlbum() {
+        final SongInput.AlbumTrackInput invalidTrack = new SongInput.AlbumTrackInput(3, new AlbumInput(null, null));
+        final SongInput.SongData data = new SongInput.SongData("Opener", List.of(), invalidTrack);
+        final SongInput input = new SongInput(null, data);
+
+        assertThat(ValidationTestSupport.validate(input))
+            .extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
+            .containsExactly(tuple("data.albumTrack.album", "AlbumInput must have an ID or data"));
     }
 
     private static SongInput.SongData songData() {
