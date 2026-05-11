@@ -111,6 +111,49 @@ class AlbumServiceTest {
         verifyNoMoreInteractions(albumMapper);
     }
 
+    @Test
+    void upsertAlbumAllowsPrimaryArtistServiceToReturnEmpty() {
+        ArtistInput primaryArtist = new ArtistInput(20L, null);
+        AlbumInput input = new AlbumInput(null, new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), primaryArtist));
+        AlbumOut output = albumOut(1L);
+        when(artistService.upsertArtist(primaryArtist)).thenReturn(Mono.empty());
+        when(albumMapper.upsertAlbum(any(AlbumIn.class))).thenReturn(Mono.just(output));
+
+        StepVerifier.create(albumService.upsertAlbum(input))
+            .expectNext(output)
+            .verifyComplete();
+
+        ArgumentCaptor<AlbumIn> captor = ArgumentCaptor.forClass(AlbumIn.class);
+        verify(artistService).upsertArtist(primaryArtist);
+        verify(albumMapper).upsertAlbum(captor.capture());
+        assertThat(captor.getValue().primaryArtistId()).isNull();
+        verifyNoInteractions(fileService);
+        verifyNoMoreInteractions(albumMapper, artistService);
+    }
+
+    @Test
+    void upsertAlbumPropagatesCoverArtStorageFailure() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_JPEG);
+        when(coverArt.filename()).thenReturn("cover.jpg");
+        when(coverArt.headers()).thenReturn(headers);
+        AlbumInput input = new AlbumInput(null, new AlbumData("Live Set", coverArt, LocalDate.of(2020, 4, 5), null));
+        AlbumOut output = albumOut(1L);
+        IllegalStateException failure = new IllegalStateException("storage failed");
+        when(albumMapper.upsertAlbum(any(AlbumIn.class))).thenReturn(Mono.just(output));
+        when(fileService.put(coverArt, ResourceSlug.ALBUM_ART, Map.of("id", output.details().resourceId())))
+            .thenReturn(Mono.error(failure));
+
+        StepVerifier.create(albumService.upsertAlbum(input))
+            .expectErrorSatisfies(error -> assertThat(error).isSameAs(failure))
+            .verify();
+
+        verify(albumMapper).upsertAlbum(any(AlbumIn.class));
+        verify(fileService).put(coverArt, ResourceSlug.ALBUM_ART, Map.of("id", output.details().resourceId()));
+        verifyNoInteractions(artistService);
+        verifyNoMoreInteractions(albumMapper, fileService);
+    }
+
     private static AlbumOut albumOut(Long id) {
         AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5)) {
             @Override

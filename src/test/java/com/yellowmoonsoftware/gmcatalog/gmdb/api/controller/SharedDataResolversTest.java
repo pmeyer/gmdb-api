@@ -18,6 +18,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,5 +45,31 @@ class SharedDataResolversTest {
             .verifyComplete();
 
         verify(artistMapper).getArtistsByIds(Set.of(10L));
+    }
+
+    @Test
+    void artistsForAlbumArtistIdContainerOmitsContainersWhenArtistIsNotFetched() {
+        AlbumSearchResult album = new AlbumSearchResult(1L, "First", LocalDate.of(2020, 1, 1), null, 10L);
+        when(artistMapper.getArtistsByIds(Set.of(10L))).thenReturn(Flux.empty());
+
+        StepVerifier.create(resolvers.artistsForAlbumArtistIdContainer(Set.of(album)))
+            .assertNext(result -> assertThat(result).isEmpty())
+            .verifyComplete();
+
+        verify(artistMapper).getArtistsByIds(Set.of(10L));
+        verifyNoMoreInteractions(artistMapper);
+    }
+
+    @Test
+    void artistsForAlbumArtistIdContainerHandlesOnlyNullArtistIds() {
+        AlbumSearchResult missingArtist = new AlbumSearchResult(3L, "Third", LocalDate.of(2022, 1, 1), null, null);
+        when(artistMapper.getArtistsByIds(Set.of())).thenReturn(Flux.empty());
+
+        StepVerifier.create(resolvers.artistsForAlbumArtistIdContainer(Set.of(missingArtist)))
+            .assertNext(result -> assertThat(result).isEmpty())
+            .verifyComplete();
+
+        verify(artistMapper).getArtistsByIds(Set.of());
+        verifyNoMoreInteractions(artistMapper);
     }
 }
