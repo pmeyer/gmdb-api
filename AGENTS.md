@@ -20,12 +20,15 @@
 - Name test classes `*Tests`; keep focused, deterministic fixtures, and include representative resource files under `src/test/resources` when needed.
 - Use assertj for assertions
 - Test classes in isolation, creating mocks for any dependencies that provide behavior to the class under test. Dependencies that just hold data can be used directly.
-- Mocks used should be defined at class level using annotations.
+- Mocks used should be defined at class level using annotations wherever possible.
+- Do not use mocks in place of simple classes (for example DTOs) where the real implementation would suffice.
+- Do not mock `ObjectMapper` unless absolutely necessary.
+- Do not attempt to mock static methods or final classes, or other constructs where generally accepted mocking practices are not possible.
 
 ## Commit & Pull Request Guidelines
-- Follow the repository’s short, imperative commit messages (e.g., `Add mapper for albums`). Group related edits together instead of squashing unrelated fixes.
+- Use [convention commits](https://www.conventionalcommits.org/en/v1.0.0/#:~:text=The%20Conventional%20Commits%20specification%20is,automated%20tools%20on%20top%20of). 
+- Group related edits together instead of squashing unrelated fixes.
 - PRs should describe context, list notable changes, and call out schema updates or required migrations. Link Jira/GitHub issues when available.
-- Include validation evidence (commands run, screenshots of GraphiQL output) and flag configuration changes so reviewers can reproduce locally.
 
 ## Security & Configuration Tips
 - Database and file-store credentials are sourced via `application.yml`; prefer environment overrides for secrets.

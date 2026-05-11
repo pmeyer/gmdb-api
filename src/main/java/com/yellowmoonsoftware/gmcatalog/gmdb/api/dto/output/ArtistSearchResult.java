@@ -13,7 +13,7 @@ import java.util.Set;
 @Getter
 @ToString(callSuper = true)
 @Accessors(fluent = true)
-@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = false)
+@EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
 public class ArtistSearchResult extends ArtistBase {
     private final Set<ArtistSearchRole> matchedRoles;
 
