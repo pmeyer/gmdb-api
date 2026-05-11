@@ -2,27 +2,22 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input;
 
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.ArtistType;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.IdAndDataContainer;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.SongArtistRole;
 import jakarta.validation.ConstraintViolation;
 import org.junit.jupiter.api.Test;
-
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.tuple;
 
-class SongArtistInputTest {
+class ArtistInputTest {
 
     @Test
     void exposesRecordValuesAndDataContract() {
         final ArtistData data = new ArtistData("Alice", ArtistType.PERSON);
-        final Set<SongArtistRole> roles = Set.of(SongArtistRole.WORDS_BY, SongArtistRole.MUSIC_BY);
 
-        final SongArtistInput input = new SongArtistInput(1L, data, roles);
+        final ArtistInput input = new ArtistInput(1L, data);
 
         assertThat(input.id()).isEqualTo(1L);
         assertThat(input.data()).isSameAs(data);
-        assertThat(input.roles()).isSameAs(roles);
         assertThat((IdAndDataContainer<ArtistData>) input).extracting(IdAndDataContainer::data)
             .isSameAs(data);
     }
@@ -30,21 +25,21 @@ class SongArtistInputTest {
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
         final ArtistData data = new ArtistData("Alice", ArtistType.PERSON);
-        final SongArtistInput input = new SongArtistInput(1L, data, Set.of(SongArtistRole.WORDS_BY));
-        final SongArtistInput sameValues = new SongArtistInput(1L, data, Set.of(SongArtistRole.WORDS_BY));
-        final SongArtistInput differentRoles = new SongArtistInput(1L, data, Set.of(SongArtistRole.MUSIC_BY));
+        final ArtistInput input = new ArtistInput(1L, data);
+        final ArtistInput sameValues = new ArtistInput(1L, data);
+        final ArtistInput differentId = new ArtistInput(2L, data);
 
         assertThat(input)
             .isEqualTo(sameValues)
             .hasSameHashCodeAs(sameValues)
-            .isNotEqualTo(differentRoles);
-        assertThat(input.toString()).contains("id=1", "roles=[WORDS_BY]");
+            .isNotEqualTo(differentId);
+        assertThat(input.toString()).contains("id=1", "Alice");
     }
 
     @Test
     void validatesWhenIdOrDataIsPresent() {
-        final SongArtistInput idOnly = new SongArtistInput(1L, null, Set.of());
-        final SongArtistInput dataOnly = new SongArtistInput(null, new ArtistData("Alice", ArtistType.PERSON), Set.of());
+        final ArtistInput idOnly = new ArtistInput(1L, null);
+        final ArtistInput dataOnly = new ArtistInput(null, new ArtistData("Alice", ArtistType.PERSON));
 
         assertThat(ValidationTestSupport.validate(idOnly)).isEmpty();
         assertThat(ValidationTestSupport.validate(dataOnly)).isEmpty();
@@ -52,16 +47,16 @@ class SongArtistInputTest {
 
     @Test
     void validatesIdOrDataRequirement() {
-        final SongArtistInput input = new SongArtistInput(null, null, Set.of());
+        final ArtistInput input = new ArtistInput(null, null);
 
         assertThat(ValidationTestSupport.validate(input))
             .extracting(ConstraintViolation::getMessage)
-            .containsExactly("SongArtistInput must have an ID or data");
+            .containsExactly("ArtistInput must have an ID or data");
     }
 
     @Test
     void cascadesValidationToArtistData() {
-        final SongArtistInput input = new SongArtistInput(null, new ArtistData(null, null), Set.of());
+        final ArtistInput input = new ArtistInput(null, new ArtistData(null, null));
 
         assertThat(ValidationTestSupport.validate(input))
             .extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)

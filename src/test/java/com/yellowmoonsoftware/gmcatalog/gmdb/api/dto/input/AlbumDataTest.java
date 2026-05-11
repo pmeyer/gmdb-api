@@ -4,6 +4,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.ArtistType;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.ResourceAttributes;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.AlbumDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.ResourceSlug;
+import jakarta.validation.ConstraintViolation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -15,6 +16,7 @@ import org.springframework.http.codec.multipart.FilePart;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -59,6 +61,15 @@ class AlbumDataTest {
 
         assertThat(details.releaseDate()).isEqualTo(LocalDate.of(2020, 4, 5));
         assertThat(details.resources()).isEmpty();
+    }
+
+    @Test
+    void cascadesValidationToPrimaryArtist() {
+        final AlbumData data = new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), new ArtistInput(null, null));
+
+        assertThat(ValidationTestSupport.validate(data))
+            .extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
+            .containsExactly(tuple("primaryArtist", "ArtistInput must have an ID or data"));
     }
 
     private static ArtistInput primaryArtist() {
