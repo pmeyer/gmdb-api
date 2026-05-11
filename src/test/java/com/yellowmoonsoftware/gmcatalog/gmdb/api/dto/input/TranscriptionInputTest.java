@@ -24,10 +24,10 @@ class TranscriptionInputTest {
 
     @Test
     void exposesTranscriptionFields() {
-        SongInput song = new SongInput(1L, null);
-        List<TranscriberInput> transcribers = List.of(new TranscriberInput(2L, null));
+        final SongInput song = new SongInput(1L, null);
+        final List<TranscriberInput> transcribers = List.of(new TranscriberInput(2L, null));
 
-        TranscriptionInput input = new TranscriptionInput(song, 12, file, transcribers);
+        final TranscriptionInput input = new TranscriptionInput(song, 12, file, transcribers);
 
         assertThat(input.song()).isSameAs(song);
         assertThat(input.pageNumber()).isEqualTo(12);
@@ -37,13 +37,13 @@ class TranscriptionInputTest {
 
     @Test
     void convertsToDetailsWithTranscriptionResource() {
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         when(file.filename()).thenReturn("page.pdf");
         when(file.headers()).thenReturn(headers);
-        TranscriptionInput input = new TranscriptionInput(new SongInput(1L, null), 12, file, List.of());
+        final TranscriptionInput input = new TranscriptionInput(new SongInput(1L, null), 12, file, List.of());
 
-        TranscriptionDetails details = input.toDetails();
+        final TranscriptionDetails details = input.toDetails();
 
         assertThat(details.pageNumber()).isEqualTo(12);
         assertThat(details.resources())
@@ -52,9 +52,9 @@ class TranscriptionInputTest {
 
     @Test
     void convertsToDetailsWithoutResourceWhenFileIsNull() {
-        TranscriptionInput input = new TranscriptionInput(new SongInput(1L, null), 12, null, List.of());
+        final TranscriptionInput input = new TranscriptionInput(new SongInput(1L, null), 12, null, List.of());
 
-        TranscriptionDetails details = input.toDetails();
+        final TranscriptionDetails details = input.toDetails();
 
         assertThat(details.pageNumber()).isEqualTo(12);
         assertThat(details.resources()).isEmpty();

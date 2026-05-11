@@ -11,9 +11,9 @@ class AlbumOutTest {
 
     @Test
     void exposesAlbumFieldsAndAction() {
-        AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5));
+        final AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5));
 
-        AlbumOut album = new AlbumOut(1L, "Live Set", details, 2L, MergeAction.UPDATE);
+        final AlbumOut album = new AlbumOut(1L, "Live Set", details, 2L, MergeAction.UPDATE);
 
         assertThat(album.id()).isEqualTo(1L);
         assertThat(album.title()).isEqualTo("Live Set");

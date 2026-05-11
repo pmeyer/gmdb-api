@@ -11,10 +11,10 @@ class PubOutTest {
 
     @Test
     void exposesPublicationFieldsAndAction() {
-        LocalDate pubDate = LocalDate.of(2024, 1, 15);
-        BookDetails details = new BookDetails("First");
+        final LocalDate pubDate = LocalDate.of(2024, 1, 15);
+        final BookDetails details = new BookDetails("First");
 
-        PubOut publication = new PubOut(1L, pubDate, 2L, details, MergeAction.INSERT);
+        final PubOut publication = new PubOut(1L, pubDate, 2L, details, MergeAction.INSERT);
 
         assertThat(publication.id()).isEqualTo(1L);
         assertThat(publication.pubDate()).isEqualTo(pubDate);

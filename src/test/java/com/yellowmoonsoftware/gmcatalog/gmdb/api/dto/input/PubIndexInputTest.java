@@ -10,9 +10,9 @@ class PubIndexInputTest {
 
     @Test
     void exposesRecordValuesAndDataContract() {
-        PubIndexInput.Data data = new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1");
+        final PubIndexInput.Data data = new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1");
 
-        PubIndexInput input = new PubIndexInput(1L, data);
+        final PubIndexInput input = new PubIndexInput(1L, data);
 
         assertThat(input.id()).isEqualTo(1L);
         assertThat(input.data()).isSameAs(data);
@@ -22,7 +22,7 @@ class PubIndexInputTest {
 
     @Test
     void dataRecordExposesValues() {
-        PubIndexInput.Data data = new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1");
+        final PubIndexInput.Data data = new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1");
 
         assertThat(data.name()).isEqualTo("Guide");
         assertThat(data.type()).isEqualTo(PubType.BOOK);
@@ -31,9 +31,9 @@ class PubIndexInputTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        PubIndexInput input = new PubIndexInput(1L, new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1"));
-        PubIndexInput sameValues = new PubIndexInput(1L, new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1"));
-        PubIndexInput differentData = new PubIndexInput(1L, new PubIndexInput.Data("Magazine", PubType.MAG, "ISSN-1"));
+        final PubIndexInput input = new PubIndexInput(1L, new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1"));
+        final PubIndexInput sameValues = new PubIndexInput(1L, new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1"));
+        final PubIndexInput differentData = new PubIndexInput(1L, new PubIndexInput.Data("Magazine", PubType.MAG, "ISSN-1"));
 
         assertThat(input)
             .isEqualTo(sameValues)

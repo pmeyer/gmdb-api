@@ -16,11 +16,11 @@ class ArtistSearchCriteriaTest {
 
     @Test
     void exposesRecordValues() {
-        Set<ArtistSearchRole> roles = Set.of(ArtistSearchRole.PERFORMED_BY);
-        LinkedHashSet<OrderSpec<ArtistSearchCriteria.OrderBy>> orderBy = new LinkedHashSet<>();
+        final Set<ArtistSearchRole> roles = Set.of(ArtistSearchRole.PERFORMED_BY);
+        final LinkedHashSet<OrderSpec<ArtistSearchCriteria.OrderBy>> orderBy = new LinkedHashSet<>();
         orderBy.add(new OrderSpec<>(ArtistSearchCriteria.OrderBy.NAME_TITLE_SORT, OrderByDirection.ASC, OrderByNulls.NULLS_LAST));
 
-        ArtistSearchCriteria criteria = new ArtistSearchCriteria("alice", ArtistType.PERSON, roles, true, orderBy);
+        final ArtistSearchCriteria criteria = new ArtistSearchCriteria("alice", ArtistType.PERSON, roles, true, orderBy);
 
         assertThat(criteria.searchName()).isEqualTo("alice");
         assertThat(criteria.type()).isEqualTo(ArtistType.PERSON);
@@ -42,9 +42,9 @@ class ArtistSearchCriteriaTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        ArtistSearchCriteria criteria = new ArtistSearchCriteria("alice", ArtistType.PERSON, Set.of(ArtistSearchRole.PERFORMED_BY), true, new LinkedHashSet<>());
-        ArtistSearchCriteria sameValues = new ArtistSearchCriteria("alice", ArtistType.PERSON, Set.of(ArtistSearchRole.PERFORMED_BY), true, new LinkedHashSet<>());
-        ArtistSearchCriteria differentType = new ArtistSearchCriteria("alice", ArtistType.BAND, Set.of(ArtistSearchRole.PERFORMED_BY), true, new LinkedHashSet<>());
+        final ArtistSearchCriteria criteria = new ArtistSearchCriteria("alice", ArtistType.PERSON, Set.of(ArtistSearchRole.PERFORMED_BY), true, new LinkedHashSet<>());
+        final ArtistSearchCriteria sameValues = new ArtistSearchCriteria("alice", ArtistType.PERSON, Set.of(ArtistSearchRole.PERFORMED_BY), true, new LinkedHashSet<>());
+        final ArtistSearchCriteria differentType = new ArtistSearchCriteria("alice", ArtistType.BAND, Set.of(ArtistSearchRole.PERFORMED_BY), true, new LinkedHashSet<>());
 
         assertThat(criteria)
             .isEqualTo(sameValues)

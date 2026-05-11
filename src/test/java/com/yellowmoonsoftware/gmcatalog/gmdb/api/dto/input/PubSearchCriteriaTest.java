@@ -11,10 +11,10 @@ class PubSearchCriteriaTest {
 
     @Test
     void exposesRecordValues() {
-        LocalDate dateStart = LocalDate.of(2020, 1, 1);
-        LocalDate dateEnd = LocalDate.of(2024, 1, 1);
+        final LocalDate dateStart = LocalDate.of(2020, 1, 1);
+        final LocalDate dateEnd = LocalDate.of(2024, 1, 1);
 
-        PubSearchCriteria criteria = new PubSearchCriteria("guide", PubType.BOOK, dateStart, dateEnd, true);
+        final PubSearchCriteria criteria = new PubSearchCriteria("guide", PubType.BOOK, dateStart, dateEnd, true);
 
         assertThat(criteria.searchName()).isEqualTo("guide");
         assertThat(criteria.type()).isEqualTo(PubType.BOOK);
@@ -25,9 +25,9 @@ class PubSearchCriteriaTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        PubSearchCriteria criteria = new PubSearchCriteria("guide", PubType.BOOK, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
-        PubSearchCriteria sameValues = new PubSearchCriteria("guide", PubType.BOOK, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
-        PubSearchCriteria differentType = new PubSearchCriteria("guide", PubType.MAG, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
+        final PubSearchCriteria criteria = new PubSearchCriteria("guide", PubType.BOOK, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
+        final PubSearchCriteria sameValues = new PubSearchCriteria("guide", PubType.BOOK, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
+        final PubSearchCriteria differentType = new PubSearchCriteria("guide", PubType.MAG, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
 
         assertThat(criteria)
             .isEqualTo(sameValues)

@@ -68,8 +68,8 @@ class MutationControllerTest {
 
     @Test
     void addTranscriptionMapsServiceOutputToGraphQlTranscription() {
-        TranscriptionInput input = new TranscriptionInput(new SongInput(1L, null), 12, null, List.of());
-        TranscriptionInOut output = new TranscriptionInOut(2L, 1L, 3L, new TranscriptionDetails(12), null);
+        final TranscriptionInput input = new TranscriptionInput(new SongInput(1L, null), 12, null, List.of());
+        final TranscriptionInOut output = new TranscriptionInOut(2L, 1L, 3L, new TranscriptionDetails(12), null);
         when(transcriptionService.upsertTranscription(3L, input)).thenReturn(Mono.just(output));
 
         StepVerifier.create(mutationController.addTranscription(3L, input))
@@ -86,8 +86,8 @@ class MutationControllerTest {
 
     @Test
     void addMagazineIssueDelegatesToPublicationService() {
-        MagazineInput input = new MagazineInput(LocalDate.of(2024, 1, 15), new PubIndexInput(1L, null), new MagazineIssueInput("12", "4", "Winter", null), List.of());
-        PubSearchResult output = pubSearchResult();
+        final MagazineInput input = new MagazineInput(LocalDate.of(2024, 1, 15), new PubIndexInput(1L, null), new MagazineIssueInput("12", "4", "Winter", null), List.of());
+        final PubSearchResult output = pubSearchResult();
         when(publicationService.addPub(input)).thenReturn(Mono.just(output));
 
         StepVerifier.create(mutationController.addMagazineIssue(input)).expectNext(output).verifyComplete();
@@ -97,8 +97,8 @@ class MutationControllerTest {
 
     @Test
     void addBookEditionDelegatesToPublicationService() {
-        BookInput input = new BookInput(LocalDate.of(2024, 1, 15), new PubIndexInput(1L, null), new BookEditionInput("First", null), List.of());
-        PubSearchResult output = pubSearchResult();
+        final BookInput input = new BookInput(LocalDate.of(2024, 1, 15), new PubIndexInput(1L, null), new BookEditionInput("First", null), List.of());
+        final PubSearchResult output = pubSearchResult();
         when(publicationService.addPub(input)).thenReturn(Mono.just(output));
 
         StepVerifier.create(mutationController.addBookEdition(input)).expectNext(output).verifyComplete();
@@ -108,12 +108,12 @@ class MutationControllerTest {
 
     @Test
     void addPubCoverImageUpdatesDetailsAndStoresFile() {
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         when(cover.filename()).thenReturn("cover.jpg");
         when(cover.headers()).thenReturn(headers);
-        PubCoverImageInput input = new PubCoverImageInput(1L, cover);
-        PubSearchResult output = pubSearchResult();
+        final PubCoverImageInput input = new PubCoverImageInput(1L, cover);
+        final PubSearchResult output = pubSearchResult();
         when(mapper.updatePubCoverImage(org.mockito.ArgumentMatchers.eq(1L), any())).thenReturn(Mono.just(output));
         when(fileService.put(cover, ResourceSlug.COVER_IMAGE, Map.of("id", output.details().resourceId())))
             .thenReturn(Mono.just(new ResourceReference(ResourceSlug.COVER_IMAGE, "pub/1", "cover.jpg")));
@@ -126,8 +126,8 @@ class MutationControllerTest {
 
     @Test
     void upsertPubIndexDelegatesToPublicationIndexService() {
-        PubIndexInput input = new PubIndexInput(1L, null);
-        PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
+        final PubIndexInput input = new PubIndexInput(1L, null);
+        final PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
         when(pubIndexService.upsertPublicationIndex(input)).thenReturn(Mono.just(output));
 
         StepVerifier.create(mutationController.upsertPubIndex(input)).expectNext(output).verifyComplete();
@@ -136,7 +136,7 @@ class MutationControllerTest {
     }
 
     private static PubSearchResult pubSearchResult() {
-        BookDetails details = new BookDetails("First") {
+        final BookDetails details = new BookDetails("First") {
             @Override
             public UUID resourceId() {
                 return UUID.fromString("00000000-0000-0000-0000-000000000001");

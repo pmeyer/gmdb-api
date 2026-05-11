@@ -11,7 +11,7 @@ class TranscriptionDetailsTest {
 
     @Test
     void exposesPageNumberAndEmptyResourceState() {
-        TranscriptionDetails details = new TranscriptionDetails(12);
+        final TranscriptionDetails details = new TranscriptionDetails(12);
 
         assertThat(details.pageNumber()).isEqualTo(12);
         assertThat(details.resourceId()).isNull();
@@ -21,7 +21,7 @@ class TranscriptionDetailsTest {
 
     @Test
     void transcriptionUrlUsesTranscriptionResourceWhenPresent() {
-        TranscriptionDetails details = new TranscriptionDetails(12);
+        final TranscriptionDetails details = new TranscriptionDetails(12);
         details.resources().put(ResourceSlug.TRANSCRIPTION, new ResourceAttributes("page.pdf", MediaType.APPLICATION_PDF));
 
         assertThat(details.transcriptionUrl())

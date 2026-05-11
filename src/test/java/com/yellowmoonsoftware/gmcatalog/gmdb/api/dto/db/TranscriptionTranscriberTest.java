@@ -8,7 +8,7 @@ class TranscriptionTranscriberTest {
 
     @Test
     void exposesTranscriptionTranscriberFieldsAndAction() {
-        TranscriptionTranscriber transcriber = new TranscriptionTranscriber(1L, 2L, MergeAction.INSERT);
+        final TranscriptionTranscriber transcriber = new TranscriptionTranscriber(1L, 2L, MergeAction.INSERT);
 
         assertThat(transcriber.transcriptionId()).isEqualTo(1L);
         assertThat(transcriber.transcriberId()).isEqualTo(2L);
@@ -17,7 +17,7 @@ class TranscriptionTranscriberTest {
 
     @Test
     void forInputCreatesValueWithoutAction() {
-        TranscriptionTranscriber transcriber = TranscriptionTranscriber.forInput(1L, 2L);
+        final TranscriptionTranscriber transcriber = TranscriptionTranscriber.forInput(1L, 2L);
 
         assertThat(transcriber.transcriptionId()).isEqualTo(1L);
         assertThat(transcriber.transcriberId()).isEqualTo(2L);

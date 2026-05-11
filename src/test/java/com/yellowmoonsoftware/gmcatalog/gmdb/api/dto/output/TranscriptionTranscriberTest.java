@@ -8,7 +8,7 @@ class TranscriptionTranscriberTest {
 
     @Test
     void exposesTranscriberAndTranscriptionFields() {
-        TranscriptionTranscriber transcriber = new TranscriptionTranscriber(1L, "Alice", 10L);
+        final TranscriptionTranscriber transcriber = new TranscriptionTranscriber(1L, "Alice", 10L);
 
         assertThat(transcriber.id()).isEqualTo(1L);
         assertThat(transcriber.name()).isEqualTo("Alice");
@@ -17,9 +17,9 @@ class TranscriptionTranscriberTest {
 
     @Test
     void equalityUsesInheritedIdAndTranscriptionId() {
-        TranscriptionTranscriber transcriber = new TranscriptionTranscriber(1L, "Alice", 10L);
-        TranscriptionTranscriber sameIdentity = new TranscriptionTranscriber(1L, "Different", 10L);
-        TranscriptionTranscriber differentTranscription = new TranscriptionTranscriber(1L, "Alice", 11L);
+        final TranscriptionTranscriber transcriber = new TranscriptionTranscriber(1L, "Alice", 10L);
+        final TranscriptionTranscriber sameIdentity = new TranscriptionTranscriber(1L, "Different", 10L);
+        final TranscriptionTranscriber differentTranscription = new TranscriptionTranscriber(1L, "Alice", 11L);
 
         assertThat(transcriber)
             .isEqualTo(sameIdentity)
@@ -29,7 +29,7 @@ class TranscriptionTranscriberTest {
 
     @Test
     void toStringIncludesInheritedAndLocalState() {
-        TranscriptionTranscriber transcriber = new TranscriptionTranscriber(1L, "Alice", 10L);
+        final TranscriptionTranscriber transcriber = new TranscriptionTranscriber(1L, "Alice", 10L);
 
         assertThat(transcriber.toString())
             .contains("id=1")

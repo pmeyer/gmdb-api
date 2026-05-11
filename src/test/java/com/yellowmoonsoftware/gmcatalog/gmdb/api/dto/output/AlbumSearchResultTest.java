@@ -10,9 +10,9 @@ class AlbumSearchResultTest {
 
     @Test
     void exposesRecordValuesAndPrimaryArtistContract() {
-        LocalDate releaseDate = LocalDate.of(2023, 8, 1);
+        final LocalDate releaseDate = LocalDate.of(2023, 8, 1);
 
-        AlbumSearchResult result = new AlbumSearchResult(
+        final AlbumSearchResult result = new AlbumSearchResult(
             1L,
             "Live Set",
             releaseDate,
@@ -31,9 +31,9 @@ class AlbumSearchResultTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        AlbumSearchResult result = album();
-        AlbumSearchResult sameValues = album();
-        AlbumSearchResult differentTitle = new AlbumSearchResult(1L, "Studio", LocalDate.of(2023, 8, 1), "art.jpg", 20L);
+        final AlbumSearchResult result = album();
+        final AlbumSearchResult sameValues = album();
+        final AlbumSearchResult differentTitle = new AlbumSearchResult(1L, "Studio", LocalDate.of(2023, 8, 1), "art.jpg", 20L);
 
         assertThat(result)
             .isEqualTo(sameValues)

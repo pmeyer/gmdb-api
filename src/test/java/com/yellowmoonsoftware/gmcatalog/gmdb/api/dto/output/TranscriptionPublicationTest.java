@@ -11,10 +11,10 @@ class TranscriptionPublicationTest {
 
     @Test
     void exposesPublicationAndTranscriptionFields() {
-        BookDetails details = new BookDetails("First");
-        LocalDate pubDate = LocalDate.of(2024, 3, 15);
+        final BookDetails details = new BookDetails("First");
+        final LocalDate pubDate = LocalDate.of(2024, 3, 15);
 
-        TranscriptionPublication publication = new TranscriptionPublication(
+        final TranscriptionPublication publication = new TranscriptionPublication(
             1L,
             "Guide",
             PubType.BOOK,
@@ -37,10 +37,10 @@ class TranscriptionPublicationTest {
 
     @Test
     void equalityUsesPublicationIdAndTranscriptionId() {
-        TranscriptionPublication publication = publication(1L, 200L);
-        TranscriptionPublication sameIdentity = publication(1L, 200L);
-        TranscriptionPublication differentPublication = publication(2L, 200L);
-        TranscriptionPublication differentTranscription = publication(1L, 201L);
+        final TranscriptionPublication publication = publication(1L, 200L);
+        final TranscriptionPublication sameIdentity = publication(1L, 200L);
+        final TranscriptionPublication differentPublication = publication(2L, 200L);
+        final TranscriptionPublication differentTranscription = publication(1L, 201L);
 
         assertThat(publication)
             .isEqualTo(sameIdentity)
@@ -51,7 +51,7 @@ class TranscriptionPublicationTest {
 
     @Test
     void toStringIncludesInheritedAndLocalState() {
-        TranscriptionPublication publication = publication(1L, 200L);
+        final TranscriptionPublication publication = publication(1L, 200L);
 
         assertThat(publication.toString())
             .contains("id=1")

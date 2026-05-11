@@ -50,8 +50,8 @@ class SongControllerTest {
 
     @Test
     void albumForSongMapsAlbumsToSongsAndSkipsSongsWithoutAlbumId() {
-        SongSearchResult withAlbum = new SongSearchResult(1L, "Opener", 3, 10L);
-        SongSearchResult withoutAlbum = new SongSearchResult(2L, "Solo", null, null);
+        final SongSearchResult withAlbum = new SongSearchResult(1L, "Opener", 3, 10L);
+        final SongSearchResult withoutAlbum = new SongSearchResult(2L, "Solo", null, null);
         when(albumMapper.getAlbumsByIds(Set.of(10L))).thenReturn(Flux.just(albumOut()));
 
         StepVerifier.create(songController.albumForSong(Set.of(withAlbum, withoutAlbum)))
@@ -67,7 +67,7 @@ class SongControllerTest {
 
     @Test
     void albumForSongSearchResultUsesCommonAlbumFetch() {
-        SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
+        final SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
         when(albumMapper.getAlbumsByIds(Set.of(10L))).thenReturn(Flux.just(albumOut()));
 
         StepVerifier.create(songController.albumForSongSearchResult(Set.of(song)))
@@ -79,8 +79,8 @@ class SongControllerTest {
 
     @Test
     void artistForSongAlbumDelegatesToSharedResolver() {
-        SongAlbum album = new SongAlbum(10L, "Live Set", 3, LocalDate.of(2020, 4, 5), null, 20L);
-        Map<SongAlbum, ArtistOut> output = Map.of(album, new ArtistOut(20L, "Alice", ArtistType.PERSON, null));
+        final SongAlbum album = new SongAlbum(10L, "Live Set", 3, LocalDate.of(2020, 4, 5), null, 20L);
+        final Map<SongAlbum, ArtistOut> output = Map.of(album, new ArtistOut(20L, "Alice", ArtistType.PERSON, null));
         when(sharedDataResolvers.artistsForAlbumArtistIdContainer(Set.of(album))).thenReturn(Mono.just(output));
 
         StepVerifier.create(songController.artistForSongAlbum(Set.of(album)))
@@ -92,8 +92,8 @@ class SongControllerTest {
 
     @Test
     void artistsForSongGroupsArtistsBySong() {
-        SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
-        SongArtist artist = new SongArtist(20L, "Alice", ArtistType.PERSON, 1L, new SongArtistRole[]{SongArtistRole.WORDS_BY});
+        final SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
+        final SongArtist artist = new SongArtist(20L, "Alice", ArtistType.PERSON, 1L, new SongArtistRole[]{SongArtistRole.WORDS_BY});
         when(mapper.getSongArtistBySongIds(Set.of(1L))).thenReturn(Flux.just(artist));
 
         StepVerifier.create(songController.artistsForSong(Set.of(song)))
@@ -105,8 +105,8 @@ class SongControllerTest {
 
     @Test
     void artistsForSongSearchResultUsesCommonArtistFetch() {
-        SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
-        SongArtist artist = new SongArtist(20L, "Alice", ArtistType.PERSON, 1L, new SongArtistRole[]{SongArtistRole.WORDS_BY});
+        final SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
+        final SongArtist artist = new SongArtist(20L, "Alice", ArtistType.PERSON, 1L, new SongArtistRole[]{SongArtistRole.WORDS_BY});
         when(mapper.getSongArtistBySongIds(Set.of(1L))).thenReturn(Flux.just(artist));
 
         StepVerifier.create(songController.artistsForSongSearchResult(Set.of(song)))
@@ -118,8 +118,8 @@ class SongControllerTest {
 
     @Test
     void transcriptionsGroupsBySong() {
-        SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
-        Transcription transcription = new Transcription(30L, "url", 12, 1L, 40L);
+        final SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
+        final Transcription transcription = new Transcription(30L, "url", 12, 1L, 40L);
         when(mapper.getSongTranscriptionBySongIds(Set.of(1L))).thenReturn(Flux.just(transcription));
 
         StepVerifier.create(songController.transcriptions(Set.of(song)))

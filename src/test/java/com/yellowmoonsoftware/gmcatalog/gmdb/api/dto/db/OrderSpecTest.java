@@ -8,8 +8,8 @@ class OrderSpecTest {
 
     @Test
     void equalityUsesOnlyColumnWhenEnumTypeMatches() {
-        OrderSpec<FirstColumn> ascending = new OrderSpec<>(FirstColumn.NAME, OrderByDirection.ASC, OrderByNulls.NULLS_FIRST);
-        OrderSpec<FirstColumn> descending = new OrderSpec<>(FirstColumn.NAME, OrderByDirection.DESC, OrderByNulls.NULLS_LAST);
+        final OrderSpec<FirstColumn> ascending = new OrderSpec<>(FirstColumn.NAME, OrderByDirection.ASC, OrderByNulls.NULLS_FIRST);
+        final OrderSpec<FirstColumn> descending = new OrderSpec<>(FirstColumn.NAME, OrderByDirection.DESC, OrderByNulls.NULLS_LAST);
 
         assertThat(ascending)
             .isEqualTo(descending)
@@ -18,23 +18,23 @@ class OrderSpecTest {
 
     @Test
     void equalityRejectsDifferentColumnsInSameEnumType() {
-        OrderSpec<FirstColumn> name = new OrderSpec<>(FirstColumn.NAME, OrderByDirection.ASC, OrderByNulls.NULLS_FIRST);
-        OrderSpec<FirstColumn> title = new OrderSpec<>(FirstColumn.TITLE, OrderByDirection.ASC, OrderByNulls.NULLS_FIRST);
+        final OrderSpec<FirstColumn> name = new OrderSpec<>(FirstColumn.NAME, OrderByDirection.ASC, OrderByNulls.NULLS_FIRST);
+        final OrderSpec<FirstColumn> title = new OrderSpec<>(FirstColumn.TITLE, OrderByDirection.ASC, OrderByNulls.NULLS_FIRST);
 
         assertThat(name).isNotEqualTo(title);
     }
 
     @Test
     void equalityRejectsSameEnumNameFromDifferentEnumType() {
-        OrderSpec<FirstColumn> first = new OrderSpec<>(FirstColumn.NAME, OrderByDirection.ASC, OrderByNulls.NULLS_FIRST);
-        OrderSpec<SecondColumn> second = new OrderSpec<>(SecondColumn.NAME, OrderByDirection.ASC, OrderByNulls.NULLS_FIRST);
+        final OrderSpec<FirstColumn> first = new OrderSpec<>(FirstColumn.NAME, OrderByDirection.ASC, OrderByNulls.NULLS_FIRST);
+        final OrderSpec<SecondColumn> second = new OrderSpec<>(SecondColumn.NAME, OrderByDirection.ASC, OrderByNulls.NULLS_FIRST);
 
         assertThat(first).isNotEqualTo(second);
     }
 
     @Test
     void equalityHandlesSelfNullAndOtherTypes() {
-        OrderSpec<FirstColumn> spec = new OrderSpec<>(FirstColumn.NAME, null, null);
+        final OrderSpec<FirstColumn> spec = new OrderSpec<>(FirstColumn.NAME, null, null);
 
         assertThat(spec)
             .isEqualTo(spec)

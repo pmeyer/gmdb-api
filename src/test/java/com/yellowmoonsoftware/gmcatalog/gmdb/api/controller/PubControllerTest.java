@@ -30,8 +30,8 @@ class PubControllerTest {
 
     @Test
     void transcriptionsGroupsTranscriptionsByPublication() {
-        PubSearchResult publication = new PubSearchResult(1L, "Guide", PubType.BOOK, new BookDetails("First"), null, "ISBN-1", 2L);
-        Transcription transcription = new Transcription(10L, "url", 12, 20L, 1L);
+        final PubSearchResult publication = new PubSearchResult(1L, "Guide", PubType.BOOK, new BookDetails("First"), null, "ISBN-1", 2L);
+        final Transcription transcription = new Transcription(10L, "url", 12, 20L, 1L);
         when(mapper.getSongTranscriptionsByPubIds(Set.of(1L))).thenReturn(Flux.just(transcription));
 
         StepVerifier.create(pubController.transcriptions(Set.of(publication)))

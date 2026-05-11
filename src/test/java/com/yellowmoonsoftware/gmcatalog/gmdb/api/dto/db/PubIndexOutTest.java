@@ -9,7 +9,7 @@ class PubIndexOutTest {
 
     @Test
     void defaultConstructorLeavesActionNull() {
-        PubIndexOut index = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
+        final PubIndexOut index = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
 
         assertThat(index.id()).isEqualTo(1L);
         assertThat(index.name()).isEqualTo("Guide");
@@ -20,7 +20,7 @@ class PubIndexOutTest {
 
     @Test
     void actionConstructorExposesAction() {
-        PubIndexOut index = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1", MergeAction.UPDATE);
+        final PubIndexOut index = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1", MergeAction.UPDATE);
 
         assertThat(index.action()).isEqualTo(MergeAction.UPDATE);
     }

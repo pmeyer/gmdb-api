@@ -48,9 +48,9 @@ class SongServiceTest {
 
     @Test
     void albumTrackRecordExposesValues() {
-        AlbumOut album = albumOut(2L);
+        final AlbumOut album = albumOut(2L);
 
-        SongService.AlbumTrack albumTrack = new SongService.AlbumTrack(album, 3);
+        final SongService.AlbumTrack albumTrack = new SongService.AlbumTrack(album, 3);
 
         assertThat(albumTrack.album()).isSameAs(album);
         assertThat(albumTrack.trackNumber()).isEqualTo(3);
@@ -58,8 +58,8 @@ class SongServiceTest {
 
     @Test
     void upsertSongLoadsExistingSongForReferenceInput() {
-        SongInput input = new SongInput(1L, null);
-        SongOut output = new SongOut(1L, "Opener", null, null, null);
+        final SongInput input = new SongInput(1L, null);
+        final SongOut output = new SongOut(1L, "Opener", null, null, null);
         when(songMapper.getSongById(1L)).thenReturn(Mono.just(output));
 
         StepVerifier.create(songService.upsertSong(input))
@@ -73,10 +73,10 @@ class SongServiceTest {
 
     @Test
     void upsertSongUpsertsAlbumAndSongArtistsWhenAlbumTrackPresent() {
-        AlbumInput albumInput = albumInput();
-        SongInput.SongData data = new SongInput.SongData("Opener", List.of(), new SongInput.AlbumTrackInput(3, albumInput));
-        SongInput input = new SongInput(null, data);
-        SongOut output = new SongOut(10L, "Opener", new SongDetails(3), 2L, null);
+        final AlbumInput albumInput = albumInput();
+        final SongInput.SongData data = new SongInput.SongData("Opener", List.of(), new SongInput.AlbumTrackInput(3, albumInput));
+        final SongInput input = new SongInput(null, data);
+        final SongOut output = new SongOut(10L, "Opener", new SongDetails(3), 2L, null);
         when(albumService.upsertAlbum(albumInput)).thenReturn(Mono.just(albumOut(2L)));
         when(songMapper.upsertSong(any(SongIn.class))).thenReturn(Mono.just(output));
         when(songArtistService.addSongArtists(10L, List.of())).thenReturn(Mono.empty());
@@ -85,7 +85,7 @@ class SongServiceTest {
             .expectNext(output)
             .verifyComplete();
 
-        ArgumentCaptor<SongIn> captor = ArgumentCaptor.forClass(SongIn.class);
+        final ArgumentCaptor<SongIn> captor = ArgumentCaptor.forClass(SongIn.class);
         verify(albumService).upsertAlbum(albumInput);
         verify(songMapper).upsertSong(captor.capture());
         assertThat(captor.getValue().title()).isEqualTo("Opener");
@@ -97,9 +97,9 @@ class SongServiceTest {
 
     @Test
     void upsertSongAllowsMissingAlbumTrack() {
-        SongInput.SongData data = new SongInput.SongData("Opener", List.of(), null);
-        SongInput input = new SongInput(null, data);
-        SongOut output = new SongOut(10L, "Opener", null, null, null);
+        final SongInput.SongData data = new SongInput.SongData("Opener", List.of(), null);
+        final SongInput input = new SongInput(null, data);
+        final SongOut output = new SongOut(10L, "Opener", null, null, null);
         when(songMapper.upsertSong(any(SongIn.class))).thenReturn(Mono.just(output));
         when(songArtistService.addSongArtists(10L, List.of())).thenReturn(Mono.empty());
 
@@ -107,7 +107,7 @@ class SongServiceTest {
             .expectNext(output)
             .verifyComplete();
 
-        ArgumentCaptor<SongIn> captor = ArgumentCaptor.forClass(SongIn.class);
+        final ArgumentCaptor<SongIn> captor = ArgumentCaptor.forClass(SongIn.class);
         verify(songMapper).upsertSong(captor.capture());
         assertThat(captor.getValue().details()).isNull();
         assertThat(captor.getValue().albumId()).isNull();
@@ -117,8 +117,8 @@ class SongServiceTest {
     }
 
     private static AlbumInput albumInput() {
-        ArtistInput artist = new ArtistInput(20L, new ArtistData("Alice", ArtistType.PERSON));
-        AlbumData data = new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), artist);
+        final ArtistInput artist = new ArtistInput(20L, new ArtistData("Alice", ArtistType.PERSON));
+        final AlbumData data = new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), artist);
         return new AlbumInput(2L, data);
     }
 

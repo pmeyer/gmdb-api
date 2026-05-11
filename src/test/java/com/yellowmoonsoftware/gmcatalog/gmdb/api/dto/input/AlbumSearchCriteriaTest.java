@@ -14,12 +14,12 @@ class AlbumSearchCriteriaTest {
 
     @Test
     void exposesRecordValues() {
-        LinkedHashSet<OrderSpec<AlbumSearchCriteria.OrderBy>> orderBy = new LinkedHashSet<>();
+        final LinkedHashSet<OrderSpec<AlbumSearchCriteria.OrderBy>> orderBy = new LinkedHashSet<>();
         orderBy.add(new OrderSpec<>(AlbumSearchCriteria.OrderBy.RELEASE_DATE, OrderByDirection.DESC, OrderByNulls.NULLS_LAST));
-        LocalDate dateStart = LocalDate.of(2020, 1, 1);
-        LocalDate dateEnd = LocalDate.of(2024, 1, 1);
+        final LocalDate dateStart = LocalDate.of(2020, 1, 1);
+        final LocalDate dateEnd = LocalDate.of(2024, 1, 1);
 
-        AlbumSearchCriteria criteria = new AlbumSearchCriteria("live", dateStart, dateEnd, orderBy);
+        final AlbumSearchCriteria criteria = new AlbumSearchCriteria("live", dateStart, dateEnd, orderBy);
 
         assertThat(criteria.searchName()).isEqualTo("live");
         assertThat(criteria.dateStart()).isEqualTo(dateStart);
@@ -40,9 +40,9 @@ class AlbumSearchCriteriaTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        AlbumSearchCriteria criteria = new AlbumSearchCriteria("live", LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), new LinkedHashSet<>());
-        AlbumSearchCriteria sameValues = new AlbumSearchCriteria("live", LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), new LinkedHashSet<>());
-        AlbumSearchCriteria differentSearch = new AlbumSearchCriteria("studio", LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), new LinkedHashSet<>());
+        final AlbumSearchCriteria criteria = new AlbumSearchCriteria("live", LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), new LinkedHashSet<>());
+        final AlbumSearchCriteria sameValues = new AlbumSearchCriteria("live", LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), new LinkedHashSet<>());
+        final AlbumSearchCriteria differentSearch = new AlbumSearchCriteria("studio", LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), new LinkedHashSet<>());
 
         assertThat(criteria)
             .isEqualTo(sameValues)

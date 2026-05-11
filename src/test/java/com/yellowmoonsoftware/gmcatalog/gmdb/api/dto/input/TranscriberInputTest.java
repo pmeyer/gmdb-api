@@ -9,7 +9,7 @@ class TranscriberInputTest {
 
     @Test
     void exposesRecordValuesAndDataContract() {
-        TranscriberInput input = new TranscriberInput(1L, "Alice");
+        final TranscriberInput input = new TranscriberInput(1L, "Alice");
 
         assertThat(input.id()).isEqualTo(1L);
         assertThat(input.name()).isEqualTo("Alice");
@@ -20,9 +20,9 @@ class TranscriberInputTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        TranscriberInput input = new TranscriberInput(1L, "Alice");
-        TranscriberInput sameValues = new TranscriberInput(1L, "Alice");
-        TranscriberInput differentName = new TranscriberInput(1L, "Bob");
+        final TranscriberInput input = new TranscriberInput(1L, "Alice");
+        final TranscriberInput sameValues = new TranscriberInput(1L, "Alice");
+        final TranscriberInput differentName = new TranscriberInput(1L, "Bob");
 
         assertThat(input)
             .isEqualTo(sameValues)

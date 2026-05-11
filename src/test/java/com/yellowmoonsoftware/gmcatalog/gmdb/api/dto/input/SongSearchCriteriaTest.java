@@ -11,11 +11,11 @@ class SongSearchCriteriaTest {
 
     @Test
     void exposesRecordValues() {
-        Set<SongSearchCriteria.ArtistMatchCriteria> artists = Set.of(new SongSearchCriteria.ArtistMatchCriteria(1L, Set.of(ArtistSearchRole.PERFORMED_BY)));
-        Set<Long> albums = Set.of(2L);
-        Set<Long> pubs = Set.of(3L);
+        final Set<SongSearchCriteria.ArtistMatchCriteria> artists = Set.of(new SongSearchCriteria.ArtistMatchCriteria(1L, Set.of(ArtistSearchRole.PERFORMED_BY)));
+        final Set<Long> albums = Set.of(2L);
+        final Set<Long> pubs = Set.of(3L);
 
-        SongSearchCriteria criteria = new SongSearchCriteria("song", "pub", "artist", "album", artists, albums, pubs);
+        final SongSearchCriteria criteria = new SongSearchCriteria("song", "pub", "artist", "album", artists, albums, pubs);
 
         assertThat(criteria.titleSearch()).isEqualTo("song");
         assertThat(criteria.pubNameSearch()).isEqualTo("pub");
@@ -28,9 +28,9 @@ class SongSearchCriteriaTest {
 
     @Test
     void artistMatchCriteriaExposesValues() {
-        Set<ArtistSearchRole> roles = Set.of(ArtistSearchRole.WORDS_BY);
+        final Set<ArtistSearchRole> roles = Set.of(ArtistSearchRole.WORDS_BY);
 
-        SongSearchCriteria.ArtistMatchCriteria criteria = new SongSearchCriteria.ArtistMatchCriteria(1L, roles);
+        final SongSearchCriteria.ArtistMatchCriteria criteria = new SongSearchCriteria.ArtistMatchCriteria(1L, roles);
 
         assertThat(criteria.id()).isEqualTo(1L);
         assertThat(criteria.roles()).isSameAs(roles);
@@ -38,9 +38,9 @@ class SongSearchCriteriaTest {
 
     @Test
     void artistMatchCriteriaEqualityUsesOnlyId() {
-        SongSearchCriteria.ArtistMatchCriteria criteria = new SongSearchCriteria.ArtistMatchCriteria(1L, Set.of(ArtistSearchRole.WORDS_BY));
-        SongSearchCriteria.ArtistMatchCriteria sameId = new SongSearchCriteria.ArtistMatchCriteria(1L, Set.of(ArtistSearchRole.MUSIC_BY));
-        SongSearchCriteria.ArtistMatchCriteria differentId = new SongSearchCriteria.ArtistMatchCriteria(2L, Set.of(ArtistSearchRole.WORDS_BY));
+        final SongSearchCriteria.ArtistMatchCriteria criteria = new SongSearchCriteria.ArtistMatchCriteria(1L, Set.of(ArtistSearchRole.WORDS_BY));
+        final SongSearchCriteria.ArtistMatchCriteria sameId = new SongSearchCriteria.ArtistMatchCriteria(1L, Set.of(ArtistSearchRole.MUSIC_BY));
+        final SongSearchCriteria.ArtistMatchCriteria differentId = new SongSearchCriteria.ArtistMatchCriteria(2L, Set.of(ArtistSearchRole.WORDS_BY));
 
         assertThat(criteria)
             .isEqualTo(sameId)
@@ -51,8 +51,8 @@ class SongSearchCriteriaTest {
 
     @Test
     void artistMatchCriteriaEqualityHandlesNullIds() {
-        SongSearchCriteria.ArtistMatchCriteria criteria = new SongSearchCriteria.ArtistMatchCriteria(null, Set.of(ArtistSearchRole.WORDS_BY));
-        SongSearchCriteria.ArtistMatchCriteria sameNullId = new SongSearchCriteria.ArtistMatchCriteria(null, Set.of(ArtistSearchRole.MUSIC_BY));
+        final SongSearchCriteria.ArtistMatchCriteria criteria = new SongSearchCriteria.ArtistMatchCriteria(null, Set.of(ArtistSearchRole.WORDS_BY));
+        final SongSearchCriteria.ArtistMatchCriteria sameNullId = new SongSearchCriteria.ArtistMatchCriteria(null, Set.of(ArtistSearchRole.MUSIC_BY));
 
         assertThat(criteria)
             .isEqualTo(sameNullId)
@@ -61,9 +61,9 @@ class SongSearchCriteriaTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        SongSearchCriteria criteria = new SongSearchCriteria("song", "pub", "artist", "album", Set.of(), Set.of(2L), Set.of(3L));
-        SongSearchCriteria sameValues = new SongSearchCriteria("song", "pub", "artist", "album", Set.of(), Set.of(2L), Set.of(3L));
-        SongSearchCriteria differentTitle = new SongSearchCriteria("other", "pub", "artist", "album", Set.of(), Set.of(2L), Set.of(3L));
+        final SongSearchCriteria criteria = new SongSearchCriteria("song", "pub", "artist", "album", Set.of(), Set.of(2L), Set.of(3L));
+        final SongSearchCriteria sameValues = new SongSearchCriteria("song", "pub", "artist", "album", Set.of(), Set.of(2L), Set.of(3L));
+        final SongSearchCriteria differentTitle = new SongSearchCriteria("other", "pub", "artist", "album", Set.of(), Set.of(2L), Set.of(3L));
 
         assertThat(criteria)
             .isEqualTo(sameValues)

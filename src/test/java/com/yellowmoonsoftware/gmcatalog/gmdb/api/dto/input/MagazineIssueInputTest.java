@@ -22,7 +22,7 @@ class MagazineIssueInputTest {
 
     @Test
     void exposesIssueFieldsAndCover() {
-        MagazineIssueInput input = new MagazineIssueInput("12", "4", "Winter", cover);
+        final MagazineIssueInput input = new MagazineIssueInput("12", "4", "Winter", cover);
 
         assertThat(input.volume()).isEqualTo("12");
         assertThat(input.issue()).isEqualTo("4");
@@ -32,13 +32,13 @@ class MagazineIssueInputTest {
 
     @Test
     void convertsToDetailsWithCoverResource() {
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         when(cover.filename()).thenReturn("cover.jpg");
         when(cover.headers()).thenReturn(headers);
-        MagazineIssueInput input = new MagazineIssueInput("12", "4", "Winter", cover);
+        final MagazineIssueInput input = new MagazineIssueInput("12", "4", "Winter", cover);
 
-        MagDetails details = input.toDetails();
+        final MagDetails details = input.toDetails();
 
         assertThat(details.volume()).isEqualTo("12");
         assertThat(details.issue()).isEqualTo("4");
@@ -49,9 +49,9 @@ class MagazineIssueInputTest {
 
     @Test
     void convertsToDetailsWithoutCoverResourceWhenCoverIsNull() {
-        MagazineIssueInput input = new MagazineIssueInput("12", "4", "Winter", null);
+        final MagazineIssueInput input = new MagazineIssueInput("12", "4", "Winter", null);
 
-        MagDetails details = input.toDetails();
+        final MagDetails details = input.toDetails();
 
         assertThat(details.volume()).isEqualTo("12");
         assertThat(details.issue()).isEqualTo("4");

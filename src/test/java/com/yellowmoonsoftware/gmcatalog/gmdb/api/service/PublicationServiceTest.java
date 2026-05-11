@@ -63,16 +63,16 @@ class PublicationServiceTest {
 
     @Test
     void addPubStoresCoverTranscriptionsAndReturnsPublication() {
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         when(cover.filename()).thenReturn("cover.jpg");
         when(cover.headers()).thenReturn(headers);
-        PubIndexInput index = new PubIndexInput(1L, null);
-        TranscriptionInput transcription = new TranscriptionInput(new SongInput(2L, null), 12, null, List.of());
-        BookInput input = new BookInput(LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", cover), List.of(transcription));
-        PubIndexOut pubIndex = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
-        PubOut pubOut = new PubOut(10L, input.pubDate(), 1L, bookDetails(), null);
-        PubSearchResult result = new PubSearchResult(10L, "Guide", PubType.BOOK, pubOut.details(), input.pubDate(), "ISBN-1", 1L);
+        final PubIndexInput index = new PubIndexInput(1L, null);
+        final TranscriptionInput transcription = new TranscriptionInput(new SongInput(2L, null), 12, null, List.of());
+        final BookInput input = new BookInput(LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", cover), List.of(transcription));
+        final PubIndexOut pubIndex = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
+        final PubOut pubOut = new PubOut(10L, input.pubDate(), 1L, bookDetails(), null);
+        final PubSearchResult result = new PubSearchResult(10L, "Guide", PubType.BOOK, pubOut.details(), input.pubDate(), "ISBN-1", 1L);
         when(pubIndexService.upsertPublicationIndex(index)).thenReturn(Mono.just(pubIndex));
         when(pubMutationMapper.upsertPublication(any())).thenReturn(Mono.just(pubOut));
         when(fileService.put(cover, ResourceSlug.COVER_IMAGE, Map.of("id", pubOut.details().resourceId())))
@@ -95,8 +95,8 @@ class PublicationServiceTest {
 
     @Test
     void addPubRejectsMismatchedPublicationType() {
-        PubIndexInput index = new PubIndexInput(1L, null);
-        BookInput input = new BookInput(LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", null), List.of());
+        final PubIndexInput index = new PubIndexInput(1L, null);
+        final BookInput input = new BookInput(LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", null), List.of());
         when(pubIndexService.upsertPublicationIndex(index))
             .thenReturn(Mono.just(new PubIndexOut(1L, "Magazine", PubType.MAG, "ISSN-1")));
 

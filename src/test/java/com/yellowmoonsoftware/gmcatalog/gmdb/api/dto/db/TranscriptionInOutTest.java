@@ -8,9 +8,9 @@ class TranscriptionInOutTest {
 
     @Test
     void exposesTranscriptionFieldsAndAction() {
-        TranscriptionDetails details = new TranscriptionDetails(12);
+        final TranscriptionDetails details = new TranscriptionDetails(12);
 
-        TranscriptionInOut transcription = new TranscriptionInOut(1L, 2L, 3L, details, MergeAction.INSERT);
+        final TranscriptionInOut transcription = new TranscriptionInOut(1L, 2L, 3L, details, MergeAction.INSERT);
 
         assertThat(transcription.id()).isEqualTo(1L);
         assertThat(transcription.songId()).isEqualTo(2L);
@@ -21,9 +21,9 @@ class TranscriptionInOutTest {
 
     @Test
     void forNewTranscriptionCreatesInsertInputWithoutIdOrAction() {
-        TranscriptionDetails details = new TranscriptionDetails(12);
+        final TranscriptionDetails details = new TranscriptionDetails(12);
 
-        TranscriptionInOut transcription = TranscriptionInOut.forNewTranscription(2L, 3L, details);
+        final TranscriptionInOut transcription = TranscriptionInOut.forNewTranscription(2L, 3L, details);
 
         assertThat(transcription.id()).isNull();
         assertThat(transcription.songId()).isEqualTo(2L);

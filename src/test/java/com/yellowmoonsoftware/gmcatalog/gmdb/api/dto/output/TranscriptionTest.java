@@ -8,7 +8,7 @@ class TranscriptionTest {
 
     @Test
     void exposesRecordValues() {
-        Transcription transcription = new Transcription(1L, "/resources/transcriptions/one.pdf", 12, 20L, 30L);
+        final Transcription transcription = new Transcription(1L, "/resources/transcriptions/one.pdf", 12, 20L, 30L);
 
         assertThat(transcription.id()).isEqualTo(1L);
         assertThat(transcription.url()).isEqualTo("/resources/transcriptions/one.pdf");
@@ -19,9 +19,9 @@ class TranscriptionTest {
 
     @Test
     void equalityUsesOnlyId() {
-        Transcription transcription = new Transcription(1L, "/one.pdf", 12, 20L, 30L);
-        Transcription sameId = new Transcription(1L, "/other.pdf", 99, 21L, 31L);
-        Transcription differentId = new Transcription(2L, "/one.pdf", 12, 20L, 30L);
+        final Transcription transcription = new Transcription(1L, "/one.pdf", 12, 20L, 30L);
+        final Transcription sameId = new Transcription(1L, "/other.pdf", 99, 21L, 31L);
+        final Transcription differentId = new Transcription(2L, "/one.pdf", 12, 20L, 30L);
 
         assertThat(transcription)
             .isEqualTo(sameId)
@@ -31,15 +31,15 @@ class TranscriptionTest {
 
     @Test
     void equalityRejectsDifferentTypes() {
-        Transcription transcription = new Transcription(1L, "/one.pdf", 12, 20L, 30L);
+        final Transcription transcription = new Transcription(1L, "/one.pdf", 12, 20L, 30L);
 
         assertThat(transcription).isNotEqualTo("1");
     }
 
     @Test
     void equalityAndHashCodeHandleNullIds() {
-        Transcription transcription = new Transcription(null, "/one.pdf", 12, 20L, 30L);
-        Transcription sameNullId = new Transcription(null, "/other.pdf", 99, 21L, 31L);
+        final Transcription transcription = new Transcription(null, "/one.pdf", 12, 20L, 30L);
+        final Transcription sameNullId = new Transcription(null, "/other.pdf", 99, 21L, 31L);
 
         assertThat(transcription)
             .isEqualTo(sameNullId)
@@ -49,7 +49,7 @@ class TranscriptionTest {
 
     @Test
     void toStringIncludesRecordValues() {
-        Transcription transcription = new Transcription(1L, "/one.pdf", 12, 20L, 30L);
+        final Transcription transcription = new Transcription(1L, "/one.pdf", 12, 20L, 30L);
 
         assertThat(transcription.toString()).contains("id=1", "url=/one.pdf", "pageNumber=12");
     }

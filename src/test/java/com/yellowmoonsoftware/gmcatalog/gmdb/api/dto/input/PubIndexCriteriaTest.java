@@ -9,16 +9,16 @@ class PubIndexCriteriaTest {
 
     @Test
     void exposesRecordValues() {
-        PubIndexCriteria criteria = new PubIndexCriteria(PubType.BOOK);
+        final PubIndexCriteria criteria = new PubIndexCriteria(PubType.BOOK);
 
         assertThat(criteria.type()).isEqualTo(PubType.BOOK);
     }
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        PubIndexCriteria criteria = new PubIndexCriteria(PubType.BOOK);
-        PubIndexCriteria sameValues = new PubIndexCriteria(PubType.BOOK);
-        PubIndexCriteria differentType = new PubIndexCriteria(PubType.MAG);
+        final PubIndexCriteria criteria = new PubIndexCriteria(PubType.BOOK);
+        final PubIndexCriteria sameValues = new PubIndexCriteria(PubType.BOOK);
+        final PubIndexCriteria differentType = new PubIndexCriteria(PubType.MAG);
 
         assertThat(criteria)
             .isEqualTo(sameValues)

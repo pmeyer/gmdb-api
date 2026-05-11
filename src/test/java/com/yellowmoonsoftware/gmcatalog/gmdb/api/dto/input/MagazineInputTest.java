@@ -12,12 +12,12 @@ class MagazineInputTest {
 
     @Test
     void exposesInheritedPublicationFieldsAndSupportedType() {
-        LocalDate pubDate = LocalDate.of(2024, 1, 15);
-        PubIndexInput index = new PubIndexInput(1L, null);
-        MagazineIssueInput info = new MagazineIssueInput("12", "4", "Winter", null);
-        List<TranscriptionInput> transcriptions = List.of(new TranscriptionInput(new SongInput(2L, null), 12, null, List.of()));
+        final LocalDate pubDate = LocalDate.of(2024, 1, 15);
+        final PubIndexInput index = new PubIndexInput(1L, null);
+        final MagazineIssueInput info = new MagazineIssueInput("12", "4", "Winter", null);
+        final List<TranscriptionInput> transcriptions = List.of(new TranscriptionInput(new SongInput(2L, null), 12, null, List.of()));
 
-        MagazineInput input = new MagazineInput(pubDate, index, info, transcriptions);
+        final MagazineInput input = new MagazineInput(pubDate, index, info, transcriptions);
 
         assertThat(input.pubDate()).isEqualTo(pubDate);
         assertThat(input.index()).isSameAs(index);

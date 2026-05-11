@@ -8,10 +8,10 @@ class SongInTest {
 
     @Test
     void exposesRecordValuesAndSupportsRecordEquality() {
-        SongDetails details = new SongDetails(3);
-        SongIn song = new SongIn(1L, "Opener", details, 2L);
-        SongIn sameValues = new SongIn(1L, "Opener", details, 2L);
-        SongIn differentTitle = new SongIn(1L, "Closer", details, 2L);
+        final SongDetails details = new SongDetails(3);
+        final SongIn song = new SongIn(1L, "Opener", details, 2L);
+        final SongIn sameValues = new SongIn(1L, "Opener", details, 2L);
+        final SongIn differentTitle = new SongIn(1L, "Closer", details, 2L);
 
         assertThat(song.id()).isEqualTo(1L);
         assertThat(song.title()).isEqualTo("Opener");

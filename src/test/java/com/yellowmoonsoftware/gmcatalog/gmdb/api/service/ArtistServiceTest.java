@@ -35,8 +35,8 @@ class ArtistServiceTest {
 
     @Test
     void upsertArtistDelegatesToUpsertForDataInput() {
-        ArtistInput input = new ArtistInput(null, new ArtistData("Alice", ArtistType.PERSON));
-        ArtistOut output = new ArtistOut(1L, "Alice", ArtistType.PERSON, MergeAction.INSERT);
+        final ArtistInput input = new ArtistInput(null, new ArtistData("Alice", ArtistType.PERSON));
+        final ArtistOut output = new ArtistOut(1L, "Alice", ArtistType.PERSON, MergeAction.INSERT);
         when(artistMapper.upsertArtist(input)).thenReturn(Mono.just(output));
 
         StepVerifier.create(artistService.upsertArtist(input))
@@ -49,8 +49,8 @@ class ArtistServiceTest {
 
     @Test
     void upsertArtistLoadsExistingArtistForReferenceInput() {
-        ArtistInput input = new ArtistInput(1L, null);
-        ArtistOut output = new ArtistOut(1L, "Alice", ArtistType.PERSON, null);
+        final ArtistInput input = new ArtistInput(1L, null);
+        final ArtistOut output = new ArtistOut(1L, "Alice", ArtistType.PERSON, null);
         when(artistMapper.getArtistById(1L)).thenReturn(Mono.just(output));
 
         StepVerifier.create(artistService.upsertArtist(input))
@@ -63,8 +63,8 @@ class ArtistServiceTest {
 
     @Test
     void upsertSongArtistsDelegatesToMapper() {
-        List<SongArtistIn> input = List.of(new SongArtistIn(1L, 2L, new SongArtistRole[]{SongArtistRole.WORDS_BY}));
-        SongArtistOut output = new SongArtistOut(1L, 2L, new SongArtistRole[]{SongArtistRole.WORDS_BY}, MergeAction.INSERT);
+        final List<SongArtistIn> input = List.of(new SongArtistIn(1L, 2L, new SongArtistRole[]{SongArtistRole.WORDS_BY}));
+        final SongArtistOut output = new SongArtistOut(1L, 2L, new SongArtistRole[]{SongArtistRole.WORDS_BY}, MergeAction.INSERT);
         when(artistMapper.upsertSongArtists(input)).thenReturn(Flux.just(output));
 
         StepVerifier.create(artistService.upsertSongArtists(input))

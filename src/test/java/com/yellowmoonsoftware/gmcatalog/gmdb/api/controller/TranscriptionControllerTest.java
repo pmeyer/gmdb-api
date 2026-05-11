@@ -33,8 +33,8 @@ class TranscriptionControllerTest {
 
     @Test
     void transcribersGroupsByTranscription() {
-        Transcription transcription = new Transcription(1L, "url", 12, 2L, 3L);
-        TranscriptionTranscriber transcriber = new TranscriptionTranscriber(10L, "Alice", 1L);
+        final Transcription transcription = new Transcription(1L, "url", 12, 2L, 3L);
+        final TranscriptionTranscriber transcriber = new TranscriptionTranscriber(10L, "Alice", 1L);
         when(mapper.getTranscribersByTranscriptionIds(Set.of(1L))).thenReturn(Flux.just(transcriber));
 
         StepVerifier.create(controller.transcribers(Set.of(transcription)))
@@ -46,8 +46,8 @@ class TranscriptionControllerTest {
 
     @Test
     void pubMapsPublicationByTranscription() {
-        Transcription transcription = new Transcription(1L, "url", 12, 2L, 3L);
-        TranscriptionPublication publication = new TranscriptionPublication(3L, "Guide", PubType.BOOK, new BookDetails("First"), null, "ISBN-1", 4L, 1L);
+        final Transcription transcription = new Transcription(1L, "url", 12, 2L, 3L);
+        final TranscriptionPublication publication = new TranscriptionPublication(3L, "Guide", PubType.BOOK, new BookDetails("First"), null, "ISBN-1", 4L, 1L);
         when(mapper.getPublicationByTranscriptionIds(Set.of(1L))).thenReturn(Flux.just(publication));
 
         StepVerifier.create(controller.pub(Set.of(transcription)))

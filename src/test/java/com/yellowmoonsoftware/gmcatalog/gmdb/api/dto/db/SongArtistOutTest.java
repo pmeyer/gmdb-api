@@ -9,9 +9,9 @@ class SongArtistOutTest {
 
     @Test
     void exposesInheritedFieldsAndAction() {
-        SongArtistRole[] roles = {SongArtistRole.WORDS_BY, SongArtistRole.MUSIC_BY};
+        final SongArtistRole[] roles = {SongArtistRole.WORDS_BY, SongArtistRole.MUSIC_BY};
 
-        SongArtistOut artist = new SongArtistOut(1L, 2L, roles, MergeAction.UPDATE);
+        final SongArtistOut artist = new SongArtistOut(1L, 2L, roles, MergeAction.UPDATE);
 
         assertThat(artist.songId()).isEqualTo(1L);
         assertThat(artist.artistId()).isEqualTo(2L);

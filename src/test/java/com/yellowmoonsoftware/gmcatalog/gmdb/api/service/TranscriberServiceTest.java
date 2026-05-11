@@ -31,8 +31,8 @@ class TranscriberServiceTest {
 
     @Test
     void upsertTranscriberDelegatesToUpsertForDataInput() {
-        TranscriberInput input = new TranscriberInput(null, "Alice");
-        TranscriberOut output = new TranscriberOut(1L, "Alice", MergeAction.INSERT);
+        final TranscriberInput input = new TranscriberInput(null, "Alice");
+        final TranscriberOut output = new TranscriberOut(1L, "Alice", MergeAction.INSERT);
         when(transcriberMapper.upsertTranscriber(input)).thenReturn(Mono.just(output));
 
         StepVerifier.create(transcriberService.upsertTranscriber(input))
@@ -45,8 +45,8 @@ class TranscriberServiceTest {
 
     @Test
     void upsertTranscriberLoadsExistingForReferenceInput() {
-        TranscriberInput input = new TranscriberInput(1L, null);
-        TranscriberOut output = new TranscriberOut(1L, "Alice", null);
+        final TranscriberInput input = new TranscriberInput(1L, null);
+        final TranscriberOut output = new TranscriberOut(1L, "Alice", null);
         when(transcriberMapper.getTranscriberById(1L)).thenReturn(Mono.just(output));
 
         StepVerifier.create(transcriberService.upsertTranscriber(input))
@@ -59,8 +59,8 @@ class TranscriberServiceTest {
 
     @Test
     void upsertTranscriptionTranscribersDelegatesToMapper() {
-        List<TranscriptionTranscriber> input = List.of(TranscriptionTranscriber.forInput(1L, 2L));
-        TranscriptionTranscriber output = new TranscriptionTranscriber(1L, 2L, MergeAction.INSERT);
+        final List<TranscriptionTranscriber> input = List.of(TranscriptionTranscriber.forInput(1L, 2L));
+        final TranscriptionTranscriber output = new TranscriptionTranscriber(1L, 2L, MergeAction.INSERT);
         when(transcriberMapper.upsertTranscriptionTranscribers(input)).thenReturn(Flux.just(output));
 
         StepVerifier.create(transcriberService.upsertTranscriptionTranscribers(input))

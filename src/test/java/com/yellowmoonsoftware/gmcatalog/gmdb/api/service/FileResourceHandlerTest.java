@@ -32,7 +32,7 @@ class FileResourceHandlerTest {
 
     @Test
     void getFileUsesFilenameAndExplicitMediaTypeQueryParameters() {
-        Map<String, String> variables = Map.of("slug", "cover-img", "id", "abc");
+        final Map<String, String> variables = Map.of("slug", "cover-img", "id", "abc");
         when(request.queryParam("_f")).thenReturn(Optional.of("cover.bin"));
         when(request.queryParam("_mt")).thenReturn(Optional.of("image/png"));
         when(request.pathVariable("slug")).thenReturn("cover-img");
@@ -52,7 +52,7 @@ class FileResourceHandlerTest {
 
     @Test
     void getFileInfersMediaTypeFromFilenameWhenExplicitMediaTypeMissing() {
-        Map<String, String> variables = Map.of("slug", "album-art", "id", "abc");
+        final Map<String, String> variables = Map.of("slug", "album-art", "id", "abc");
         when(request.queryParam("_f")).thenReturn(Optional.of("cover.jpg"));
         when(request.queryParam("_mt")).thenReturn(Optional.empty());
         when(request.pathVariable("slug")).thenReturn("album-art");
@@ -71,7 +71,7 @@ class FileResourceHandlerTest {
 
     @Test
     void getFileAllowsMissingQueryParameters() {
-        Map<String, String> variables = Map.of("slug", "transcription", "id", "abc");
+        final Map<String, String> variables = Map.of("slug", "transcription", "id", "abc");
         when(request.queryParam("_f")).thenReturn(Optional.empty());
         when(request.queryParam("_mt")).thenReturn(Optional.empty());
         when(request.pathVariable("slug")).thenReturn("transcription");

@@ -8,7 +8,7 @@ class TranscriberOutTest {
 
     @Test
     void exposesTranscriberFieldsAndAction() {
-        TranscriberOut transcriber = new TranscriberOut(1L, "Alice", MergeAction.INSERT);
+        final TranscriberOut transcriber = new TranscriberOut(1L, "Alice", MergeAction.INSERT);
 
         assertThat(transcriber.id()).isEqualTo(1L);
         assertThat(transcriber.name()).isEqualTo("Alice");

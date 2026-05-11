@@ -31,9 +31,9 @@ class PubTranscriptionControllerTest {
 
     @Test
     void songMapsSongsToAllMatchingTranscriptions() {
-        Transcription first = new Transcription(1L, "url1", 12, 10L, 100L);
-        Transcription second = new Transcription(2L, "url2", 13, 10L, 100L);
-        SongSearchResult song = new SongSearchResult(10L, "Opener", 3, 20L);
+        final Transcription first = new Transcription(1L, "url1", 12, 10L, 100L);
+        final Transcription second = new Transcription(2L, "url2", 13, 10L, 100L);
+        final SongSearchResult song = new SongSearchResult(10L, "Opener", 3, 20L);
         when(mapper.getSongsBySongIds(Set.of(10L))).thenReturn(Flux.just(song));
 
         StepVerifier.create(controller.song(Set.of(first, second)))
@@ -47,8 +47,8 @@ class PubTranscriptionControllerTest {
 
     @Test
     void transcribersGroupsByTranscription() {
-        Transcription transcription = new Transcription(1L, "url", 12, 10L, 100L);
-        TranscriptionTranscriber transcriber = new TranscriptionTranscriber(20L, "Alice", 1L);
+        final Transcription transcription = new Transcription(1L, "url", 12, 10L, 100L);
+        final TranscriptionTranscriber transcriber = new TranscriptionTranscriber(20L, "Alice", 1L);
         when(mapper.getTranscribersByTranscriptionIds(Set.of(1L))).thenReturn(Flux.just(transcriber));
 
         StepVerifier.create(controller.transcribers(Set.of(transcription)))

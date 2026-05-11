@@ -30,9 +30,9 @@ class FileSystemFileServiceTest {
 
     @Test
     void putCreatesParentDirectoriesTransfersFileAndReturnsResourceReference() {
-        FileSystemFileService service = new FileSystemFileService(tempDir.toString(), "");
-        UUID resourceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
-        TestFilePart filePart = new TestFilePart("cover", "cover.jpg", "image bytes");
+        final FileSystemFileService service = new FileSystemFileService(tempDir.toString(), "");
+        final UUID resourceId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        final TestFilePart filePart = new TestFilePart("cover", "cover.jpg", "image bytes");
 
         StepVerifier.create(service.put(filePart, ResourceSlug.COVER_IMAGE, Map.of("id", resourceId)))
             .assertNext(reference -> {
@@ -42,30 +42,30 @@ class FileSystemFileServiceTest {
             })
             .verifyComplete();
 
-        Path expectedPath = tempDir.resolve("pub").resolve(resourceId.toString()).resolve("cover-img");
+        final Path expectedPath = tempDir.resolve("pub").resolve(resourceId.toString()).resolve("cover-img");
         assertThat(expectedPath).hasContent("image bytes");
         assertThat(filePart.transferredTo()).isEqualTo(expectedPath);
     }
 
     @Test
     void putExpandsTildeRootAgainstUserHome() {
-        FileSystemFileService service = new FileSystemFileService("~" + File.separator + "gmdb-files", tempDir.toString());
-        UUID resourceId = UUID.fromString("00000000-0000-0000-0000-000000000002");
-        TestFilePart filePart = new TestFilePart("album-art", "art.jpg", "album art");
+        final FileSystemFileService service = new FileSystemFileService("~" + File.separator + "gmdb-files", tempDir.toString());
+        final UUID resourceId = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        final TestFilePart filePart = new TestFilePart("album-art", "art.jpg", "album art");
 
         StepVerifier.create(service.put(filePart, ResourceSlug.ALBUM_ART, Map.of("id", resourceId)))
             .assertNext(reference -> assertThat(reference.slugPath()).isEqualTo("album/%s/album-art".formatted(resourceId)))
             .verifyComplete();
 
-        Path expectedPath = tempDir.resolve("gmdb-files").resolve("album").resolve(resourceId.toString()).resolve("album-art");
+        final Path expectedPath = tempDir.resolve("gmdb-files").resolve("album").resolve(resourceId.toString()).resolve("album-art");
         assertThat(expectedPath).hasContent("album art");
     }
 
     @Test
     void getReadsExistingFileAsDataBuffers() throws IOException {
-        FileSystemFileService service = new FileSystemFileService(tempDir.toString(), "");
-        UUID resourceId = UUID.fromString("00000000-0000-0000-0000-000000000003");
-        Path path = tempDir.resolve("transcription").resolve(resourceId.toString()).resolve("transcription");
+        final FileSystemFileService service = new FileSystemFileService(tempDir.toString(), "");
+        final UUID resourceId = UUID.fromString("00000000-0000-0000-0000-000000000003");
+        final Path path = tempDir.resolve("transcription").resolve(resourceId.toString()).resolve("transcription");
         Files.createDirectories(path.getParent());
         Files.writeString(path, "transcription text", StandardCharsets.UTF_8);
 
@@ -82,8 +82,8 @@ class FileSystemFileServiceTest {
 
     @Test
     void getFailsWhenPathDoesNotResolveToRegularFile() {
-        FileSystemFileService service = new FileSystemFileService(tempDir.toString(), "");
-        UUID resourceId = UUID.fromString("00000000-0000-0000-0000-000000000004");
+        final FileSystemFileService service = new FileSystemFileService(tempDir.toString(), "");
+        final UUID resourceId = UUID.fromString("00000000-0000-0000-0000-000000000004");
 
         StepVerifier.create(service.get(ResourceSlug.COVER_IMAGE, Map.of("id", resourceId)))
             .expectErrorSatisfies(error -> assertThat(error)
@@ -93,7 +93,7 @@ class FileSystemFileServiceTest {
     }
 
     private static String readString(DataBuffer buffer) {
-        byte[] bytes = new byte[buffer.readableByteCount()];
+        final byte[] bytes = new byte[buffer.readableByteCount()];
         buffer.read(bytes);
         return new String(bytes, StandardCharsets.UTF_8);
     }

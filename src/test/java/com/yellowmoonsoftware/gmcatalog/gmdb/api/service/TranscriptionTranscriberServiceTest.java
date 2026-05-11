@@ -32,15 +32,15 @@ class TranscriptionTranscriberServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     void addTranscriptionTranscribersBuildsReferenceAndUpsertedTranscribers() {
-        TranscriberInput reference = new TranscriberInput(10L, null);
-        TranscriberInput data = new TranscriberInput(null, "Alice");
+        final TranscriberInput reference = new TranscriberInput(10L, null);
+        final TranscriberInput data = new TranscriberInput(null, "Alice");
         when(transcriberService.upsertTranscriber(data)).thenReturn(Mono.just(new TranscriberOut(20L, "Alice", null)));
         when(transcriberService.upsertTranscriptionTranscribers(org.mockito.ArgumentMatchers.anyList())).thenReturn(Flux.empty());
 
         StepVerifier.create(transcriptionTranscriberService.addTranscriptionTranscribers(1L, List.of(reference, data)))
             .verifyComplete();
 
-        ArgumentCaptor<List<TranscriptionTranscriber>> captor = ArgumentCaptor.forClass(List.class);
+        final ArgumentCaptor<List<TranscriptionTranscriber>> captor = ArgumentCaptor.forClass(List.class);
         verify(transcriberService).upsertTranscriber(data);
         verify(transcriberService).upsertTranscriptionTranscribers(captor.capture());
         assertThat(captor.getValue()).hasSize(2);

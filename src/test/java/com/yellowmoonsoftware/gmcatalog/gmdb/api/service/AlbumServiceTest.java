@@ -53,8 +53,8 @@ class AlbumServiceTest {
 
     @Test
     void upsertAlbumLoadsExistingAlbumForReferenceInput() {
-        AlbumInput input = new AlbumInput(1L, null);
-        AlbumOut output = albumOut(1L);
+        final AlbumInput input = new AlbumInput(1L, null);
+        final AlbumOut output = albumOut(1L);
         when(albumMapper.getAlbumById(1L)).thenReturn(Mono.just(output));
 
         StepVerifier.create(albumService.upsertAlbum(input))
@@ -68,13 +68,13 @@ class AlbumServiceTest {
 
     @Test
     void upsertAlbumUpsertsPrimaryArtistAndStoresCoverArt() {
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         when(coverArt.filename()).thenReturn("cover.jpg");
         when(coverArt.headers()).thenReturn(headers);
-        ArtistInput primaryArtist = new ArtistInput(null, new ArtistData("Alice", ArtistType.PERSON));
-        AlbumInput input = new AlbumInput(null, new AlbumData("Live Set", coverArt, LocalDate.of(2020, 4, 5), primaryArtist));
-        AlbumOut output = albumOut(1L);
+        final ArtistInput primaryArtist = new ArtistInput(null, new ArtistData("Alice", ArtistType.PERSON));
+        final AlbumInput input = new AlbumInput(null, new AlbumData("Live Set", coverArt, LocalDate.of(2020, 4, 5), primaryArtist));
+        final AlbumOut output = albumOut(1L);
         when(artistService.upsertArtist(primaryArtist)).thenReturn(Mono.just(new ArtistOut(20L, "Alice", ArtistType.PERSON, null)));
         when(albumMapper.upsertAlbum(any(AlbumIn.class))).thenReturn(Mono.just(output));
         when(fileService.put(coverArt, ResourceSlug.ALBUM_ART, Map.of("id", output.details().resourceId())))
@@ -84,7 +84,7 @@ class AlbumServiceTest {
             .expectNext(output)
             .verifyComplete();
 
-        ArgumentCaptor<AlbumIn> captor = ArgumentCaptor.forClass(AlbumIn.class);
+        final ArgumentCaptor<AlbumIn> captor = ArgumentCaptor.forClass(AlbumIn.class);
         verify(artistService).upsertArtist(primaryArtist);
         verify(albumMapper).upsertAlbum(captor.capture());
         assertThat(captor.getValue().title()).isEqualTo("Live Set");
@@ -96,15 +96,15 @@ class AlbumServiceTest {
 
     @Test
     void upsertAlbumAllowsMissingPrimaryArtistAndCoverArt() {
-        AlbumInput input = new AlbumInput(null, new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), null));
-        AlbumOut output = albumOut(1L);
+        final AlbumInput input = new AlbumInput(null, new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), null));
+        final AlbumOut output = albumOut(1L);
         when(albumMapper.upsertAlbum(any(AlbumIn.class))).thenReturn(Mono.just(output));
 
         StepVerifier.create(albumService.upsertAlbum(input))
             .expectNext(output)
             .verifyComplete();
 
-        ArgumentCaptor<AlbumIn> captor = ArgumentCaptor.forClass(AlbumIn.class);
+        final ArgumentCaptor<AlbumIn> captor = ArgumentCaptor.forClass(AlbumIn.class);
         verify(albumMapper).upsertAlbum(captor.capture());
         assertThat(captor.getValue().primaryArtistId()).isNull();
         verifyNoInteractions(fileService, artistService);
@@ -113,9 +113,9 @@ class AlbumServiceTest {
 
     @Test
     void upsertAlbumAllowsPrimaryArtistServiceToReturnEmpty() {
-        ArtistInput primaryArtist = new ArtistInput(20L, null);
-        AlbumInput input = new AlbumInput(null, new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), primaryArtist));
-        AlbumOut output = albumOut(1L);
+        final ArtistInput primaryArtist = new ArtistInput(20L, null);
+        final AlbumInput input = new AlbumInput(null, new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), primaryArtist));
+        final AlbumOut output = albumOut(1L);
         when(artistService.upsertArtist(primaryArtist)).thenReturn(Mono.empty());
         when(albumMapper.upsertAlbum(any(AlbumIn.class))).thenReturn(Mono.just(output));
 
@@ -123,7 +123,7 @@ class AlbumServiceTest {
             .expectNext(output)
             .verifyComplete();
 
-        ArgumentCaptor<AlbumIn> captor = ArgumentCaptor.forClass(AlbumIn.class);
+        final ArgumentCaptor<AlbumIn> captor = ArgumentCaptor.forClass(AlbumIn.class);
         verify(artistService).upsertArtist(primaryArtist);
         verify(albumMapper).upsertAlbum(captor.capture());
         assertThat(captor.getValue().primaryArtistId()).isNull();
@@ -133,13 +133,13 @@ class AlbumServiceTest {
 
     @Test
     void upsertAlbumPropagatesCoverArtStorageFailure() {
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         when(coverArt.filename()).thenReturn("cover.jpg");
         when(coverArt.headers()).thenReturn(headers);
-        AlbumInput input = new AlbumInput(null, new AlbumData("Live Set", coverArt, LocalDate.of(2020, 4, 5), null));
-        AlbumOut output = albumOut(1L);
-        IllegalStateException failure = new IllegalStateException("storage failed");
+        final AlbumInput input = new AlbumInput(null, new AlbumData("Live Set", coverArt, LocalDate.of(2020, 4, 5), null));
+        final AlbumOut output = albumOut(1L);
+        final IllegalStateException failure = new IllegalStateException("storage failed");
         when(albumMapper.upsertAlbum(any(AlbumIn.class))).thenReturn(Mono.just(output));
         when(fileService.put(coverArt, ResourceSlug.ALBUM_ART, Map.of("id", output.details().resourceId())))
             .thenReturn(Mono.error(failure));
@@ -155,7 +155,7 @@ class AlbumServiceTest {
     }
 
     private static AlbumOut albumOut(Long id) {
-        AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5)) {
+        final AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5)) {
             @Override
             public UUID resourceId() {
                 return UUID.fromString("00000000-0000-0000-0000-000000000001");

@@ -46,10 +46,10 @@ class PostgresqlEnumCodecRegistrarTest {
 
     @Test
     void registerAddsCodecsForConfiguredPostgresqlEnums() {
-        PostgresqlEnumCodecRegistrar registrar = new PostgresqlEnumCodecRegistrar();
-        PostgresqlResult pubType = postgresTypeResult(100L, "pub_type", "E");
-        PostgresqlResult artistType = postgresTypeResult(101L, "artist_type", "E");
-        PostgresqlResult nonEnumType = postgresTypeResult(102L, "ignored_type", "S");
+        final PostgresqlEnumCodecRegistrar registrar = new PostgresqlEnumCodecRegistrar();
+        final PostgresqlResult pubType = postgresTypeResult(100L, "pub_type", "E");
+        final PostgresqlResult artistType = postgresTypeResult(101L, "artist_type", "E");
+        final PostgresqlResult nonEnumType = postgresTypeResult(102L, "ignored_type", "S");
         when(connection.createStatement(argThat(sql -> sql.contains("'pub_type'") && sql.contains("'artist_type'"))))
             .thenReturn(statement);
         when(statement.execute()).thenReturn(Flux.just(pubType, artistType, nonEnumType));
@@ -57,10 +57,10 @@ class PostgresqlEnumCodecRegistrarTest {
         StepVerifier.create(registrar.register(connection, allocator, registry))
             .verifyComplete();
 
-        ArgumentCaptor<Codec<?>> codecCaptor = ArgumentCaptor.forClass(Codec.class);
+        final ArgumentCaptor<Codec<?>> codecCaptor = ArgumentCaptor.forClass(Codec.class);
         verify(registry, times(2)).addLast(codecCaptor.capture());
 
-        List<Class<?>> registeredTypes = codecCaptor.getAllValues().stream()
+        final List<Class<?>> registeredTypes = codecCaptor.getAllValues().stream()
             .<Class<?>>map(codec -> ((EnumCodec<?>) codec).type())
             .toList();
 
@@ -71,19 +71,19 @@ class PostgresqlEnumCodecRegistrarTest {
     }
 
     private static PostgresqlResult postgresTypeResult(Long oid, String typeName, String typeCategory) {
-        Row row = row(oid, typeName, typeCategory);
-        RowMetadata metadata = rowMetadata();
-        PostgresqlResult result = org.mockito.Mockito.mock(PostgresqlResult.class);
+        final Row row = row(oid, typeName, typeCategory);
+        final RowMetadata metadata = rowMetadata();
+        final PostgresqlResult result = org.mockito.Mockito.mock(PostgresqlResult.class);
         when(result.map(org.mockito.ArgumentMatchers.<BiFunction<Row, RowMetadata, Object>>any())).thenAnswer(invocation -> {
             @SuppressWarnings("unchecked")
-            BiFunction<Row, RowMetadata, ?> mapper = invocation.getArgument(0, BiFunction.class);
+            final BiFunction<Row, RowMetadata, ?> mapper = invocation.getArgument(0, BiFunction.class);
             return Flux.just(mapper.apply(row, metadata));
         });
         return result;
     }
 
     private static Row row(Long oid, String typeName, String typeCategory) {
-        Row row = org.mockito.Mockito.mock(Row.class);
+        final Row row = org.mockito.Mockito.mock(Row.class);
         when(row.get("oid", Long.class)).thenReturn(oid);
         when(row.get("typname", String.class)).thenReturn(typeName);
         when(row.get("typcategory", String.class)).thenReturn(typeCategory);
@@ -91,7 +91,7 @@ class PostgresqlEnumCodecRegistrarTest {
     }
 
     private static RowMetadata rowMetadata() {
-        RowMetadata metadata = org.mockito.Mockito.mock(RowMetadata.class);
+        final RowMetadata metadata = org.mockito.Mockito.mock(RowMetadata.class);
         when(metadata.contains("typarray")).thenReturn(false);
         return metadata;
     }

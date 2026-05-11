@@ -53,14 +53,14 @@ class TranscriptionServiceTest {
 
     @Test
     void upsertTranscriptionStoresFileAndTranscribers() {
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
         when(file.filename()).thenReturn("page.pdf");
         when(file.headers()).thenReturn(headers);
-        SongInput songInput = new SongInput(1L, null);
-        List<TranscriberInput> transcribers = List.of(new TranscriberInput(2L, null));
-        TranscriptionInput input = new TranscriptionInput(songInput, 12, file, transcribers);
-        TranscriptionInOut output = transcriptionOut();
+        final SongInput songInput = new SongInput(1L, null);
+        final List<TranscriberInput> transcribers = List.of(new TranscriberInput(2L, null));
+        final TranscriptionInput input = new TranscriptionInput(songInput, 12, file, transcribers);
+        final TranscriptionInOut output = transcriptionOut();
         when(songService.upsertSong(songInput)).thenReturn(Mono.just(new SongOut(10L, "Opener", null, null, null)));
         when(transcriptionMapper.upsertTranscription(any(TranscriptionInOut.class))).thenReturn(Mono.just(output));
         when(fileService.put(file, ResourceSlug.TRANSCRIPTION, Map.of("id", output.details().resourceId())))
@@ -71,7 +71,7 @@ class TranscriptionServiceTest {
             .expectNext(output)
             .verifyComplete();
 
-        ArgumentCaptor<TranscriptionInOut> captor = ArgumentCaptor.forClass(TranscriptionInOut.class);
+        final ArgumentCaptor<TranscriptionInOut> captor = ArgumentCaptor.forClass(TranscriptionInOut.class);
         verify(songService).upsertSong(songInput);
         verify(transcriptionMapper).upsertTranscription(captor.capture());
         assertThat(captor.getValue().songId()).isEqualTo(10L);
@@ -84,9 +84,9 @@ class TranscriptionServiceTest {
 
     @Test
     void upsertTranscriptionAllowsMissingFile() {
-        SongInput songInput = new SongInput(1L, null);
-        TranscriptionInput input = new TranscriptionInput(songInput, 12, null, List.of());
-        TranscriptionInOut output = transcriptionOut();
+        final SongInput songInput = new SongInput(1L, null);
+        final TranscriptionInput input = new TranscriptionInput(songInput, 12, null, List.of());
+        final TranscriptionInOut output = transcriptionOut();
         when(songService.upsertSong(songInput)).thenReturn(Mono.just(new SongOut(10L, "Opener", null, null, null)));
         when(transcriptionMapper.upsertTranscription(any(TranscriptionInOut.class))).thenReturn(Mono.just(output));
         when(transcriptionTranscriberService.addTranscriptionTranscribers(1L, List.of())).thenReturn(Mono.empty());
@@ -103,7 +103,7 @@ class TranscriptionServiceTest {
     }
 
     private static TranscriptionInOut transcriptionOut() {
-        TranscriptionDetails details = new TranscriptionDetails(12) {
+        final TranscriptionDetails details = new TranscriptionDetails(12) {
             @Override
             public UUID resourceId() {
                 return UUID.fromString("00000000-0000-0000-0000-000000000001");

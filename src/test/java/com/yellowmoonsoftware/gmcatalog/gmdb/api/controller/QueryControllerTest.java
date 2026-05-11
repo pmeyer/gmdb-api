@@ -52,8 +52,8 @@ class QueryControllerTest {
 
     @Test
     void songSearchDelegatesToMapper() {
-        SongSearchCriteria criteria = new SongSearchCriteria("song", null, null, null, null, null, null);
-        SongSearchResult result = new SongSearchResult(1L, "Song", 3, 4L);
+        final SongSearchCriteria criteria = new SongSearchCriteria("song", null, null, null, null, null, null);
+        final SongSearchResult result = new SongSearchResult(1L, "Song", 3, 4L);
         when(gmdbMapper.songSearch(criteria)).thenReturn(Flux.just(result));
 
         StepVerifier.create(queryController.songSearch(criteria)).expectNext(result).verifyComplete();
@@ -63,8 +63,8 @@ class QueryControllerTest {
 
     @Test
     void artistSearchDelegatesToMapper() {
-        ArtistSearchCriteria criteria = new ArtistSearchCriteria("alice", ArtistType.PERSON, null, null, null);
-        ArtistSearchResult result = new ArtistSearchResult(1L, "Alice", ArtistType.PERSON, java.util.Set.of());
+        final ArtistSearchCriteria criteria = new ArtistSearchCriteria("alice", ArtistType.PERSON, null, null, null);
+        final ArtistSearchResult result = new ArtistSearchResult(1L, "Alice", ArtistType.PERSON, java.util.Set.of());
         when(artistMapper.artistSearch(criteria)).thenReturn(Flux.just(result));
 
         StepVerifier.create(queryController.artistSearch(criteria)).expectNext(result).verifyComplete();
@@ -74,8 +74,8 @@ class QueryControllerTest {
 
     @Test
     void pubSearchDelegatesToMapper() {
-        PubSearchCriteria criteria = new PubSearchCriteria("guide", PubType.BOOK, null, null, null);
-        PubSearchResult result = new PubSearchResult(1L, "Guide", PubType.BOOK, new com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.BookDetails("First"), null, "ISBN-1", 2L);
+        final PubSearchCriteria criteria = new PubSearchCriteria("guide", PubType.BOOK, null, null, null);
+        final PubSearchResult result = new PubSearchResult(1L, "Guide", PubType.BOOK, new com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.BookDetails("First"), null, "ISBN-1", 2L);
         when(gmdbMapper.pubSearch(criteria)).thenReturn(Flux.just(result));
 
         StepVerifier.create(queryController.pubSearch(criteria)).expectNext(result).verifyComplete();
@@ -85,9 +85,9 @@ class QueryControllerTest {
 
     @Test
     void albumSearchMapsAlbumOutToSearchResult() {
-        AlbumSearchCriteria criteria = new AlbumSearchCriteria("live", null, null, null);
-        AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5));
-        AlbumOut album = new AlbumOut(1L, "Live Set", details, 2L, null);
+        final AlbumSearchCriteria criteria = new AlbumSearchCriteria("live", null, null, null);
+        final AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5));
+        final AlbumOut album = new AlbumOut(1L, "Live Set", details, 2L, null);
         when(albumMapper.albumSearch(criteria)).thenReturn(Flux.just(album));
 
         StepVerifier.create(queryController.albumSearch(criteria))
@@ -105,7 +105,7 @@ class QueryControllerTest {
 
     @Test
     void transcriberSearchDelegatesToMapper() {
-        Transcriber result = new Transcriber(1L, "Alice");
+        final Transcriber result = new Transcriber(1L, "Alice");
         when(gmdbMapper.getTranscribers("alice")).thenReturn(Flux.just(result));
 
         StepVerifier.create(queryController.transcriberSearch("alice")).expectNext(result).verifyComplete();
@@ -115,8 +115,8 @@ class QueryControllerTest {
 
     @Test
     void getPubIndicesDelegatesToService() {
-        PubIndexCriteria criteria = new PubIndexCriteria(PubType.BOOK);
-        PubIndexOut result = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
+        final PubIndexCriteria criteria = new PubIndexCriteria(PubType.BOOK);
+        final PubIndexOut result = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
         when(publicationIndexService.getPublicationIndices(criteria)).thenReturn(Flux.just(result));
 
         StepVerifier.create(queryController.getPubIndices(criteria)).expectNext(result).verifyComplete();

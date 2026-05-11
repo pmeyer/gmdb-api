@@ -18,21 +18,21 @@ class ConditionalNotNullValidatorTest {
 
     @Test
     void anyCheckRequiresValueWhenAnyDependentFieldIsNull() {
-        TestInput value = new TestInput(null, null, "present");
+        final TestInput value = new TestInput(null, null, "present");
 
         assertThat(validator.isValid(value, null)).isFalse();
     }
 
     @Test
     void anyCheckAllowsNullValueWhenAllDependentFieldsArePresent() {
-        TestInput value = new TestInput(null, "present", "also present");
+        final TestInput value = new TestInput(null, "present", "also present");
 
         assertThat(validator.isValid(value, null)).isTrue();
     }
 
     @Test
     void anyCheckAllowsPresentValueWhenDependentFieldIsNull() {
-        TestInput value = new TestInput("required", null, "present");
+        final TestInput value = new TestInput("required", null, "present");
 
         assertThat(validator.isValid(value, null)).isTrue();
     }
@@ -40,7 +40,7 @@ class ConditionalNotNullValidatorTest {
     @Test
     void allCheckRequiresValueWhenAllDependentFieldsAreNull() {
         validator.initialize(annotationFrom(AllCheckInput.class));
-        TestInput value = new TestInput(null, null, null);
+        final TestInput value = new TestInput(null, null, null);
 
         assertThat(validator.isValid(value, null)).isFalse();
     }
@@ -48,14 +48,14 @@ class ConditionalNotNullValidatorTest {
     @Test
     void allCheckAllowsNullValueWhenAnyDependentFieldIsPresent() {
         validator.initialize(annotationFrom(AllCheckInput.class));
-        TestInput value = new TestInput(null, null, "present");
+        final TestInput value = new TestInput(null, null, "present");
 
         assertThat(validator.isValid(value, null)).isTrue();
     }
 
     @Test
     void checkFieldNullAppliesAnyAndAllSemantics() {
-        TestInput value = new TestInput("required", null, "present");
+        final TestInput value = new TestInput("required", null, "present");
 
         assertThat(validator.checkFieldNull(value, ConditionalNotNull.CheckType.ANY, "first", "second")).isTrue();
         assertThat(validator.checkFieldNull(value, ConditionalNotNull.CheckType.ALL, "first", "second")).isFalse();
@@ -63,14 +63,14 @@ class ConditionalNotNullValidatorTest {
 
     @Test
     void getFieldReturnsPrivateFieldValue() {
-        TestInput value = new TestInput("required", "first", "second");
+        final TestInput value = new TestInput("required", "first", "second");
 
         assertThat(validator.getField(value, "required")).isEqualTo("required");
     }
 
     @Test
     void getFieldThrowsRuntimeExceptionWhenFieldDoesNotExist() {
-        TestInput value = new TestInput("required", "first", "second");
+        final TestInput value = new TestInput("required", "first", "second");
 
         assertThatThrownBy(() -> validator.getField(value, "missing"))
             .isInstanceOf(RuntimeException.class)

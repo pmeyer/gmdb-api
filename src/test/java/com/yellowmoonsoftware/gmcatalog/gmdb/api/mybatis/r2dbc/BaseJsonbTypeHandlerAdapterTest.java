@@ -32,29 +32,29 @@ class BaseJsonbTypeHandlerAdapterTest {
 
     @Test
     void adaptClazzReturnsConfiguredType() {
-        BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
+        final BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
 
         assertThat(adapter.adaptClazz()).isEqualTo(TestPayload.class);
     }
 
     @Test
     void setParameterSerializesParameterAsJsonb() {
-        BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
-        ParameterHandlerContext context = new ParameterHandlerContext();
+        final BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
+        final ParameterHandlerContext context = new ParameterHandlerContext();
         context.setIndex(2);
-        TestPayload payload = new TestPayload("Alice", 7);
+        final TestPayload payload = new TestPayload("Alice", 7);
 
         adapter.setParameter(statement, context, payload);
 
-        ArgumentCaptor<Json> captor = ArgumentCaptor.forClass(Json.class);
+        final ArgumentCaptor<Json> captor = ArgumentCaptor.forClass(Json.class);
         verify(statement).bind(eq(2), captor.capture());
         assertThat(captor.getValue().asString()).isEqualTo("{\"name\":\"Alice\",\"count\":7}");
     }
 
     @Test
     void setParameterWrapsJsonSerializationFailure() {
-        BaseJsonbTypeHandlerAdapter<SelfReferencingPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(SelfReferencingPayload.class);
-        ParameterHandlerContext context = new ParameterHandlerContext();
+        final BaseJsonbTypeHandlerAdapter<SelfReferencingPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(SelfReferencingPayload.class);
+        final ParameterHandlerContext context = new ParameterHandlerContext();
         context.setIndex(1);
 
         assertThatThrownBy(() -> adapter.setParameter(statement, context, new SelfReferencingPayload()))
@@ -65,10 +65,10 @@ class BaseJsonbTypeHandlerAdapterTest {
 
     @Test
     void getResultByColumnNameReadsJsonbValue() {
-        BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
+        final BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
         when(readable.get("details", Json.class)).thenReturn(Json.of("{\"name\":\"Alice\",\"count\":7}"));
 
-        TestPayload result = adapter.getResult(readable, metadata, "details");
+        final TestPayload result = adapter.getResult(readable, metadata, "details");
 
         assertThat(result).isEqualTo(new TestPayload("Alice", 7));
         verify(readable).get("details", Json.class);
@@ -76,10 +76,10 @@ class BaseJsonbTypeHandlerAdapterTest {
 
     @Test
     void getResultByColumnIndexReadsJsonbValue() {
-        BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
+        final BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
         when(readable.get(3, Json.class)).thenReturn(Json.of("{\"name\":\"Bob\",\"count\":4}"));
 
-        TestPayload result = adapter.getResult(readable, metadata, 3);
+        final TestPayload result = adapter.getResult(readable, metadata, 3);
 
         assertThat(result).isEqualTo(new TestPayload("Bob", 4));
         verify(readable).get(3, Json.class);
@@ -87,14 +87,14 @@ class BaseJsonbTypeHandlerAdapterTest {
 
     @Test
     void mapColumnValueReturnsNullForNullJsonbValue() {
-        BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
+        final BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
 
         assertThat(adapter.mapColumnValue(null)).isNull();
     }
 
     @Test
     void mapColumnValueWrapsJsonDeserializationFailure() {
-        BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
+        final BaseJsonbTypeHandlerAdapter<TestPayload> adapter = new BaseJsonbTypeHandlerAdapter<>(TestPayload.class);
 
         assertThatThrownBy(() -> adapter.mapColumnValue(Json.of("{not valid json")))
             .isInstanceOf(PGDataConversionException.class)

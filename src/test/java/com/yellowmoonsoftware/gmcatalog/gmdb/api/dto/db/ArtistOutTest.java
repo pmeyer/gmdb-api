@@ -9,7 +9,7 @@ class ArtistOutTest {
 
     @Test
     void exposesArtistFieldsAndAction() {
-        ArtistOut artist = new ArtistOut(1L, "Alice", ArtistType.PERSON, MergeAction.INSERT);
+        final ArtistOut artist = new ArtistOut(1L, "Alice", ArtistType.PERSON, MergeAction.INSERT);
 
         assertThat(artist.id()).isEqualTo(1L);
         assertThat(artist.name()).isEqualTo("Alice");

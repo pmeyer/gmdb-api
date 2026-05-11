@@ -15,9 +15,9 @@ class SongInputTest {
 
     @Test
     void exposesRecordValuesAndDataContract() {
-        SongInput.SongData data = songData();
+        final SongInput.SongData data = songData();
 
-        SongInput input = new SongInput(1L, data);
+        final SongInput input = new SongInput(1L, data);
 
         assertThat(input.id()).isEqualTo(1L);
         assertThat(input.data()).isSameAs(data);
@@ -27,10 +27,10 @@ class SongInputTest {
 
     @Test
     void songDataExposesValues() {
-        SongArtistInput artist = new SongArtistInput(10L, null, Set.of(SongArtistRole.PERFORMED_BY));
-        SongInput.AlbumTrackInput albumTrack = albumTrack();
+        final SongArtistInput artist = new SongArtistInput(10L, null, Set.of(SongArtistRole.PERFORMED_BY));
+        final SongInput.AlbumTrackInput albumTrack = albumTrack();
 
-        SongInput.SongData data = new SongInput.SongData("Opener", List.of(artist), albumTrack);
+        final SongInput.SongData data = new SongInput.SongData("Opener", List.of(artist), albumTrack);
 
         assertThat(data.title()).isEqualTo("Opener");
         assertThat(data.artists()).containsExactly(artist);
@@ -39,9 +39,9 @@ class SongInputTest {
 
     @Test
     void albumTrackInputExposesValues() {
-        AlbumInput album = albumInput();
+        final AlbumInput album = albumInput();
 
-        SongInput.AlbumTrackInput albumTrack = new SongInput.AlbumTrackInput(3, album);
+        final SongInput.AlbumTrackInput albumTrack = new SongInput.AlbumTrackInput(3, album);
 
         assertThat(albumTrack.trackNumber()).isEqualTo(3);
         assertThat(albumTrack.album()).isSameAs(album);
@@ -49,10 +49,10 @@ class SongInputTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        SongInput.SongData data = songData();
-        SongInput input = new SongInput(1L, data);
-        SongInput sameValues = new SongInput(1L, data);
-        SongInput differentId = new SongInput(2L, data);
+        final SongInput.SongData data = songData();
+        final SongInput input = new SongInput(1L, data);
+        final SongInput sameValues = new SongInput(1L, data);
+        final SongInput differentId = new SongInput(2L, data);
 
         assertThat(input)
             .isEqualTo(sameValues)
@@ -74,8 +74,8 @@ class SongInputTest {
     }
 
     private static AlbumInput albumInput() {
-        ArtistInput artist = new ArtistInput(20L, new ArtistData("Alice", ArtistType.PERSON));
-        AlbumData albumData = new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), artist);
+        final ArtistInput artist = new ArtistInput(20L, new ArtistData("Alice", ArtistType.PERSON));
+        final AlbumData albumData = new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), artist);
         return new AlbumInput(30L, albumData);
     }
 }

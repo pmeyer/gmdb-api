@@ -14,9 +14,9 @@ class GraphQLExceptionHandlerTest {
 
     @Test
     void handleConstraintViolationExceptionReturnsValidationError() {
-        ConstraintViolationException exception = new ConstraintViolationException("constraint failed", null);
+        final ConstraintViolationException exception = new ConstraintViolationException("constraint failed", null);
 
-        GraphQLError error = handler.handleConstraintViolationException(exception);
+        final GraphQLError error = handler.handleConstraintViolationException(exception);
 
         assertThat(error.getErrorType()).isEqualTo(ErrorType.ValidationError);
         assertThat(error.getMessage()).isEqualTo("constraint failed");
@@ -24,9 +24,9 @@ class GraphQLExceptionHandlerTest {
 
     @Test
     void handlerInputValidationExceptionReturnsValidationError() {
-        InputValidationException exception = new InputValidationException("input failed");
+        final InputValidationException exception = new InputValidationException("input failed");
 
-        GraphQLError error = handler.handlerInputValidationException(exception);
+        final GraphQLError error = handler.handlerInputValidationException(exception);
 
         assertThat(error.getErrorType()).isEqualTo(ErrorType.ValidationError);
         assertThat(error.getMessage()).isEqualTo("input failed");

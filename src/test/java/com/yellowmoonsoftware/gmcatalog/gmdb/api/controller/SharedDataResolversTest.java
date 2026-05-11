@@ -32,10 +32,10 @@ class SharedDataResolversTest {
 
     @Test
     void artistsForAlbumArtistIdContainerMapsFetchedArtistsToContainers() {
-        AlbumSearchResult first = new AlbumSearchResult(1L, "First", LocalDate.of(2020, 1, 1), null, 10L);
-        AlbumSearchResult second = new AlbumSearchResult(2L, "Second", LocalDate.of(2021, 1, 1), null, 10L);
-        AlbumSearchResult missingArtist = new AlbumSearchResult(3L, "Third", LocalDate.of(2022, 1, 1), null, null);
-        ArtistOut artist = new ArtistOut(10L, "Alice", ArtistType.PERSON, null);
+        final AlbumSearchResult first = new AlbumSearchResult(1L, "First", LocalDate.of(2020, 1, 1), null, 10L);
+        final AlbumSearchResult second = new AlbumSearchResult(2L, "Second", LocalDate.of(2021, 1, 1), null, 10L);
+        final AlbumSearchResult missingArtist = new AlbumSearchResult(3L, "Third", LocalDate.of(2022, 1, 1), null, null);
+        final ArtistOut artist = new ArtistOut(10L, "Alice", ArtistType.PERSON, null);
         when(artistMapper.getArtistsByIds(Set.of(10L))).thenReturn(Flux.just(artist));
 
         StepVerifier.create(resolvers.artistsForAlbumArtistIdContainer(Set.of(first, second, missingArtist)))
@@ -49,7 +49,7 @@ class SharedDataResolversTest {
 
     @Test
     void artistsForAlbumArtistIdContainerOmitsContainersWhenArtistIsNotFetched() {
-        AlbumSearchResult album = new AlbumSearchResult(1L, "First", LocalDate.of(2020, 1, 1), null, 10L);
+        final AlbumSearchResult album = new AlbumSearchResult(1L, "First", LocalDate.of(2020, 1, 1), null, 10L);
         when(artistMapper.getArtistsByIds(Set.of(10L))).thenReturn(Flux.empty());
 
         StepVerifier.create(resolvers.artistsForAlbumArtistIdContainer(Set.of(album)))
@@ -62,7 +62,7 @@ class SharedDataResolversTest {
 
     @Test
     void artistsForAlbumArtistIdContainerHandlesOnlyNullArtistIds() {
-        AlbumSearchResult missingArtist = new AlbumSearchResult(3L, "Third", LocalDate.of(2022, 1, 1), null, null);
+        final AlbumSearchResult missingArtist = new AlbumSearchResult(3L, "Third", LocalDate.of(2022, 1, 1), null, null);
         when(artistMapper.getArtistsByIds(Set.of())).thenReturn(Flux.empty());
 
         StepVerifier.create(resolvers.artistsForAlbumArtistIdContainer(Set.of(missingArtist)))

@@ -15,9 +15,9 @@ class SongAlbumTest {
 
     @Test
     void exposesRecordValuesAndPrimaryArtistContract() {
-        LocalDate releaseDate = LocalDate.of(2020, 4, 5);
+        final LocalDate releaseDate = LocalDate.of(2020, 4, 5);
 
-        SongAlbum album = new SongAlbum(1L, "Live Set", 3, releaseDate, "art.jpg", 10L);
+        final SongAlbum album = new SongAlbum(1L, "Live Set", 3, releaseDate, "art.jpg", 10L);
 
         assertThat(album.id()).isEqualTo(1L);
         assertThat(album.title()).isEqualTo("Live Set");
@@ -31,12 +31,12 @@ class SongAlbumTest {
 
     @Test
     void derivesValuesFromAlbumAndSong() {
-        AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5));
+        final AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5));
         details.resources().put(ResourceSlug.ALBUM_ART, new ResourceAttributes("cover.jpg", MediaType.IMAGE_JPEG));
-        AlbumOut albumOut = new AlbumOut(1L, "Live Set", details, 10L, MergeAction.INSERT);
-        SongSearchResult song = new SongSearchResult(20L, "Opener", 3, 1L);
+        final AlbumOut albumOut = new AlbumOut(1L, "Live Set", details, 10L, MergeAction.INSERT);
+        final SongSearchResult song = new SongSearchResult(20L, "Opener", 3, 1L);
 
-        SongAlbum album = new SongAlbum(albumOut, song);
+        final SongAlbum album = new SongAlbum(albumOut, song);
 
         assertThat(album.id()).isEqualTo(1L);
         assertThat(album.title()).isEqualTo("Live Set");
@@ -48,9 +48,9 @@ class SongAlbumTest {
 
     @Test
     void equalityUsesOnlyId() {
-        SongAlbum album = new SongAlbum(1L, "Live Set", 3, LocalDate.of(2020, 4, 5), "art.jpg", 10L);
-        SongAlbum sameId = new SongAlbum(1L, "Studio", 4, LocalDate.of(2021, 1, 1), "other.jpg", 11L);
-        SongAlbum differentId = new SongAlbum(2L, "Live Set", 3, LocalDate.of(2020, 4, 5), "art.jpg", 10L);
+        final SongAlbum album = new SongAlbum(1L, "Live Set", 3, LocalDate.of(2020, 4, 5), "art.jpg", 10L);
+        final SongAlbum sameId = new SongAlbum(1L, "Studio", 4, LocalDate.of(2021, 1, 1), "other.jpg", 11L);
+        final SongAlbum differentId = new SongAlbum(2L, "Live Set", 3, LocalDate.of(2020, 4, 5), "art.jpg", 10L);
 
         assertThat(album)
             .isEqualTo(sameId)
@@ -60,9 +60,9 @@ class SongAlbumTest {
 
     @Test
     void equalityRejectsDifferentTypesAndHandlesNullIds() {
-        SongAlbum album = new SongAlbum(1L, "Live Set", 3, LocalDate.of(2020, 4, 5), "art.jpg", 10L);
-        SongAlbum nullId = new SongAlbum(null, "Live Set", 3, LocalDate.of(2020, 4, 5), "art.jpg", 10L);
-        SongAlbum sameNullId = new SongAlbum(null, "Studio", 4, LocalDate.of(2021, 1, 1), "other.jpg", 11L);
+        final SongAlbum album = new SongAlbum(1L, "Live Set", 3, LocalDate.of(2020, 4, 5), "art.jpg", 10L);
+        final SongAlbum nullId = new SongAlbum(null, "Live Set", 3, LocalDate.of(2020, 4, 5), "art.jpg", 10L);
+        final SongAlbum sameNullId = new SongAlbum(null, "Studio", 4, LocalDate.of(2021, 1, 1), "other.jpg", 11L);
 
         assertThat(album).isNotEqualTo("1");
         assertThat(nullId)
@@ -73,7 +73,7 @@ class SongAlbumTest {
 
     @Test
     void toStringIncludesRecordValues() {
-        SongAlbum album = new SongAlbum(1L, "Live Set", 3, LocalDate.of(2020, 4, 5), "art.jpg", 10L);
+        final SongAlbum album = new SongAlbum(1L, "Live Set", 3, LocalDate.of(2020, 4, 5), "art.jpg", 10L);
 
         assertThat(album.toString()).contains("id=1", "title=Live Set", "trackNumber=3");
     }

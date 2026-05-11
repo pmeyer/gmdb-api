@@ -16,10 +16,10 @@ class AlbumInTest {
 
     @Test
     void exposesRecordValuesAndSupportsRecordEquality() {
-        AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5));
-        AlbumIn album = new AlbumIn(1L, "Live Set", details, 2L);
-        AlbumIn sameValues = new AlbumIn(1L, "Live Set", details, 2L);
-        AlbumIn differentTitle = new AlbumIn(1L, "Studio", details, 2L);
+        final AlbumDetails details = new AlbumDetails(LocalDate.of(2020, 4, 5));
+        final AlbumIn album = new AlbumIn(1L, "Live Set", details, 2L);
+        final AlbumIn sameValues = new AlbumIn(1L, "Live Set", details, 2L);
+        final AlbumIn differentTitle = new AlbumIn(1L, "Studio", details, 2L);
 
         assertThat(album.id()).isEqualTo(1L);
         assertThat(album.title()).isEqualTo("Live Set");
@@ -33,9 +33,9 @@ class AlbumInTest {
 
     @Test
     void fromMapsInputDataAndPrimaryArtist() {
-        AlbumInput input = new AlbumInput(1L, albumData());
+        final AlbumInput input = new AlbumInput(1L, albumData());
 
-        AlbumIn album = AlbumIn.from(input, 20L);
+        final AlbumIn album = AlbumIn.from(input, 20L);
 
         assertThat(album.id()).isEqualTo(1L);
         assertThat(album.title()).isEqualTo("Live Set");
@@ -45,9 +45,9 @@ class AlbumInTest {
 
     @Test
     void fromHandlesReferenceOnlyInput() {
-        AlbumInput input = new AlbumInput(1L, null);
+        final AlbumInput input = new AlbumInput(1L, null);
 
-        AlbumIn album = AlbumIn.from(input, 20L);
+        final AlbumIn album = AlbumIn.from(input, 20L);
 
         assertThat(album.id()).isEqualTo(1L);
         assertThat(album.title()).isNull();
@@ -56,7 +56,7 @@ class AlbumInTest {
     }
 
     private static AlbumData albumData() {
-        ArtistInput artist = new ArtistInput(10L, new ArtistData("Alice", ArtistType.PERSON));
+        final ArtistInput artist = new ArtistInput(10L, new ArtistData("Alice", ArtistType.PERSON));
         return new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), artist);
     }
 }

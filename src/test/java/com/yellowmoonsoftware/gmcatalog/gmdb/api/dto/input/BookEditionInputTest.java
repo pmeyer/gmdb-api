@@ -22,7 +22,7 @@ class BookEditionInputTest {
 
     @Test
     void exposesEditionAndCover() {
-        BookEditionInput input = new BookEditionInput("First", cover);
+        final BookEditionInput input = new BookEditionInput("First", cover);
 
         assertThat(input.edition()).isEqualTo("First");
         assertThat(input.cover()).isSameAs(cover);
@@ -30,13 +30,13 @@ class BookEditionInputTest {
 
     @Test
     void convertsToDetailsWithCoverResource() {
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_PNG);
         when(cover.filename()).thenReturn("cover.png");
         when(cover.headers()).thenReturn(headers);
-        BookEditionInput input = new BookEditionInput("First", cover);
+        final BookEditionInput input = new BookEditionInput("First", cover);
 
-        BookDetails details = input.toDetails();
+        final BookDetails details = input.toDetails();
 
         assertThat(details.edition()).isEqualTo("First");
         assertThat(details.resources())
@@ -45,9 +45,9 @@ class BookEditionInputTest {
 
     @Test
     void convertsToDetailsWithoutCoverResourceWhenCoverIsNull() {
-        BookEditionInput input = new BookEditionInput("First", null);
+        final BookEditionInput input = new BookEditionInput("First", null);
 
-        BookDetails details = input.toDetails();
+        final BookDetails details = input.toDetails();
 
         assertThat(details.edition()).isEqualTo("First");
         assertThat(details.resources()).isEmpty();

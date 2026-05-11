@@ -15,11 +15,11 @@ class PubInTest {
 
     @Test
     void exposesRecordValuesAndSupportsRecordEquality() {
-        LocalDate pubDate = LocalDate.of(2024, 1, 15);
-        BookDetails details = new BookDetails("First");
-        PubIn publication = new PubIn(1L, pubDate, 2L, details);
-        PubIn sameValues = new PubIn(1L, pubDate, 2L, details);
-        PubIn differentId = new PubIn(3L, pubDate, 2L, details);
+        final LocalDate pubDate = LocalDate.of(2024, 1, 15);
+        final BookDetails details = new BookDetails("First");
+        final PubIn publication = new PubIn(1L, pubDate, 2L, details);
+        final PubIn sameValues = new PubIn(1L, pubDate, 2L, details);
+        final PubIn differentId = new PubIn(3L, pubDate, 2L, details);
 
         assertThat(publication.id()).isEqualTo(1L);
         assertThat(publication.pubDate()).isEqualTo(pubDate);
@@ -33,10 +33,10 @@ class PubInTest {
 
     @Test
     void forNewPubMapsPublicationInput() {
-        LocalDate pubDate = LocalDate.of(2024, 1, 15);
-        BookInput input = new BookInput(pubDate, new PubIndexInput(1L, null), new BookEditionInput("First", null), List.of());
+        final LocalDate pubDate = LocalDate.of(2024, 1, 15);
+        final BookInput input = new BookInput(pubDate, new PubIndexInput(1L, null), new BookEditionInput("First", null), List.of());
 
-        PubIn publication = PubIn.forNewPub(2L, input);
+        final PubIn publication = PubIn.forNewPub(2L, input);
 
         assertThat(publication.id()).isNull();
         assertThat(publication.pubDate()).isEqualTo(pubDate);

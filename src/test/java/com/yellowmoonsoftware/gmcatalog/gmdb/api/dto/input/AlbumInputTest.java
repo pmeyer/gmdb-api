@@ -12,9 +12,9 @@ class AlbumInputTest {
 
     @Test
     void exposesRecordValuesAndDataContract() {
-        AlbumData data = albumData();
+        final AlbumData data = albumData();
 
-        AlbumInput input = new AlbumInput(1L, data);
+        final AlbumInput input = new AlbumInput(1L, data);
 
         assertThat(input.id()).isEqualTo(1L);
         assertThat(input.data()).isSameAs(data);
@@ -24,10 +24,10 @@ class AlbumInputTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        AlbumData data = albumData();
-        AlbumInput input = new AlbumInput(1L, data);
-        AlbumInput sameValues = new AlbumInput(1L, data);
-        AlbumInput differentId = new AlbumInput(2L, data);
+        final AlbumData data = albumData();
+        final AlbumInput input = new AlbumInput(1L, data);
+        final AlbumInput sameValues = new AlbumInput(1L, data);
+        final AlbumInput differentId = new AlbumInput(2L, data);
 
         assertThat(input)
             .isEqualTo(sameValues)
@@ -37,7 +37,7 @@ class AlbumInputTest {
     }
 
     private static AlbumData albumData() {
-        ArtistInput artist = new ArtistInput(10L, new ArtistData("Alice", ArtistType.PERSON));
+        final ArtistInput artist = new ArtistInput(10L, new ArtistData("Alice", ArtistType.PERSON));
         return new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), artist);
     }
 }

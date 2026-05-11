@@ -37,8 +37,8 @@ class SongArtistServiceTest {
     @Test
     @SuppressWarnings("unchecked")
     void addSongArtistsBuildsReferenceAndUpsertedArtistInputs() {
-        SongArtistInput reference = new SongArtistInput(10L, null, Set.of(SongArtistRole.WORDS_BY));
-        SongArtistInput data = new SongArtistInput(null, new ArtistData("Alice", ArtistType.PERSON), Set.of(SongArtistRole.MUSIC_BY));
+        final SongArtistInput reference = new SongArtistInput(10L, null, Set.of(SongArtistRole.WORDS_BY));
+        final SongArtistInput data = new SongArtistInput(null, new ArtistData("Alice", ArtistType.PERSON), Set.of(SongArtistRole.MUSIC_BY));
         when(artistService.upsertArtist(new ArtistInput(null, data.data())))
             .thenReturn(Mono.just(new ArtistOut(20L, "Alice", ArtistType.PERSON, null)));
         when(artistService.upsertSongArtists(org.mockito.ArgumentMatchers.anyList())).thenReturn(Flux.empty());
@@ -46,7 +46,7 @@ class SongArtistServiceTest {
         StepVerifier.create(songArtistService.addSongArtists(1L, List.of(reference, data)))
             .verifyComplete();
 
-        ArgumentCaptor<List<SongArtistIn>> captor = ArgumentCaptor.forClass(List.class);
+        final ArgumentCaptor<List<SongArtistIn>> captor = ArgumentCaptor.forClass(List.class);
         verify(artistService).upsertArtist(new ArtistInput(null, data.data()));
         verify(artistService).upsertSongArtists(captor.capture());
         assertThat(captor.getValue()).hasSize(2);

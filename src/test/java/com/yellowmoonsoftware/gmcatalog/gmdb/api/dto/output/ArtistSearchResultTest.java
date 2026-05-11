@@ -12,7 +12,7 @@ class ArtistSearchResultTest {
 
     @Test
     void arrayConstructorExposesArtistFieldsAndMatchedRoles() {
-        ArtistSearchResult result = new ArtistSearchResult(
+        final ArtistSearchResult result = new ArtistSearchResult(
             1L,
             "The Band",
             ArtistType.BAND,
@@ -28,19 +28,19 @@ class ArtistSearchResultTest {
 
     @Test
     void setConstructorKeepsProvidedRoles() {
-        Set<ArtistSearchRole> roles = Set.of(ArtistSearchRole.WORDS_BY);
+        final Set<ArtistSearchRole> roles = Set.of(ArtistSearchRole.WORDS_BY);
 
-        ArtistSearchResult result = new ArtistSearchResult(2L, "Alice", ArtistType.PERSON, roles);
+        final ArtistSearchResult result = new ArtistSearchResult(2L, "Alice", ArtistType.PERSON, roles);
 
         assertThat(result.matchedRoles()).isSameAs(roles);
     }
 
     @Test
     void equalityUsesArtistBaseIdentityAndIgnoresMatchedRoles() {
-        ArtistSearchResult result = new ArtistSearchResult(1L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.PERFORMED_BY));
-        ArtistSearchResult sameId = new ArtistSearchResult(1L, "Different", ArtistType.PERSON, Set.of(ArtistSearchRole.WORDS_BY));
-        ArtistSearchResult sameArtistDifferentRoles = new ArtistSearchResult(1L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.ALBUM_ARTIST));
-        ArtistSearchResult differentId = new ArtistSearchResult(2L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.PERFORMED_BY));
+        final ArtistSearchResult result = new ArtistSearchResult(1L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.PERFORMED_BY));
+        final ArtistSearchResult sameId = new ArtistSearchResult(1L, "Different", ArtistType.PERSON, Set.of(ArtistSearchRole.WORDS_BY));
+        final ArtistSearchResult sameArtistDifferentRoles = new ArtistSearchResult(1L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.ALBUM_ARTIST));
+        final ArtistSearchResult differentId = new ArtistSearchResult(2L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.PERFORMED_BY));
 
         assertThat(result)
             .isEqualTo(sameId)
@@ -52,7 +52,7 @@ class ArtistSearchResultTest {
 
     @Test
     void toStringIncludesArtistAndRoleState() {
-        ArtistSearchResult result = new ArtistSearchResult(1L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.PERFORMED_BY));
+        final ArtistSearchResult result = new ArtistSearchResult(1L, "The Band", ArtistType.BAND, Set.of(ArtistSearchRole.PERFORMED_BY));
 
         assertThat(result.toString())
             .contains("id=1")

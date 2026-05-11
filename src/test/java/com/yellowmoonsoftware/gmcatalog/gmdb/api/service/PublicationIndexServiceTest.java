@@ -33,8 +33,8 @@ class PublicationIndexServiceTest {
 
     @Test
     void upsertPublicationIndexDelegatesToUpsertForDataInput() {
-        PubIndexInput input = new PubIndexInput(null, new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1"));
-        PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
+        final PubIndexInput input = new PubIndexInput(null, new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1"));
+        final PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
         when(pubMutationMapper.upsertPubIndex(input)).thenReturn(Mono.just(output));
 
         StepVerifier.create(publicationIndexService.upsertPublicationIndex(input))
@@ -47,8 +47,8 @@ class PublicationIndexServiceTest {
 
     @Test
     void upsertPublicationIndexLoadsExistingIndexForReferenceInput() {
-        PubIndexInput input = new PubIndexInput(1L, null);
-        PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
+        final PubIndexInput input = new PubIndexInput(1L, null);
+        final PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
         when(gmdbMapper.getPubIndex(1L)).thenReturn(Mono.just(output));
 
         StepVerifier.create(publicationIndexService.upsertPublicationIndex(input))
@@ -61,8 +61,8 @@ class PublicationIndexServiceTest {
 
     @Test
     void getPublicationIndicesDelegatesToMutationMapper() {
-        PubIndexCriteria criteria = new PubIndexCriteria(PubType.BOOK);
-        PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
+        final PubIndexCriteria criteria = new PubIndexCriteria(PubType.BOOK);
+        final PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
         when(pubMutationMapper.getPubIndices(criteria)).thenReturn(Flux.just(output));
 
         StepVerifier.create(publicationIndexService.getPublicationIndices(criteria))

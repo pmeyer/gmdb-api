@@ -22,7 +22,7 @@ class PubCoverImageInputTest {
 
     @Test
     void exposesRecordValues() {
-        PubCoverImageInput input = new PubCoverImageInput(1L, cover);
+        final PubCoverImageInput input = new PubCoverImageInput(1L, cover);
 
         assertThat(input.id()).isEqualTo(1L);
         assertThat(input.cover()).isSameAs(cover);
@@ -30,13 +30,13 @@ class PubCoverImageInputTest {
 
     @Test
     void convertsCoverToResourceDetails() {
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         when(cover.filename()).thenReturn("cover.jpg");
         when(cover.headers()).thenReturn(headers);
-        PubCoverImageInput input = new PubCoverImageInput(1L, cover);
+        final PubCoverImageInput input = new PubCoverImageInput(1L, cover);
 
-        ResourcesContainer details = input.toDetails();
+        final ResourcesContainer details = input.toDetails();
 
         assertThat(details.resources())
             .containsEntry(ResourceSlug.COVER_IMAGE, new ResourceAttributes("cover.jpg", MediaType.IMAGE_JPEG));
@@ -44,9 +44,9 @@ class PubCoverImageInputTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        PubCoverImageInput input = new PubCoverImageInput(1L, cover);
-        PubCoverImageInput sameValues = new PubCoverImageInput(1L, cover);
-        PubCoverImageInput differentId = new PubCoverImageInput(2L, cover);
+        final PubCoverImageInput input = new PubCoverImageInput(1L, cover);
+        final PubCoverImageInput sameValues = new PubCoverImageInput(1L, cover);
+        final PubCoverImageInput differentId = new PubCoverImageInput(2L, cover);
 
         assertThat(input)
             .isEqualTo(sameValues)

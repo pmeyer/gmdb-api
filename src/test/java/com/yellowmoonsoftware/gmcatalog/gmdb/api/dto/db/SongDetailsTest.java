@@ -8,7 +8,7 @@ class SongDetailsTest {
 
     @Test
     void exposesTrackNumberAndEmptyResourceState() {
-        SongDetails details = new SongDetails(3);
+        final SongDetails details = new SongDetails(3);
 
         assertThat(details.trackNumber()).isEqualTo(3);
         assertThat(details.resourceId()).isNull();

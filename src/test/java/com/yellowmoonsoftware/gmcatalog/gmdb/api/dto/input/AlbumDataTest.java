@@ -25,10 +25,10 @@ class AlbumDataTest {
 
     @Test
     void exposesAlbumFields() {
-        ArtistInput primaryArtist = primaryArtist();
-        LocalDate releaseDate = LocalDate.of(2020, 4, 5);
+        final ArtistInput primaryArtist = primaryArtist();
+        final LocalDate releaseDate = LocalDate.of(2020, 4, 5);
 
-        AlbumData data = new AlbumData("Live Set", coverArt, releaseDate, primaryArtist);
+        final AlbumData data = new AlbumData("Live Set", coverArt, releaseDate, primaryArtist);
 
         assertThat(data.title()).isEqualTo("Live Set");
         assertThat(data.coverArt()).isSameAs(coverArt);
@@ -38,13 +38,13 @@ class AlbumDataTest {
 
     @Test
     void convertsToDetailsWithAlbumArtResource() {
-        HttpHeaders headers = new HttpHeaders();
+        final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
         when(coverArt.filename()).thenReturn("art.jpg");
         when(coverArt.headers()).thenReturn(headers);
-        AlbumData data = new AlbumData("Live Set", coverArt, LocalDate.of(2020, 4, 5), primaryArtist());
+        final AlbumData data = new AlbumData("Live Set", coverArt, LocalDate.of(2020, 4, 5), primaryArtist());
 
-        AlbumDetails details = data.toDetails();
+        final AlbumDetails details = data.toDetails();
 
         assertThat(details.releaseDate()).isEqualTo(LocalDate.of(2020, 4, 5));
         assertThat(details.resources())
@@ -53,9 +53,9 @@ class AlbumDataTest {
 
     @Test
     void convertsToDetailsWithoutAlbumArtWhenCoverIsNull() {
-        AlbumData data = new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), primaryArtist());
+        final AlbumData data = new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), primaryArtist());
 
-        AlbumDetails details = data.toDetails();
+        final AlbumDetails details = data.toDetails();
 
         assertThat(details.releaseDate()).isEqualTo(LocalDate.of(2020, 4, 5));
         assertThat(details.resources()).isEmpty();

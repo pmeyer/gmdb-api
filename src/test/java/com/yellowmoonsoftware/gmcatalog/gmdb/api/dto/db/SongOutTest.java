@@ -8,9 +8,9 @@ class SongOutTest {
 
     @Test
     void exposesSongFieldsAndAction() {
-        SongDetails details = new SongDetails(3);
+        final SongDetails details = new SongDetails(3);
 
-        SongOut song = new SongOut(1L, "Opener", details, 2L, MergeAction.UPDATE);
+        final SongOut song = new SongOut(1L, "Opener", details, 2L, MergeAction.UPDATE);
 
         assertThat(song.id()).isEqualTo(1L);
         assertThat(song.title()).isEqualTo("Opener");

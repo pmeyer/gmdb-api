@@ -28,8 +28,8 @@ class AlbumControllerTest {
 
     @Test
     void artistForAlbumDelegatesToSharedResolver() {
-        Set<AlbumSearchResult> albums = Set.of(new AlbumSearchResult(1L, "Live Set", LocalDate.of(2020, 4, 5), null, 2L));
-        Map<AlbumSearchResult, ArtistOut> output = Map.of();
+        final Set<AlbumSearchResult> albums = Set.of(new AlbumSearchResult(1L, "Live Set", LocalDate.of(2020, 4, 5), null, 2L));
+        final Map<AlbumSearchResult, ArtistOut> output = Map.of();
         when(sharedDataResolvers.artistsForAlbumArtistIdContainer(albums)).thenReturn(Mono.just(output));
 
         StepVerifier.create(albumController.artistForAlbum(albums))
