@@ -25,14 +25,5 @@ r2dbc:
     configuration:
       jdbc-type-for-null: null
 
-logging:
-  level:
-    com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers: debug
-    com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.typehandlers: info
-    org.springframework.graphql: debug
-    com.yellowmoonsoftware.graphql.multipart: debug
-    com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis: debug
-    pro.chenggang.project.reactive.mybatis.support.r2dbc: trace
-
 file-service:
   root: ${FILE_SERVICE_ROOT}
