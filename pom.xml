@@ -19,8 +19,21 @@
         <commons-lang3.version>3.18.0</commons-lang3.version> <!-- Address CVE-2025-48924 -->
         <r2dbc-postgresql.version>1.1.1.RELEASE</r2dbc-postgresql.version> <!-- Address CVE-2025-59432 (transitive via driver -->
         <jacoco.version>0.8.13</jacoco.version>
+        <gmdb-liquibase.version>1.2.0</gmdb-liquibase.version>
         <argLine></argLine>
     </properties>
+    <repositories>
+        <repository>
+            <id>github-gmdb-liquibase</id>
+            <url>https://maven.pkg.github.com/pmeyer/gmdb-liquibase</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -101,6 +114,23 @@
             <artifactId>byte-buddy-agent</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.yellowmoonsoftware.gmcatalog</groupId>
+            <artifactId>gmdb-liquibase</artifactId>
+            <version>${gmdb-liquibase.version}</version>
+            <classifier>resources</classifier>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -154,11 +184,65 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>add-integration-test-source</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/integrationTest/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>add-integration-test-resources</id>
+                        <phase>generate-test-resources</phase>
+                        <goals>
+                            <goal>add-test-resource</goal>
+                        </goals>
+                        <configuration>
+                            <resources>
+                                <resource>
+                                    <directory>src/integrationTest/resources</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>@{argLine} -Xshare:off -javaagent:${project.build.directory}/byte-buddy-agent.jar</argLine>
+                    <excludes>
+                        <exclude>**/*IntegrationTests.java</exclude>
+                    </excludes>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <configuration>
+                    <argLine>@{argLine} -Xshare:off -javaagent:${project.build.directory}/byte-buddy-agent.jar</argLine>
+                    <includes>
+                        <include>**/*IntegrationTests.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
