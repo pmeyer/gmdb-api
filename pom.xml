@@ -19,8 +19,21 @@
         <commons-lang3.version>3.18.0</commons-lang3.version> <!-- Address CVE-2025-48924 -->
         <r2dbc-postgresql.version>1.1.1.RELEASE</r2dbc-postgresql.version> <!-- Address CVE-2025-59432 (transitive via driver -->
         <jacoco.version>0.8.13</jacoco.version>
+        <gmdb-liquibase.version>1.0.2</gmdb-liquibase.version>
         <argLine></argLine>
     </properties>
+    <repositories>
+        <repository>
+            <id>github-gmdb-liquibase</id>
+            <url>https://maven.pkg.github.com/pmeyer/gmdb-liquibase</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -99,6 +112,12 @@
         <dependency>
             <groupId>net.bytebuddy</groupId>
             <artifactId>byte-buddy-agent</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.yellowmoonsoftware.gmcatalog</groupId>
+            <artifactId>gmdb-liquibase</artifactId>
+            <version>${gmdb-liquibase.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

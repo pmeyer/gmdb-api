@@ -152,3 +152,25 @@ provide both MyBatis and R2DBC support.
 abstracted away from the application layer, allowing it to be swapped out for another implementation such as the file 
 system or MinIO.
 
+## Maven Package Access
+Test-scoped database migration resources are provided by the private `gmdb-liquibase` Maven package hosted in GitHub
+Packages. Maven resolves that artifact from `https://maven.pkg.github.com/pmeyer/gmdb-liquibase` using the repository
+id `github-gmdb-liquibase`.
+
+Configure credentials in `~/.m2/settings.xml` before running a build that needs to resolve the package:
+
+```xml
+<settings>
+  <servers>
+    <server>
+      <id>github-gmdb-liquibase</id>
+      <username>${env.GITHUB_ACTOR}</username>
+      <password>${env.GITHUB_TOKEN}</password>
+    </server>
+  </servers>
+</settings>
+```
+
+For local builds, set `GITHUB_ACTOR` to the GitHub username associated with the PAT and set `GITHUB_TOKEN` to a PAT
+with package read access.
+In GitHub Actions, prefer `GITHUB_ACTOR` and `GITHUB_TOKEN` or a repository secret with equivalent package read access.
