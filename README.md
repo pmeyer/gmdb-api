@@ -155,7 +155,7 @@ system or MinIO.
 ## Maven Package Access
 Test-scoped database migration resources are provided by the private `gmdb-liquibase` Maven package hosted in GitHub
 Packages. Maven resolves that artifact from `https://maven.pkg.github.com/pmeyer/gmdb-liquibase` using the repository
-id `github-gmdb-liquibase`.
+id `github`.
 
 Configure credentials in `~/.m2/settings.xml` before running a build that needs to resolve the package:
 
@@ -163,7 +163,7 @@ Configure credentials in `~/.m2/settings.xml` before running a build that needs 
 <settings>
   <servers>
     <server>
-      <id>github-gmdb-liquibase</id>
+      <id>github</id>
       <username>${env.GITHUB_ACTOR}</username>
       <password>${env.GITHUB_TOKEN}</password>
     </server>
