@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.0...gmdb-api-v1.0.1) (2026-05-15)
+
+
+### Bug Fixes
+
+* address CVE-2024-25710 and CVE-2024-26308 ([f98d4a8](https://github.com/pmeyer/gmdb-api/commit/f98d4a84b843b330d5f67a2b0520503fdd3f89be))
+* use workflow token for package publishing ([923bead](https://github.com/pmeyer/gmdb-api/commit/923bead85108a6c9a58d29a51b8748e9debd6a91))
+
 ## 1.0.0 (2026-05-15)
 
 
