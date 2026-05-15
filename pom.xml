@@ -30,7 +30,7 @@
     </properties>
     <repositories>
         <repository>
-            <id>github</id>
+            <id>github-gmdb-liquibase</id>
             <url>https://maven.pkg.github.com/pmeyer/gmdb-liquibase</url>
             <releases>
                 <enabled>true</enabled>

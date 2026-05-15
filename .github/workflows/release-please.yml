@@ -49,8 +49,32 @@ jobs:
             exit 1
           fi
 
+      - name: Configure Maven package credentials
+        if: ${{ steps.release.outputs.release_created == 'true' }}
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<'EOF'
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.2.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.2.0 https://maven.apache.org/xsd/settings-1.2.0.xsd">
+            <servers>
+              <server>
+                <id>github</id>
+                <username>${env.GITHUB_ACTOR}</username>
+                <password>${env.GITHUB_TOKEN}</password>
+              </server>
+              <server>
+                <id>github-gmdb-liquibase</id>
+                <username>${env.GITHUB_ACTOR}</username>
+                <password>${env.MAVEN_PACKAGE_READ}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+
       - name: Publish package
         if: ${{ steps.release.outputs.release_created == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_PACKAGE_READ: ${{ secrets.MAVEN_PACKAGE_READ }}
         run: mvn -B -Dmaven.test.skip=true deploy
