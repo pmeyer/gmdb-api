@@ -52,5 +52,5 @@ jobs:
       - name: Publish package
         if: ${{ steps.release.outputs.release_created == 'true' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.MAVEN_PACKAGE_READ }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: mvn -B -Dmaven.test.skip=true deploy
