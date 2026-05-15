@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.1...gmdb-api-v1.0.2) (2026-05-15)
+
+
+### Bug Fixes
+
+* separate package credentials for release publish ([1a2472f](https://github.com/pmeyer/gmdb-api/commit/1a2472faa926729ee874d974db58af281b6cfeb2))
+
 ## [1.0.1](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.0...gmdb-api-v1.0.1) (2026-05-15)
 
 
