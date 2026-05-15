@@ -34,7 +34,7 @@ jobs:
           distribution: temurin
           java-version: '23'
           cache: maven
-          server-id: github
+          server-id: github-gmdb-liquibase
 
       - name: Build and test
         env:
