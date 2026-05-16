@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -12,8 +14,15 @@ import reactor.test.StepVerifier;
 @ActiveProfiles("test")
 class GmdbApplicationIntegrationTests extends GmdbDatabaseIntegrationTestSupport {
 
+    private static final GmdbIntegrationDatabase DATABASE = createStartedDatabase();
+
     @Autowired
     private ConnectionFactory connectionFactory;
+
+    @DynamicPropertySource
+    static void registerGmdbIntegrationProperties(final DynamicPropertyRegistry registry) {
+        registerGmdbIntegrationProperties(registry, DATABASE);
+    }
 
     @Test
     void startsApplicationAgainstMigratedDatabase() {

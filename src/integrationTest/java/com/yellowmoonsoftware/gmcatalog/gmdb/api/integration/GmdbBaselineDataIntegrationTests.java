@@ -2,26 +2,35 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSupport {
 
+    private static final GmdbIntegrationDatabase DATABASE = createStartedDatabase();
+
     @BeforeAll
     static void applyTestData() {
-        applyBaselineTestData();
+        applyBaselineTestData(DATABASE);
+    }
+
+    @DynamicPropertySource
+    static void registerGmdbIntegrationProperties(final DynamicPropertyRegistry registry) {
+        registerGmdbIntegrationProperties(registry, DATABASE);
     }
 
     @Test
     void appliesBaselineTestDataSql() {
-        assertThat(queryForInt("""
+        assertThat(queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.artist
                 where name = 'AC/DC'
                     and type::text = 'BAND'
                 """)).isEqualTo(1);
 
-        assertThat(queryForInt("""
+        assertThat(queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.transcription tran
                     inner join gmdb.song song on tran.song_id = song.id
@@ -46,7 +55,7 @@ class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSuppor
         assertGeneratedResourceIds("song");
         assertGeneratedResourceIds("transcription");
 
-        assertThat(queryForInt("""
+        assertThat(queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.album
                 where title = 'Appetite For Destruction'
@@ -54,7 +63,7 @@ class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSuppor
                     and details - 'resourceId' = '{}'::jsonb
                 """)).isEqualTo(1);
 
-        assertThat(queryForInt("""
+        assertThat(queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.pub pub
                     inner join gmdb.pub_idx pub_idx on pub.pub_idx_id = pub_idx.id
@@ -65,7 +74,7 @@ class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSuppor
                     and pub.details->>'issueName' = 'November 2018'
                 """)).isEqualTo(1);
 
-        assertThat(queryForInt("""
+        assertThat(queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.song
                 where title = 'American Girl'
@@ -73,7 +82,7 @@ class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSuppor
                     and details->>'trackNumber' = '1'
                 """)).isEqualTo(1);
 
-        assertThat(queryForInt("""
+        assertThat(queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.transcription tran
                     inner join gmdb.song song on tran.song_id = song.id
@@ -86,7 +95,7 @@ class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSuppor
     }
 
     private static void assertGeneratedResourceIds(final String tableName) {
-        assertThat(queryForInt("""
+        assertThat(queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.%s
                 where details->>'resourceId' is null
