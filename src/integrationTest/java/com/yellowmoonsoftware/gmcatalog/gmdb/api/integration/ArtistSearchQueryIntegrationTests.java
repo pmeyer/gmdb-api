@@ -82,6 +82,226 @@ class ArtistSearchQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestS
                 artist(52, "Zack de la Rocha", PERSON, MUSIC_BY, WORDS_BY));
     }
 
+    @Test
+    void artistSearchWithSearchNameMatchesArtistNameCaseInsensitively() {
+        final var results = graphQlTester.document("""
+                        query {
+                            artistSearch(criteria: { searchName: "tom" }) {
+                                name
+                            }
+                        }
+                        """)
+                .execute()
+                .path("artistSearch")
+                .entityList(ArtistNameResponse.class)
+                .get();
+
+        assertThat(results).containsExactlyInAnyOrder(
+                artistName("Tom Keifer"),
+                artistName("Tom Morello"),
+                artistName("Tom Petty"),
+                artistName("Tom Petty & the Heartbreakers"));
+    }
+
+    @Test
+    void artistSearchWithTypeReturnsArtistsOfThatType() {
+        final var results = graphQlTester.document("""
+                        query {
+                            artistSearch(criteria: { type: BAND }) {
+                                name
+                                type
+                            }
+                        }
+                        """)
+                .execute()
+                .path("artistSearch")
+                .entityList(ArtistTypeResponse.class)
+                .get();
+
+        assertThat(results).containsExactlyInAnyOrder(
+                artistType("Cinderella", BAND),
+                artistType("Foo Fighters", BAND),
+                artistType("Guns N' Roses", BAND),
+                artistType("Rage Against The Machine", BAND),
+                artistType("The Who", BAND),
+                artistType("Tom Petty & the Heartbreakers", BAND));
+    }
+
+    @Test
+    void artistSearchWithSingleRoleReturnsArtistsMatchingThatRole() {
+        final var results = graphQlTester.document("""
+                        query {
+                            artistSearch(criteria: { roles: [ALBUM_ARTIST] }) {
+                                name
+                                matchedRoles
+                            }
+                        }
+                        """)
+                .execute()
+                .path("artistSearch")
+                .entityList(ArtistRolesResponse.class)
+                .get();
+
+        assertThat(results).containsExactlyInAnyOrder(
+                artistRoles("Cinderella", ALBUM_ARTIST),
+                artistRoles("Foo Fighters", ALBUM_ARTIST),
+                artistRoles("Guns N' Roses", ALBUM_ARTIST),
+                artistRoles("Rage Against The Machine", ALBUM_ARTIST),
+                artistRoles("Stevie Ray Vaughan", ALBUM_ARTIST),
+                artistRoles("The Who", ALBUM_ARTIST),
+                artistRoles("Tom Petty & the Heartbreakers", ALBUM_ARTIST));
+    }
+
+    @Test
+    void artistSearchWithMultipleRolesReturnsArtistsMatchingAnyRole() {
+        final var results = graphQlTester.document("""
+                        query {
+                            artistSearch(criteria: { roles: [MUSIC_BY, PERFORMED_BY] }) {
+                                name
+                            }
+                        }
+                        """)
+                .execute()
+                .path("artistSearch")
+                .entityList(ArtistNameResponse.class)
+                .get();
+
+        assertThat(results).containsExactlyInAnyOrderElementsOf(allExpectedArtistNames());
+    }
+
+    @Test
+    void artistSearchWithAllRolesReturnsSameArtistsAsNoRoleCriteria() {
+        final var results = graphQlTester.document("""
+                        query {
+                            artistSearch(criteria: { roles: [WORDS_BY, MUSIC_BY, PERFORMED_BY, ALBUM_ARTIST] }) {
+                                name
+                            }
+                        }
+                        """)
+                .execute()
+                .path("artistSearch")
+                .entityList(ArtistNameResponse.class)
+                .get();
+
+        assertThat(results).containsExactlyInAnyOrderElementsOf(allExpectedArtistNames());
+    }
+
+    @Test
+    void artistSearchRestrictingToTranscribedArtistsOnlyReturnsArtistsWithTranscribedSongs() {
+        final var results = graphQlTester.document("""
+                        query {
+                            artistSearch(criteria: { restrictToTranscribedArtists: true }) {
+                                name
+                            }
+                        }
+                        """)
+                .execute()
+                .path("artistSearch")
+                .entityList(ArtistNameResponse.class)
+                .get();
+
+        assertThat(results).containsExactlyInAnyOrderElementsOf(allExpectedArtistNames());
+    }
+
+    @Test
+    void artistSearchOrdersResultsByCriteria() {
+        final var results = graphQlTester.document("""
+                        query {
+                            artistSearch(criteria: {
+                                roles: [ALBUM_ARTIST],
+                                orderBy: [
+                                    { column: NAME_TITLE_SORT, direction: DESC }
+                                ]
+                            }) {
+                                name
+                            }
+                        }
+                        """)
+                .execute()
+                .path("artistSearch")
+                .entityList(ArtistNameResponse.class)
+                .get();
+
+        assertThat(results).containsExactly(
+                artistName("The Who"),
+                artistName("Tom Petty & the Heartbreakers"),
+                artistName("Stevie Ray Vaughan"),
+                artistName("Rage Against The Machine"),
+                artistName("Guns N' Roses"),
+                artistName("Foo Fighters"),
+                artistName("Cinderella"));
+    }
+
+    @Test
+    void artistSearchCombinesCriteriaElements() {
+        final var results = graphQlTester.document("""
+                        query {
+                            artistSearch(criteria: {
+                                searchName: "tom",
+                                type: PERSON,
+                                roles: [MUSIC_BY],
+                                restrictToTranscribedArtists: true
+                            }) {
+                                name
+                            }
+                        }
+                        """)
+                .execute()
+                .path("artistSearch")
+                .entityList(ArtistNameResponse.class)
+                .get();
+
+        assertThat(results).containsExactlyInAnyOrder(
+                artistName("Tom Keifer"),
+                artistName("Tom Morello"),
+                artistName("Tom Petty"));
+    }
+
+    private static Set<ArtistNameResponse> allExpectedArtistNames() {
+        return Set.of(
+                artistName("Barbara Logan"),
+                artistName("Brad Wilk"),
+                artistName("Cinderella"),
+                artistName("Dave Grohl"),
+                artistName("David A. Stewart"),
+                artistName("Doyle Bramhall"),
+                artistName("Duff McKagan"),
+                artistName("Foo Fighters"),
+                artistName("Guns N' Roses"),
+                artistName("Izzy Stradlin"),
+                artistName("Jeff Lyne"),
+                artistName("John Keene"),
+                artistName("Mike Campbell"),
+                artistName("Pete Townshend"),
+                artistName("Rage Against The Machine"),
+                artistName("Slash"),
+                artistName("Steven Adler"),
+                artistName("Stevie Ray Vaughan"),
+                artistName("The Who"),
+                artistName("Tim Commerford"),
+                artistName("Tom Keifer"),
+                artistName("Tom Morello"),
+                artistName("Tom Petty"),
+                artistName("Tom Petty & the Heartbreakers"),
+                artistName("W. Axl Rose"),
+                artistName("Zack de la Rocha"));
+    }
+
+    private static ArtistNameResponse artistName(final String name) {
+        return new ArtistNameResponse(name);
+    }
+
+    private static ArtistTypeResponse artistType(final String name, final ArtistType type) {
+        return new ArtistTypeResponse(name, type);
+    }
+
+    private static ArtistRolesResponse artistRoles(
+            final String name,
+            final ArtistSearchRole... matchedRoles) {
+
+        return new ArtistRolesResponse(name, Set.of(matchedRoles));
+    }
+
     private static ArtistSearchResponse artist(
             final long id,
             final String name,
@@ -96,5 +316,14 @@ class ArtistSearchQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestS
             String name,
             ArtistType type,
             Set<ArtistSearchRole> matchedRoles) {
+    }
+
+    private record ArtistNameResponse(String name) {
+    }
+
+    private record ArtistTypeResponse(String name, ArtistType type) {
+    }
+
+    private record ArtistRolesResponse(String name, Set<ArtistSearchRole> matchedRoles) {
     }
 }
