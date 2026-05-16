@@ -1,7 +1,6 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 import org.testcontainers.utility.DockerImageName;
@@ -26,44 +25,42 @@ public abstract class GmdbDatabaseIntegrationTestSupport {
     private static final String APP_USER_PASSWORD = "gmdb_app_user";
     private static final String ADMIN_USER = "gmdb_admin";
     private static final String ADMIN_PASSWORD = "gmdb_admin";
-    private static final Object BASELINE_TEST_DATA_LOCK = new Object();
 
-    private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>(
-            DockerImageName.parse(buildPostgresImage()).asCompatibleSubstituteFor("postgres"))
-            .withDatabaseName(DATABASE_NAME)
-            .withUsername(SUPERUSER)
-            .withPassword(SUPERUSER_PASSWORD);
+    protected static GmdbIntegrationDatabase createStartedDatabase() {
+        final PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
+                DockerImageName.parse(buildPostgresImage()).asCompatibleSubstituteFor("postgres"))
+                .withDatabaseName(DATABASE_NAME)
+                .withUsername(SUPERUSER)
+                .withPassword(SUPERUSER_PASSWORD);
 
-    private static final Path FILE_ROOT = createFileRoot();
-    private static boolean baselineTestDataApplied;
-
-    static {
-        POSTGRES.start();
+        postgres.start();
         GmdbLiquibaseMigrator.bootstrap(
-                POSTGRES.getJdbcUrl(),
-                POSTGRES.getUsername(),
-                POSTGRES.getPassword(),
+                postgres.getJdbcUrl(),
+                postgres.getUsername(),
+                postgres.getPassword(),
                 APP_USER_PASSWORD,
                 ADMIN_PASSWORD);
         GmdbLiquibaseMigrator.migrate(
-                POSTGRES.getJdbcUrl(),
+                postgres.getJdbcUrl(),
                 ADMIN_USER,
                 ADMIN_PASSWORD);
+
+        return new GmdbIntegrationDatabase(postgres, createFileRoot());
     }
 
-    protected static void applyBaselineTestData() {
-        synchronized (BASELINE_TEST_DATA_LOCK) {
-            if (!baselineTestDataApplied) {
-                executeSqlScript(BASELINE_TEST_DATA_SCRIPT);
-                baselineTestDataApplied = true;
+    protected static void applyBaselineTestData(final GmdbIntegrationDatabase database) {
+        synchronized (database.baselineTestDataLock) {
+            if (!database.baselineTestDataApplied) {
+                executeSqlScript(database, BASELINE_TEST_DATA_SCRIPT);
+                database.baselineTestDataApplied = true;
             }
         }
     }
 
-    protected static int queryForInt(final String sql) {
+    protected static int queryForInt(final GmdbIntegrationDatabase database, final String sql) {
         try (
                 Connection connection = DriverManager.getConnection(
-                        POSTGRES.getJdbcUrl(),
+                        database.postgres.getJdbcUrl(),
                         APP_USER,
                         APP_USER_PASSWORD);
                 Statement statement = connection.createStatement();
@@ -78,19 +75,14 @@ public abstract class GmdbDatabaseIntegrationTestSupport {
         }
     }
 
-    @DynamicPropertySource
-    static void registerGmdbIntegrationProperties(final DynamicPropertyRegistry registry) {
-        registry.add("spring.r2dbc.mybatis.r2dbc-url", GmdbDatabaseIntegrationTestSupport::r2dbcUrl);
+    protected static void registerGmdbIntegrationProperties(
+            final DynamicPropertyRegistry registry,
+            final GmdbIntegrationDatabase database) {
+
+        registry.add("spring.r2dbc.mybatis.r2dbc-url", database::r2dbcUrl);
         registry.add("spring.r2dbc.mybatis.username", () -> APP_USER);
         registry.add("spring.r2dbc.mybatis.password", () -> APP_USER_PASSWORD);
-        registry.add("file-service.root", () -> FILE_ROOT.toString());
-    }
-
-    private static String r2dbcUrl() {
-        return "r2dbc:postgresql://%s:%d/%s".formatted(
-                POSTGRES.getHost(),
-                POSTGRES.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT),
-                POSTGRES.getDatabaseName());
+        registry.add("file-service.root", () -> database.fileRoot.toString());
     }
 
     private static String buildPostgresImage() {
@@ -105,10 +97,10 @@ public abstract class GmdbDatabaseIntegrationTestSupport {
                 .get();
     }
 
-    private static void executeSqlScript(final String resourceName) {
+    private static void executeSqlScript(final GmdbIntegrationDatabase database, final String resourceName) {
         try (
                 Connection connection = DriverManager.getConnection(
-                        POSTGRES.getJdbcUrl(),
+                        database.postgres.getJdbcUrl(),
                         SUPERUSER,
                         SUPERUSER_PASSWORD);
                 Statement statement = connection.createStatement()
@@ -139,6 +131,26 @@ public abstract class GmdbDatabaseIntegrationTestSupport {
             return Files.createTempDirectory("gmdb-api-it-files-");
         } catch (final IOException exception) {
             throw new IllegalStateException("Could not create integration test file root", exception);
+        }
+    }
+
+    protected static final class GmdbIntegrationDatabase {
+
+        private final PostgreSQLContainer<?> postgres;
+        private final Path fileRoot;
+        private final Object baselineTestDataLock = new Object();
+        private boolean baselineTestDataApplied;
+
+        private GmdbIntegrationDatabase(final PostgreSQLContainer<?> postgres, final Path fileRoot) {
+            this.postgres = postgres;
+            this.fileRoot = fileRoot;
+        }
+
+        private String r2dbcUrl() {
+            return "r2dbc:postgresql://%s:%d/%s".formatted(
+                    postgres.getHost(),
+                    postgres.getMappedPort(PostgreSQLContainer.POSTGRESQL_PORT),
+                    postgres.getDatabaseName());
         }
     }
 }
