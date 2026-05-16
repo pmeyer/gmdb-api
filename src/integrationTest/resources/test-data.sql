@@ -230,7 +230,7 @@ from jsonb_array_elements(
              [
                {
                  "Album" : "Appetite For Destruction",
-                 "PerformedBy" : "Guns N'' Roses",
+                 "PerformedBy" : "Guns N' Roses",
                  "ReleaseDate" : "1987-07-21"
                },
                {
