@@ -60,7 +60,7 @@ class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSuppor
                 from gmdb.album
                 where title = 'Appetite For Destruction'
                     and details ? 'resourceId'
-                    and details - 'resourceId' = '{}'::jsonb
+                    and details->>'releaseDate' = '1987-07-21'
                 """)).isEqualTo(1);
 
         assertThat(queryForInt(DATABASE, """

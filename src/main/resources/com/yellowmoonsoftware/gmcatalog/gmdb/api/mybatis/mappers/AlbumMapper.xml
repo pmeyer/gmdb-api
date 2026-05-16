@@ -62,6 +62,9 @@
                         <when test="ord.column.name() == 'RELEASE_DATE'">
                             d.release_date
                         </when>
+                        <when test="ord.column.name() == 'ARTIST'">
+                            aa.name
+                        </when>
                     </choose>
                     <if test="ord.direction.clause != null">
                         ${ord.direction.clause}

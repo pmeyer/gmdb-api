@@ -221,39 +221,58 @@ from jsonb_array_elements('[
 insert into album(title, details, primary_artist_id)
 select
     a->>'Album' title,
-    '{}'::jsonb details,
+    case when a->>'ReleaseDate' is not null
+                then jsonb_build_object('releaseDate', a->>'ReleaseDate')
+         else '{}'::jsonb end details,
     artist.id primary_artist_id
 from jsonb_array_elements(
-             '[
+             $json$
+             [
                {
                  "Album" : "Appetite For Destruction",
-                 "PerformedBy" : "Guns N'' Roses"
+                 "PerformedBy" : "Guns N' Roses",
+                 "ReleaseDate" : "1987-07-21"
                },
                {
                  "Album" : "Rage Against The Machine",
-                 "PerformedBy" : "Rage Against The Machine"
+                 "PerformedBy" : "Rage Against The Machine",
+                 "ReleaseDate" : "1992-11-03"
                },
                {
                  "Album" : "The Sky Is Crying",
-                 "PerformedBy" : "Stevie Ray Vaughan"
+                 "PerformedBy" : "Stevie Ray Vaughan",
+                 "ReleaseDate" : "1991-11-05"
                },
                {
                  "Album" : "Long Cold Winter",
-                 "PerformedBy" : "Cinderella"
+                 "PerformedBy" : "Cinderella",
+                 "ReleaseDate" : "1988-05-21"
                },
                {
                  "Album" : "Greatest Hits",
-                 "PerformedBy" : "Tom Petty & the Heartbreakers"
+                 "PerformedBy" : "Tom Petty & the Heartbreakers",
+                 "ReleaseDate" : "1993-11-16"
                },
                {
                  "Album" : "Meaty Beaty Big and Bouncy",
-                 "PerformedBy" : "The Who"
+                 "PerformedBy" : "The Who",
+                 "ReleaseDate" : "1971-10-30"
                },
                {
                  "Album" : "The Colour and the Shape",
-                 "PerformedBy" : "Foo Fighters"
+                 "PerformedBy" : "Foo Fighters",
+                 "ReleaseDate" : "1997-05-20"
+               },
+               {
+                 "Album" : "Lost Dogs",
+                 "PerformedBy" : "Pearl Jam",
+                 "ReleaseDate" : "2003-11-11"
+               },
+               {
+                 "Album" : "Who's Next",
+                 "PerformedBy" : "The Who"
                }
-             ]'::jsonb) as a
+             ] $json$::jsonb) as a
          inner join artist on a->>'PerformedBy' = artist."name";
 
 -- Insert Songs
@@ -385,7 +404,7 @@ with songs as (
         ) as x on true
 )
 insert into song(title,details,album_id)
-select s.song, json_build_object('trackNumber', s.track) , a.id from songs s inner join album a on s.album = a.title;
+select s.song, jsonb_build_object('trackNumber', s.track) , a.id from songs s inner join album a on s.album = a.title;
 
 
 -- Insert pub/pub_idx
