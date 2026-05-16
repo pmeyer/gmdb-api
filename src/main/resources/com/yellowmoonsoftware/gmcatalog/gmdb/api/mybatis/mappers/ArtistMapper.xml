@@ -84,7 +84,7 @@
                 and name ~* #{criteria.searchName}
             </if>
             <if test="criteria.type != null">
-                and type = #{criteria.type}
+                and type = #{criteria.type}::artist_type
             </if>
         </where>
         group by id, name, type
