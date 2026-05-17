@@ -463,7 +463,7 @@ with pubs as (
                         join lateral (
         select p.pubs->>'Name' name,
                upper(p.pubs->>'PubType')::pub_type pub_type,
-               to_timestamp((p.pubs->>'PubDate')::bigint/1000)::date pub_date,
+               (to_timestamp((p.pubs->>'PubDate')::bigint/1000) at time zone 'UTC')::date pub_date,
                p.pubs->>'Serial' serial,
                (p.pubs->>'details')::jsonb details
         ) as t on true
