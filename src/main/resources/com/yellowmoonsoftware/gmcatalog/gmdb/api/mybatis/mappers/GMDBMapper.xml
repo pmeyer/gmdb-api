@@ -17,6 +17,11 @@
             case when (details->>'trackNumber' ~ '^\d+$') then (details->>'trackNumber')::int end track_number,
             album_id
         from song
+        <where>
+            <if test="criteria.titleSearch != null and criteria.titleSearch != ''">
+                title ~* #{criteria.titleSearch}
+            </if>
+        </where>
     </select>
 
     <sql id="pubSearchSelect">
