@@ -31,6 +31,14 @@
                         and pi.name ~* #{criteria.pubNameSearch}
                 )
             </if>
+            <if test="criteria.albumSearch != null and criteria.albumSearch != ''">
+                and exists (
+                    select *
+                    from album a
+                    where a.id = s.album_id
+                        and a.title ~* #{criteria.albumSearch}
+                )
+            </if>
         </where>
     </select>
 
