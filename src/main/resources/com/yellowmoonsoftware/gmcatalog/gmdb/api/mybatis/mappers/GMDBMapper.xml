@@ -57,6 +57,23 @@
                     )
                 )
             </if>
+            <if test="criteria.albums != null and !criteria.albums.isEmpty()">
+                and s.album_id in
+                <foreach collection="criteria.albums" item="albumId" open="(" separator="," close=")">
+                    #{albumId}
+                </foreach>
+            </if>
+            <if test="criteria.pubs != null and !criteria.pubs.isEmpty()">
+                and exists (
+                    select *
+                    from transcription t
+                    where t.song_id = s.id
+                        and t.pub_id in
+                        <foreach collection="criteria.pubs" item="pubId" open="(" separator="," close=")">
+                            #{pubId}
+                        </foreach>
+                )
+            </if>
         </where>
     </select>
 
