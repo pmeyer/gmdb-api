@@ -463,7 +463,7 @@ with pubs as (
                         join lateral (
         select p.pubs->>'Name' name,
                upper(p.pubs->>'PubType')::pub_type pub_type,
-               to_timestamp((p.pubs->>'PubDate')::bigint/1000)::date pub_date,
+               (to_timestamp((p.pubs->>'PubDate')::bigint/1000) at time zone 'UTC')::date pub_date,
                p.pubs->>'Serial' serial,
                (p.pubs->>'details')::jsonb details
         ) as t on true
@@ -1115,7 +1115,7 @@ with d as (
             t.i->>'Name' song,
             t.i->>'Album' album,
             t.i->>'Serial' serial_number,
-            to_timestamp((t.i->>'PubDate')::decimal)::date pub_date,
+            (to_timestamp((t.i->>'PubDate')::decimal) at time zone 'UTC')::date pub_date,
             (t.i->>'PubDetails')::jsonb pub_details,
             (t.i->>'Details')::jsonb details,
             (t.i->>'Transcribers')::jsonb transcribers
