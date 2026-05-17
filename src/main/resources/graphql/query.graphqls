@@ -12,7 +12,7 @@ type Query {
 
 input ArtistMatchCriteria {
     id: Long!
-    roles: [ArtistSearchRole!]!
+    roles: [ArtistSearchRole!]
 }
 
 input SongSearchCriteria {
@@ -74,11 +74,21 @@ enum ArtistType {
     PERSON
 }
 
+type TranscriptionPub {
+    id: Long!
+    name: String!
+    type: PubType!
+    details: PubDetails!
+    pubDate: Date
+    serialNumber: String!
+    pubIndexId: Long!
+}
+
 type Transcription {
     id: Long!
     url: String
     pageNumber: Int
-    pub: PubSearchResult
+    pub: TranscriptionPub
     transcribers: [Transcriber!]
 }
 

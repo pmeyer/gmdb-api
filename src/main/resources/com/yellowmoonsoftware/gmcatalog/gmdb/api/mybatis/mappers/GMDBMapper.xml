@@ -12,11 +12,105 @@
 
     <select id="songSearch" parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongSearchCriteria" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.SongSearchResult">
         select
-            id,
-            title,
-            case when (details->>'trackNumber' ~ '^\d+$') then (details->>'trackNumber')::int end track_number,
-            album_id
-        from song
+            s.id,
+            s.title,
+            case when (s.details->>'trackNumber' ~ '^\d+$') then (s.details->>'trackNumber')::int end track_number,
+            s.album_id
+        from song s
+        <where>
+            <if test="criteria.titleSearch != null and criteria.titleSearch != ''">
+                s.title ~* #{criteria.titleSearch}
+            </if>
+            <if test="criteria.pubNameSearch != null and criteria.pubNameSearch != ''">
+                and exists (
+                    select *
+                    from transcription t
+                        inner join pub p on t.pub_id = p.id
+                        inner join pub_idx pi on p.pub_idx_id = pi.id
+                    where t.song_id = s.id
+                        and pi.name ~* #{criteria.pubNameSearch}
+                )
+            </if>
+            <if test="criteria.albumSearch != null and criteria.albumSearch != ''">
+                and exists (
+                    select *
+                    from album a
+                    where a.id = s.album_id
+                        and a.title ~* #{criteria.albumSearch}
+                )
+            </if>
+            <if test="criteria.artistSearch != null and criteria.artistSearch != ''">
+                and (
+                    exists (
+                        select *
+                        from song_artist sa
+                            inner join artist a on sa.artist_id = a.id
+                        where sa.song_id = s.id
+                            and a.name ~* #{criteria.artistSearch}
+                    )
+                    or exists (
+                        select *
+                        from album al
+                            inner join artist a on al.primary_artist_id = a.id
+                        where al.id = s.album_id
+                            and a.name ~* #{criteria.artistSearch}
+                    )
+                )
+            </if>
+            <if test="criteria.artists != null and !criteria.artists.isEmpty()">
+                and (
+                    <foreach collection="criteria.artists" item="artistCriterion" separator=" or ">
+                        (
+                            exists (
+                                select *
+                                from song_artist sa
+                                where sa.song_id = s.id
+                                    and sa.artist_id = #{artistCriterion.id}
+                                <if test="artistCriterion.roles != null and !artistCriterion.roles.isEmpty()">
+                                    and exists (
+                                        select *
+                                        from jsonb_array_elements_text(sa.roles) as song_role(role)
+                                        where song_role.role in
+                                        <foreach collection="artistCriterion.roles" item="role" open="(" separator="," close=")">
+                                            #{role}::text
+                                        </foreach>
+                                    )
+                                </if>
+                            )
+                            or exists (
+                                select *
+                                from album al
+                                where al.id = s.album_id
+                                    and al.primary_artist_id = #{artistCriterion.id}
+                                <if test="artistCriterion.roles != null and !artistCriterion.roles.isEmpty()">
+                                    and 'ALBUM_ARTIST' in
+                                    <foreach collection="artistCriterion.roles" item="role" open="(" separator="," close=")">
+                                        #{role}::text
+                                    </foreach>
+                                </if>
+                            )
+                        )
+                    </foreach>
+                )
+            </if>
+            <if test="criteria.albums != null and !criteria.albums.isEmpty()">
+                and s.album_id in
+                <foreach collection="criteria.albums" item="albumId" open="(" separator="," close=")">
+                    #{albumId}
+                </foreach>
+            </if>
+            <if test="criteria.pubs != null and !criteria.pubs.isEmpty()">
+                and exists (
+                    select *
+                    from transcription t
+                    where t.song_id = s.id
+                        and t.pub_id in
+                        <foreach collection="criteria.pubs" item="pubId" open="(" separator="," close=")">
+                            #{pubId}
+                        </foreach>
+                )
+            </if>
+        </where>
     </select>
 
     <sql id="pubSearchSelect">
