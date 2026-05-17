@@ -259,6 +259,60 @@ class SongSearchQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestSup
     }
 
     @Test
+    void songSearchWithArtistsDoesNotFilterByRoleWhenRolesAreOmitted() {
+        final var tomPettyAndTheHeartbreakersId = queryForInt(DATABASE, """
+                select id
+                from gmdb.artist
+                where name = 'Tom Petty & the Heartbreakers'
+                """);
+
+        final var results = graphQlTester.document("""
+                        query {
+                            songSearch(criteria: {
+                                artists: [
+                                    { id: %d }
+                                ]
+                            }) {
+                                title
+                            }
+                        }
+                        """.formatted(tomPettyAndTheHeartbreakersId))
+                .execute()
+                .path("songSearch")
+                .entityList(SongTitleResponse.class)
+                .get();
+
+        assertThat(results).containsExactlyInAnyOrderElementsOf(tomPettyGreatestHitsSongTitles());
+    }
+
+    @Test
+    void songSearchWithArtistsDoesNotFilterByRoleWhenRolesAreEmpty() {
+        final var tomPettyAndTheHeartbreakersId = queryForInt(DATABASE, """
+                select id
+                from gmdb.artist
+                where name = 'Tom Petty & the Heartbreakers'
+                """);
+
+        final var results = graphQlTester.document("""
+                        query {
+                            songSearch(criteria: {
+                                artists: [
+                                    { id: %d, roles: [] }
+                                ]
+                            }) {
+                                title
+                            }
+                        }
+                        """.formatted(tomPettyAndTheHeartbreakersId))
+                .execute()
+                .path("songSearch")
+                .entityList(SongTitleResponse.class)
+                .get();
+
+        assertThat(results).containsExactlyInAnyOrderElementsOf(tomPettyGreatestHitsSongTitles());
+    }
+
+    @Test
     void songSearchCombinesCriteriaElements() {
         final var greatestHitsId = queryForInt(DATABASE, """
                 select id
@@ -319,6 +373,28 @@ class SongSearchQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestSup
                 songTitle("Runnin' Down a Dream"),
                 songTitle("Something In The Air"),
                 songTitle("Substitute"),
+                songTitle("The Waiting"),
+                songTitle("You Got Lucky"));
+    }
+
+    private static Set<SongTitleResponse> tomPettyGreatestHitsSongTitles() {
+        return Set.of(
+                songTitle("American Girl"),
+                songTitle("Breakdown"),
+                songTitle("Don't Come Around Here No More"),
+                songTitle("Don't Do Me Like That"),
+                songTitle("Even The Losers"),
+                songTitle("Free Fallin'"),
+                songTitle("Here Comes My Girl"),
+                songTitle("I Need To Know"),
+                songTitle("I Won't Back Down"),
+                songTitle("Into The Great Wide Open"),
+                songTitle("Learning to Fly"),
+                songTitle("Listen To Her Heart"),
+                songTitle("Mary Jane's Last Dance"),
+                songTitle("Refugee"),
+                songTitle("Runnin' Down a Dream"),
+                songTitle("Something In The Air"),
                 songTitle("The Waiting"),
                 songTitle("You Got Lucky"));
     }

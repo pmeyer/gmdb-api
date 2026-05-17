@@ -12,7 +12,7 @@ type Query {
 
 input ArtistMatchCriteria {
     id: Long!
-    roles: [ArtistSearchRole!]!
+    roles: [ArtistSearchRole!]
 }
 
 input SongSearchCriteria {

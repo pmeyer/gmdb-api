@@ -57,6 +57,42 @@
                     )
                 )
             </if>
+            <if test="criteria.artists != null and !criteria.artists.isEmpty()">
+                and (
+                    <foreach collection="criteria.artists" item="artistCriterion" separator=" or ">
+                        (
+                            exists (
+                                select *
+                                from song_artist sa
+                                where sa.song_id = s.id
+                                    and sa.artist_id = #{artistCriterion.id}
+                                <if test="artistCriterion.roles != null and !artistCriterion.roles.isEmpty()">
+                                    and exists (
+                                        select *
+                                        from jsonb_array_elements_text(sa.roles) as song_role(role)
+                                        where song_role.role in
+                                        <foreach collection="artistCriterion.roles" item="role" open="(" separator="," close=")">
+                                            #{role}::text
+                                        </foreach>
+                                    )
+                                </if>
+                            )
+                            or exists (
+                                select *
+                                from album al
+                                where al.id = s.album_id
+                                    and al.primary_artist_id = #{artistCriterion.id}
+                                <if test="artistCriterion.roles != null and !artistCriterion.roles.isEmpty()">
+                                    and 'ALBUM_ARTIST' in
+                                    <foreach collection="artistCriterion.roles" item="role" open="(" separator="," close=")">
+                                        #{role}::text
+                                    </foreach>
+                                </if>
+                            )
+                        )
+                    </foreach>
+                )
+            </if>
             <if test="criteria.albums != null and !criteria.albums.isEmpty()">
                 and s.album_id in
                 <foreach collection="criteria.albums" item="albumId" open="(" separator="," close=")">
