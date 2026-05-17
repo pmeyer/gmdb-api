@@ -39,6 +39,24 @@
                         and a.title ~* #{criteria.albumSearch}
                 )
             </if>
+            <if test="criteria.artistSearch != null and criteria.artistSearch != ''">
+                and (
+                    exists (
+                        select *
+                        from song_artist sa
+                            inner join artist a on sa.artist_id = a.id
+                        where sa.song_id = s.id
+                            and a.name ~* #{criteria.artistSearch}
+                    )
+                    or exists (
+                        select *
+                        from album al
+                            inner join artist a on al.primary_artist_id = a.id
+                        where al.id = s.album_id
+                            and a.name ~* #{criteria.artistSearch}
+                    )
+                )
+            </if>
         </where>
     </select>
 
