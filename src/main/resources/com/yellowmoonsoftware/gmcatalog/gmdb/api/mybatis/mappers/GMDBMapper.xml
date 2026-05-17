@@ -12,14 +12,24 @@
 
     <select id="songSearch" parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongSearchCriteria" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.SongSearchResult">
         select
-            id,
-            title,
-            case when (details->>'trackNumber' ~ '^\d+$') then (details->>'trackNumber')::int end track_number,
-            album_id
-        from song
+            s.id,
+            s.title,
+            case when (s.details->>'trackNumber' ~ '^\d+$') then (s.details->>'trackNumber')::int end track_number,
+            s.album_id
+        from song s
         <where>
             <if test="criteria.titleSearch != null and criteria.titleSearch != ''">
-                title ~* #{criteria.titleSearch}
+                s.title ~* #{criteria.titleSearch}
+            </if>
+            <if test="criteria.pubNameSearch != null and criteria.pubNameSearch != ''">
+                and exists (
+                    select *
+                    from transcription t
+                        inner join pub p on t.pub_id = p.id
+                        inner join pub_idx pi on p.pub_idx_id = pi.id
+                    where t.song_id = s.id
+                        and pi.name ~* #{criteria.pubNameSearch}
+                )
             </if>
         </where>
     </select>
