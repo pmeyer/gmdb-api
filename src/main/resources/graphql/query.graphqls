@@ -2,33 +2,89 @@ scalar Long
 scalar Date
 
 type Query {
+    """
+    Finds songs matching the supplied criteria. Criteria fields are combined as filters; omit criteria or pass an empty
+    criteria object to return the unfiltered song set.
+    """
     songSearch(criteria: SongSearchCriteria! = {}): [SongSearchResult!]!
+    """
+    Finds artists with song or album associations. Criteria fields are combined as filters; omit criteria or pass an
+    empty criteria object to return the unfiltered artist set.
+    """
     artistSearch(criteria: ArtistSearchCriteria! = {}): [ArtistSearchResult!]!
+    """
+    Finds publications such as books and magazine issues. Criteria fields are combined as filters; omit criteria or pass
+    an empty criteria object to return the unfiltered publication set in the default publication order.
+    """
     pubSearch(criteria: PubSearchCriteria! = {}): [PubSearchResult!]!
+    """
+    Finds albums matching the supplied criteria. Criteria fields are combined as filters; omit criteria or pass an empty
+    criteria object to return the unfiltered album set.
+    """
     albumSearch(criteria: AlbumSearchCriteria! = {}): [AlbumSearchResult!]!
+    """
+    Finds transcribers. When searchName is supplied, it is matched against transcriber names using a case-insensitive
+    pattern match; omit searchName to return all transcribers.
+    """
     transcriberSearch(searchName: String): [Transcriber!]!
+    """
+    Returns publication index entries, optionally filtered by publication type. Results are ordered by publication index
+    name ascending.
+    """
     getPubIndices(criteria: PubIndexCriteria! = {}): [PubIndexResult!]!
 }
 
+"""
+Identifies an artist to match while searching songs. A criterion can match either the artist's direct song association
+or the artist's album-artist association through the song's album.
+"""
 input ArtistMatchCriteria {
+    """
+    Artist id to match.
+    """
     id: Long!
+    """
+    Optional roles to match for this artist. When omitted or empty, the artist id is matched without considering role.
+    When supplied, any one of the supplied roles may match. ALBUM_ARTIST matches the song's album artist; the other roles
+    match the artist's direct song roles.
+    """
     roles: [ArtistSearchRole!]
 }
 
+"""
+Criteria for songSearch. Top-level criteria fields are combined as filters. List criteria are ignored when omitted or
+empty.
+"""
 input SongSearchCriteria {
-    # Fuzzy match on song title
+    """
+    Case-insensitive pattern match against the song title.
+    """
     titleSearch: String
-    # Fuzzy match publications' names in which a song appears
+    """
+    Case-insensitive pattern match against the publication index name of publications in which a song appears.
+    """
     pubNameSearch: String
-    # Fuzzy match on the name of artists' names with any association to a song
+    """
+    Case-insensitive pattern match against names of artists associated directly with the song or as the song album's
+    artist.
+    """
     artistSearch: String
-    # Fuzzy match on the name of albums on which a song appears
+    """
+    Case-insensitive pattern match against the title of the album on which a song appears.
+    """
     albumSearch: String
-    # Return songs matching the supplied artist match criteria
+    """
+    Return songs matching any supplied artist criterion. Each criterion may match a direct song artist or the album
+    artist for the song.
+    """
     artists: [ArtistMatchCriteria!]
-    # Return songs appearing on the supplied albums
+    """
+    Return songs appearing on any of the supplied album ids.
+    """
     albums: [Long!]
-    # Return songs appearing in the supplied publications
+    """
+    Return songs transcribed in any of the supplied publication ids.
+    """
     pubs: [Long!]
 }
 
@@ -101,22 +157,42 @@ type PubTranscription {
 }
 
 enum ArtistOrderBy {
-    # Sort by Artist name, alphabetical
+    """
+    Sort by artist name alphabetically.
+    """
     NAME
-    # Sort by Artist name, title sort semantics (ignoring The, A, An, etc.)
+    """
+    Sort by artist name using title-sort semantics, ignoring leading The, A, or An.
+    """
     NAME_TITLE_SORT
-    # Sort by Artist type
+    """
+    Sort by artist type.
+    """
     TYPE
 }
 
+"""
+Ordering option for artistSearch. Multiple order specs are applied in the order supplied.
+"""
 input ArtistOrderBySpec {
+    """
+    Artist result column to order by.
+    """
     column: ArtistOrderBy!
-    # Default to DB sort order (typ. ASC)
+    """
+    Sort direction. When omitted, the database default direction is used.
+    """
     direction: OrderByDirection
-    # Default to DB sort order (typ. NULLS LAST for ASC, NULLS FIRST for DESC
+    """
+    Null ordering. When omitted, the database default null ordering is used.
+    """
     nullsOrder: OrderByNulls
 }
 
+"""
+Artist roles that can be used by artist and song search criteria. WORDS_BY, MUSIC_BY, and PERFORMED_BY refer to direct
+song artist roles. ALBUM_ARTIST refers to the primary artist associated with a song's album.
+"""
 enum ArtistSearchRole {
     WORDS_BY
     MUSIC_BY
@@ -124,11 +200,30 @@ enum ArtistSearchRole {
     ALBUM_ARTIST
 }
 
+"""
+Criteria for artistSearch. Criteria fields are combined as filters.
+"""
 input ArtistSearchCriteria {
+    """
+    Case-insensitive pattern match against artist name.
+    """
     searchName: String
+    """
+    Return artists of the supplied type.
+    """
     type: ArtistType
+    """
+    Return artists matching any of the supplied roles. Omit this field to avoid filtering by role.
+    """
     roles: [ArtistSearchRole!]
+    """
+    When true, return only artists associated with songs that have at least one transcription. When false or omitted, no
+    transcription filter is applied.
+    """
     restrictToTranscribedArtists: Boolean
+    """
+    Ordered list of sort specifications.
+    """
     orderBy: [ArtistOrderBySpec!]
 }
 
@@ -139,19 +234,45 @@ type ArtistSearchResult {
     matchedRoles: [ArtistSearchRole!]!
 }
 
-# Specifies the type of publication
+"""
+Type of publication represented by a publication index or publication result.
+"""
 enum PubType {
-    # Book
+    """
+    Book publication.
+    """
     BOOK
-    # Periodically issued magazine
+    """
+    Periodically issued magazine publication.
+    """
     MAG
 }
 
+"""
+Criteria for pubSearch. Criteria fields are combined as filters. Publications without a pubDate are included when date
+criteria are supplied.
+"""
 input PubSearchCriteria {
+    """
+    Case-insensitive pattern match against publication index name, magazine issue name, or book edition.
+    """
     searchName: String
+    """
+    Return publications of the supplied type.
+    """
     type: PubType
+    """
+    Inclusive lower bound for publication date.
+    """
     dateStart: Date
+    """
+    Inclusive upper bound for publication date.
+    """
     dateEnd: Date
+    """
+    When true, return only publications with at least one transcription. When false or omitted, no transcription filter
+    is applied.
+    """
     hasTranscriptions: Boolean
 }
 
@@ -183,23 +304,59 @@ type PubSearchResult {
 }
 
 enum AlbumOrderBy {
+    """
+    Sort by album release date.
+    """
     RELEASE_DATE
+    """
+    Sort by album title.
+    """
     TITLE
+    """
+    Sort by album artist name.
+    """
     ARTIST
 }
 
+"""
+Ordering option for albumSearch. Multiple order specs are applied in the order supplied, with album id added as a final
+tiebreaker.
+"""
 input AlbumOrderBySpec {
+    """
+    Album result column to order by.
+    """
     column: AlbumOrderBy!
-    # Default to DB sort order (typ. ASC)
+    """
+    Sort direction. When omitted, the database default direction is used.
+    """
     direction: OrderByDirection
-    # Default to DB sort order (typ. NULLS LAST for ASC, NULLS FIRST for DESC
+    """
+    Null ordering. When omitted, the database default null ordering is used.
+    """
     nullsOrder: OrderByNulls
 }
 
+"""
+Criteria for albumSearch. Criteria fields are combined as filters. Albums without a releaseDate are included when date
+criteria are supplied.
+"""
 input AlbumSearchCriteria {
+    """
+    Case-insensitive pattern match against album title or album artist name.
+    """
     searchName: String
+    """
+    Inclusive lower bound for album release date.
+    """
     dateStart: Date
+    """
+    Inclusive upper bound for album release date.
+    """
     dateEnd: Date
+    """
+    Ordered list of sort specifications.
+    """
     orderBy: [AlbumOrderBySpec!]
 }
 
@@ -222,7 +379,13 @@ type Transcriber {
     name: String!
 }
 
+"""
+Criteria for getPubIndices.
+"""
 input PubIndexCriteria {
+    """
+    Return publication index entries of the supplied publication type.
+    """
     type: PubType
 }
 
