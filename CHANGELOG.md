@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.0.3](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.2...gmdb-api-v1.0.3) (2026-05-18)
+
+
+### Bug Fixes
+
+* added new GraphQL type for publications returned for transcriptions returned for songs in the song search API ([238f8c2](https://github.com/pmeyer/gmdb-api/commit/238f8c21ccfb76a811ce87f88c184a4bf325fcc9))
+* properly cast artist type to criteria parameter to custom `artist_type` ([bba2d1a](https://github.com/pmeyer/gmdb-api/commit/bba2d1a2102f883f28e8ef3eb25c1ea2af18b4b4))
+* support song search by album name ([7449828](https://github.com/pmeyer/gmdb-api/commit/744982885d02daf5a75e861c882c0f87e72c714a))
+* support song search by artist criteria ([f0b146c](https://github.com/pmeyer/gmdb-api/commit/f0b146c6d6071c27a5ebbe23d9bfb487e5def37d))
+* support song search by artist name ([9eb375e](https://github.com/pmeyer/gmdb-api/commit/9eb375e6348c35f5dc8beaa71aced8c0b4d1a327))
+* support song search by publication and album ids ([7f531fb](https://github.com/pmeyer/gmdb-api/commit/7f531fb985d4dbf8022519cb4e4180f3020d0fcd))
+* support song search by publication name ([020acce](https://github.com/pmeyer/gmdb-api/commit/020accec0655d054bbffdad7db3d1ac609b954e1))
+
+
+### Documentation
+
+* describe graphql query criteria ([59ba6ba](https://github.com/pmeyer/gmdb-api/commit/59ba6bad182a08b5dd6185ef2c8304b0e94e5db1))
+* describe graphql query criteria ([fd3d04c](https://github.com/pmeyer/gmdb-api/commit/fd3d04c2933a4c5475575d7159e90e1338a7bfe0))
+
 ## [1.0.2](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.1...gmdb-api-v1.0.2) (2026-05-15)
 
 
