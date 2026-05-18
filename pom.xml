@@ -9,7 +9,7 @@
     </parent>
     <groupId>com.yellowmoonsoftware.gmcatalog</groupId>
     <artifactId>gmdb-api</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4-SNAPSHOT</version>
     <name>gmdb-api</name>
     <description>Guitar Transcription Catalog API</description>
     <distributionManagement>
