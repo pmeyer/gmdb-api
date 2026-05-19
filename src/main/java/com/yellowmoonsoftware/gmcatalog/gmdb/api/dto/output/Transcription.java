@@ -1,5 +1,7 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output;
 
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut;
+
 import java.util.Objects;
 
 public record Transcription(
@@ -9,6 +11,14 @@ public record Transcription(
     Long songId,
     Long pubId
 ) {
+    public static Transcription from(final TranscriptionInOut transcription) {
+        return new Transcription(
+                transcription.id(),
+                transcription.details().transcriptionUrl(),
+                transcription.details().pageNumber(),
+                transcription.songId(),
+                transcription.pubId());
+    }
 
     @Override
     public boolean equals(Object o) {

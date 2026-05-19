@@ -40,36 +40,28 @@
         </foreach>
     </select>
 
-    <select id="getSongTranscriptionBySongIds"  parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcription">
+    <select id="getSongTranscriptionBySongIds"  parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut">
         select
             t.id,
-            td.url,
-            td.page_number,
             t.song_id,
-            t.pub_id
+            t.pub_id,
+            t.details,
+            null as action
         from transcription t
-                 join lateral (select
-                                   t.details->>'url' url,
-                                   (t.details->>'pageNumber')::int page_number
-            ) as td on true
         where
         <foreach collection="songIds" item="id" open="t.song_id in(" separator="," close=")">
             #{id}
         </foreach>
     </select>
 
-    <select id="getSongTranscriptionsByPubIds" parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcription">
+    <select id="getSongTranscriptionsByPubIds" parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut">
         select
             t.id,
-            td.url,
-            td.page_number,
             t.song_id,
-            t.pub_id
+            t.pub_id,
+            t.details,
+            null as action
         from transcription t
-                 join lateral (select
-                                   t.details->>'url' url,
-                                   (t.details->>'pageNumber')::int page_number
-            ) as td on true
         where
         <foreach collection="pubIds" item="id" open="t.pub_id in(" separator="," close=")">
             #{id}

@@ -1,5 +1,6 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers;
 
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.*;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -13,9 +14,9 @@ public interface DataResolversMapper {
 
     Flux<SongArtist> getSongArtistBySongIds(@Param("songIds") final Set<Long> songIds);
 
-    Flux<Transcription> getSongTranscriptionBySongIds(@Param("songIds") final Set<Long> songIds);
+    Flux<TranscriptionInOut> getSongTranscriptionBySongIds(@Param("songIds") final Set<Long> songIds);
 
-    Flux<Transcription> getSongTranscriptionsByPubIds(@Param("pubIds") final Set<Long> pubIds);
+    Flux<TranscriptionInOut> getSongTranscriptionsByPubIds(@Param("pubIds") final Set<Long> pubIds);
 
     Flux<TranscriptionTranscriber> getTranscribersByTranscriptionIds(@Param("transcriptionIds") final Set<Long> transcriptionIds);
 

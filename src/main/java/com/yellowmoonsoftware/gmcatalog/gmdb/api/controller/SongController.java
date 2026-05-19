@@ -83,7 +83,7 @@ public class SongController {
                 .collect(toMap(SongSearchResult::id, s -> s));
 
         return mapper.getSongTranscriptionBySongIds(songMap.keySet())
+                .map(Transcription::from)
                 .collect(groupingBy(a -> songMap.get(a.songId())));
     }
 }
-

@@ -1,6 +1,8 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.AbstractResourceBundle;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.ResourceSlug;
 import lombok.Getter;
@@ -15,7 +17,8 @@ public class TranscriptionDetails extends AbstractResourceBundle {
     @Getter(lazy = true)
     private final String transcriptionUrl = getResourceUrl(ResourceSlug.TRANSCRIPTION).orElse(null);
 
-    public TranscriptionDetails(final Integer pageNumber) {
+    @JsonCreator
+    public TranscriptionDetails(@JsonProperty("pageNumber") final Integer pageNumber) {
         super(null);
         this.pageNumber = pageNumber;
     }
