@@ -59,8 +59,10 @@ class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSuppor
                 select count(*)
                 from gmdb.album
                 where title = 'Appetite For Destruction'
-                    and details ? 'resourceId'
+                    and details->>'resourceId' = '4b8c2c6f-0a74-4d5a-a271-f4734b6ce8a2'
                     and details->>'releaseDate' = '1987-07-21'
+                    and details->'resources'->'ALBUM_ART'->>'originalFilename' = 'gmdb-test-album-art.png'
+                    and details->'resources'->'ALBUM_ART'->>'mediaType' = 'image/png'
                 """)).isEqualTo(1);
 
         assertThat(queryForInt(DATABASE, """
@@ -68,10 +70,12 @@ class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSuppor
                 from gmdb.pub pub
                     inner join gmdb.pub_idx pub_idx on pub.pub_idx_id = pub_idx.id
                 where pub_idx.name = 'Guitar World'
-                    and pub.details ? 'resourceId'
+                    and pub.details->>'resourceId' = '9d4c6f61-2c7d-49d1-9e36-0e99afef0cf7'
                     and pub.details->>'volume' = '39'
                     and pub.details->>'issue' = '11'
                     and pub.details->>'issueName' = 'November 2018'
+                    and pub.details->'resources'->'COVER_IMAGE'->>'originalFilename' = 'gmdb-test-cover-image.png'
+                    and pub.details->'resources'->'COVER_IMAGE'->>'mediaType' = 'image/png'
                 """)).isEqualTo(1);
 
         assertThat(queryForInt(DATABASE, """
@@ -89,8 +93,10 @@ class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSuppor
                     inner join gmdb.album album on song.album_id = album.id
                 where song.title = 'Rocket Queen'
                     and album.title = 'Appetite For Destruction'
-                    and tran.details ? 'resourceId'
+                    and tran.details->>'resourceId' = 'f8e2c95a-6f45-44cb-8a4f-2e7e33f3df70'
                     and tran.details->>'pageNumber' = '98'
+                    and tran.details->'resources'->'TRANSCRIPTION'->>'originalFilename' = 'gmdb-test-transcription.pdf'
+                    and tran.details->'resources'->'TRANSCRIPTION'->>'mediaType' = 'application/pdf'
                 """)).isEqualTo(1);
     }
 
