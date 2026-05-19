@@ -26,6 +26,7 @@ public class PubController {
         final Map<Long, PubSearchResult> pubIdMap = pubs.stream().collect(toMap(PubSearchResult::id, p -> p));
 
         return mapper.getSongTranscriptionsByPubIds(pubIdMap.keySet())
+                .map(Transcription::from)
                 .collect(groupingBy(t -> pubIdMap.get(t.pubId())));
     }
 }
