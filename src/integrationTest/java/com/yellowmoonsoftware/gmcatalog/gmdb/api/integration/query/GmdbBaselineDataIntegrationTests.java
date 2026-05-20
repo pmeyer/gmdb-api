@@ -1,25 +1,10 @@
-package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration;
+package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration.query;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class GmdbBaselineDataIntegrationTests extends GmdbDatabaseIntegrationTestSupport {
-
-    private static final GmdbIntegrationDatabase DATABASE = createStartedDatabase();
-
-    @BeforeAll
-    static void applyTestData() {
-        applyBaselineTestData(DATABASE);
-    }
-
-    @DynamicPropertySource
-    static void registerGmdbIntegrationProperties(final DynamicPropertyRegistry registry) {
-        registerGmdbIntegrationProperties(registry, DATABASE);
-    }
+class GmdbBaselineDataIntegrationTests extends GmdbReadOnlyIntegrationTestSupport {
 
     @Test
     void appliesBaselineTestDataSql() {

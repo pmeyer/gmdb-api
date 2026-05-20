@@ -78,11 +78,17 @@ public abstract class GmdbDatabaseIntegrationTestSupport {
     protected static void registerGmdbIntegrationProperties(
             final DynamicPropertyRegistry registry,
             final GmdbIntegrationDatabase database) {
+        registerGmdbIntegrationProperties(registry, database, database.fileRoot);
+    }
 
+    protected static void registerGmdbIntegrationProperties(
+            final DynamicPropertyRegistry registry,
+            final GmdbIntegrationDatabase database,
+            final Path fileRoot) {
         registry.add("spring.r2dbc.mybatis.r2dbc-url", database::r2dbcUrl);
         registry.add("spring.r2dbc.mybatis.username", () -> APP_USER);
         registry.add("spring.r2dbc.mybatis.password", () -> APP_USER_PASSWORD);
-        registry.add("file-service.root", () -> database.fileRoot.toString());
+        registry.add("file-service.root", () -> fileRoot.toString());
     }
 
     private static String buildPostgresImage() {
