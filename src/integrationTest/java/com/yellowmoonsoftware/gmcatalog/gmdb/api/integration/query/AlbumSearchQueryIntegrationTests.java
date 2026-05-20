@@ -1,11 +1,8 @@
-package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration;
+package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration.query;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.test.tester.WebGraphQlTester;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,20 +11,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class AlbumSearchQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestSupport {
 
-    private static final GmdbIntegrationDatabase DATABASE = createStartedDatabase();
-
     @Autowired
     private WebGraphQlTester graphQlTester;
-
-    @BeforeAll
-    static void applyTestData() {
-        applyBaselineTestData(DATABASE);
-    }
-
-    @DynamicPropertySource
-    static void registerGmdbIntegrationProperties(final DynamicPropertyRegistry registry) {
-        registerGmdbIntegrationProperties(registry, DATABASE);
-    }
 
     @Test
     void albumSearchWithoutCriteriaReturnsExpectedAlbums() {

@@ -1,27 +1,20 @@
-package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration;
+package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration.query;
 
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.test.tester.WebGraphQlTester;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import java.util.List;
-import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class ResourceFileQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestSupport {
-
-    private static final GmdbIntegrationDatabase DATABASE = createStartedDatabase();
     private static final String ALBUM_RESOURCE_ID = "4b8c2c6f-0a74-4d5a-a271-f4734b6ce8a2";
     private static final String PUB_RESOURCE_ID = "9d4c6f61-2c7d-49d1-9e36-0e99afef0cf7";
     private static final String TRANSCRIPTION_RESOURCE_ID = "f8e2c95a-6f45-44cb-8a4f-2e7e33f3df70";
@@ -31,17 +24,6 @@ class ResourceFileQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestS
 
     @Autowired
     private WebTestClient webTestClient;
-
-    @BeforeAll
-    static void applyTestData() {
-        applyBaselineTestData(DATABASE);
-    }
-
-    @DynamicPropertySource
-    static void registerGmdbIntegrationProperties(final DynamicPropertyRegistry registry) {
-        registerGmdbIntegrationProperties(registry, DATABASE);
-        registry.add("file-service.root", () -> fileRepoRoot().toString());
-    }
 
     @Test
     void songSearchResourceUrlsResolveToExpectedTestResources() {
@@ -83,17 +65,6 @@ class ResourceFileQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestS
         assertResourceResponseMatchesTestResource(
                 transcription.pub().details().cover(),
                 Path.of("pub", PUB_RESOURCE_ID, "cover-img"));
-    }
-
-    private static Path fileRepoRoot() {
-        try {
-            return Path.of(Objects.requireNonNull(
-                            ResourceFileQueryIntegrationTests.class.getClassLoader().getResource("file-repo"),
-                            "Could not find file-repo test resource")
-                    .toURI());
-        } catch (final URISyntaxException exception) {
-            throw new IllegalStateException("Could not resolve file-repo test resource", exception);
-        }
     }
 
     private void assertResourceResponseMatchesTestResource(final String resourceUrl, final Path testResourcePath) {
