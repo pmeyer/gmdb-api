@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.4](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.3...gmdb-api-v1.0.4) (2026-05-19)
+
+
+### Bug Fixes
+
+* map transcription resources from details ([79889ee](https://github.com/pmeyer/gmdb-api/commit/79889eec1c7e7794963d0b918c0ed38f3aeb64da))
+* map transcription resources from details ([54c9b0c](https://github.com/pmeyer/gmdb-api/commit/54c9b0c7862dc7a4cc92ad3c05c0e737f3583c0f))
+
 ## [1.0.3](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.2...gmdb-api-v1.0.3) (2026-05-18)
 
 
