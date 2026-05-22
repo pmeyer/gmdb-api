@@ -2,6 +2,7 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.r2dbc;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.PGDataConversionException;
 import io.r2dbc.postgresql.codec.Json;
 import io.r2dbc.spi.Readable;
@@ -19,6 +20,7 @@ public class BaseJsonbTypeHandlerAdapter<T> implements R2dbcTypeHandlerAdapter<T
 
     static {
         objectMapper.findAndRegisterModules();
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     private final Class<T> type;
