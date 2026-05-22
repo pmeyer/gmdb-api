@@ -4,7 +4,7 @@
     <select id="upsertSong" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.SongOut">
         merge into song as t
         using (
-            values (#{input.id}::bigint, #{input.title}::text, coalesce(#{input.details}::jsonb, '{}'::jsonb), #{input.albumId})
+            values (#{input.id}::bigint, #{input.title}::text, coalesce(#{input.details}::jsonb, '{}'::jsonb), #{input.albumId}::bigint)
         ) as s(id, title, details, album_id)
         on (t.id = s.id) or (t.title = s.title and t.album_id = s.album_id)
         when matched then

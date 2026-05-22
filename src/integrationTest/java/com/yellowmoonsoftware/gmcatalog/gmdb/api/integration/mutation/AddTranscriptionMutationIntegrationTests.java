@@ -181,6 +181,35 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     @Test
+    void addTranscriptionWithOmittedOptionalSongDataCreatesStandaloneSong() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        final var result = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Standalone Song"
+                        }
+                    }
+                    pageNumber: 71
+                    transcribers: []
+                }
+                """.formatted(pubId));
+
+        final long songId = standaloneSongIdByTitle("Mutation Test Standalone Song");
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.pageNumber()).isEqualTo(71);
+        assertThat(result.song()).isEqualTo(new SongResponse(songId, "Mutation Test Standalone Song"));
+        assertThat(result.transcribers()).isNull();
+        assertThat(countStandaloneSongsByTitle("Mutation Test Standalone Song")).isOne();
+        assertThat(countSongArtists(songId)).isZero();
+        assertThat(countTranscriptions(songId, pubId, 71)).isOne();
+        assertThat(countTranscriptionTranscribers(result.id())).isZero();
+    }
+
+    @Test
     void addTranscriptionWithNewSongAndExistingAlbumAndArtistReferencesCreatesRelatedData() {
         final long pubId = pubIdForGuitarWorldNovember2018();
         final long albumId = albumIdByTitle("Appetite For Destruction");
@@ -753,6 +782,15 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 """.formatted(title.replace("'", "''")));
     }
 
+    private static long standaloneSongIdByTitle(final String title) {
+        return queryForLong(DATABASE, """
+                select id
+                from gmdb.song
+                where title = '%s'
+                    and album_id is null
+                """.formatted(title.replace("'", "''")));
+    }
+
     private static int countAlbumsByTitlePrimaryArtistAndReleaseDate(
             final String title,
             final long primaryArtistId,
@@ -810,6 +848,24 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     and album_id = %d
                     and details->>'trackNumber' = '%d'
                 """.formatted(title.replace("'", "''"), albumId, trackNumber));
+    }
+
+    private static int countStandaloneSongsByTitle(final String title) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.song
+                where title = '%s'
+                    and album_id is null
+                    and details ? 'trackNumber' = false
+                """.formatted(title.replace("'", "''")));
+    }
+
+    private static int countSongArtists(final long songId) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.song_artist
+                where song_id = %d
+                """.formatted(songId));
     }
 
     private static int countSongArtistsByRole(
