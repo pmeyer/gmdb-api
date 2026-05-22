@@ -3,7 +3,7 @@ scalar Upload
 
 type Mutation {
     # Adds a transcription do the GMag Database
-    addTranscription(pubId: Long, transcriptionInput: TranscriptionInput!): PubTranscription!
+    addTranscription(pubId: Long!, transcriptionInput: TranscriptionInput!): PubTranscription!
     # Adds a magazine issue to the GMag Database
     addMagazineIssue(magInput: MagazineInput!): PubSearchResult!
     # Adds a book edition to the GMag Database
