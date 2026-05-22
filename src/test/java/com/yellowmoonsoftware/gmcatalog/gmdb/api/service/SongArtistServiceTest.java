@@ -22,6 +22,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -60,13 +61,18 @@ class SongArtistServiceTest {
     }
 
     @Test
-    void addSongArtistsTreatsNullListAsEmpty() {
-        when(artistService.upsertSongArtists(List.of())).thenReturn(Flux.empty());
-
+    void addSongArtistsSkipsNullList() {
         StepVerifier.create(songArtistService.addSongArtists(1L, null))
             .verifyComplete();
 
-        verify(artistService).upsertSongArtists(List.of());
-        verifyNoMoreInteractions(artistService);
+        verifyNoInteractions(artistService);
+    }
+
+    @Test
+    void addSongArtistsSkipsEmptyList() {
+        StepVerifier.create(songArtistService.addSongArtists(1L, List.of()))
+            .verifyComplete();
+
+        verifyNoInteractions(artistService);
     }
 }
