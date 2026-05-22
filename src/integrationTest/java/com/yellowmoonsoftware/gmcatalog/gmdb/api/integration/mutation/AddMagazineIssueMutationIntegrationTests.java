@@ -124,6 +124,32 @@ class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     @Test
+    void addMagazineIssueWithOmittedPublicationDateCreatesPublication() {
+        final long pubIndexId = pubIndexIdBySerialNumber("10456295");
+
+        final var result = addMagazineIssue("""
+                index: { id: %d }
+                info: {
+                    issueName: "Mutation Test Magazine Without Publication Date"
+                }
+                """.formatted(pubIndexId));
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.name()).isEqualTo("Guitar World");
+        assertThat(result.type()).isEqualTo(MAG);
+        assertThat(result.pubDate()).isNull();
+        assertThat(result.serialNumber()).isEqualTo("10456295");
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.details()).isEqualTo(new MagDetailsResponse(
+                null,
+                null,
+                "Mutation Test Magazine Without Publication Date"));
+        assertThat(countMagazineIssuesWithNullPublicationDateAndNullVolumeAndIssue(
+                pubIndexId,
+                "Mutation Test Magazine Without Publication Date")).isOne();
+    }
+
+    @Test
     void addMagazineIssueWithExistingIndexIdAndDataUpdatesPublicationIndex() {
         addMagazineIssue("""
                 pubDate: "2025-08-15"
@@ -307,6 +333,21 @@ class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     and details->>'issue' is null
                     and details->>'issueName' = '%s'
                 """.formatted(pubIndexId, pubDate, issueName));
+    }
+
+    private static int countMagazineIssuesWithNullPublicationDateAndNullVolumeAndIssue(
+            final long pubIndexId,
+            final String issueName) {
+
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.pub
+                where pub_idx_id = %d
+                    and pub_date is null
+                    and details->>'volume' is null
+                    and details->>'issue' is null
+                    and details->>'issueName' = '%s'
+                """.formatted(pubIndexId, issueName));
     }
 
     private static int countTranscriptions(

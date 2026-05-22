@@ -101,6 +101,24 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
     }
 
     @Test
+    void addBookEditionWithOmittedPublicationDateCreatesPublication() {
+        final long pubIndexId = pubIndexIdBySerialNumber("0898987660");
+
+        final var result = addBookEdition("""
+                index: { id: %d }
+                """.formatted(pubIndexId));
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.name()).isEqualTo("Tom Petty & the Heartbreakers: Greatest Hits");
+        assertThat(result.type()).isEqualTo(BOOK);
+        assertThat(result.pubDate()).isNull();
+        assertThat(result.serialNumber()).isEqualTo("0898987660");
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.details()).isEqualTo(new BookDetailsResponse(null));
+        assertThat(countBookEditionsWithNullPublicationDateAndNullEdition(pubIndexId)).isOne();
+    }
+
+    @Test
     void addBookEditionWithExistingIndexIdAndDataUpdatesPublicationIndex() {
         addBookEdition("""
                 pubDate: "2025-08-01"
@@ -267,6 +285,16 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
                     and pub_date = '%s'::date
                     and details->>'edition' is null
                 """.formatted(pubIndexId, pubDate));
+    }
+
+    private static int countBookEditionsWithNullPublicationDateAndNullEdition(final long pubIndexId) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.pub
+                where pub_idx_id = %d
+                    and pub_date is null
+                    and details->>'edition' is null
+                """.formatted(pubIndexId));
     }
 
     private static int countTranscriptions(
