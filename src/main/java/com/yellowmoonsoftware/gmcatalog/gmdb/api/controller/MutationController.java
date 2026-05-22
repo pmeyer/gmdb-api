@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Controller;
 import reactor.core.publisher.Mono;
 
@@ -26,7 +27,7 @@ public class MutationController {
     private final TranscriptionService transcriptionService;
 
     @MutationMapping("addTranscription")
-    public Mono<Transcription> addTranscription(@Argument("pubId") Long pubId, @Valid @Argument("transcriptionInput") final TranscriptionInput input) {
+    public Mono<Transcription> addTranscription(@NonNull @Argument("pubId") Long pubId, @Valid @Argument("transcriptionInput") final TranscriptionInput input) {
         return transcriptionService.upsertTranscription(pubId, input)
                 .map(t -> new Transcription(t.id(), t.details().transcriptionUrl(), t.details().pageNumber(), t.songId(), t.pubId()));
     }
