@@ -75,6 +75,24 @@ public abstract class GmdbDatabaseIntegrationTestSupport {
         }
     }
 
+    protected static long queryForLong(final GmdbIntegrationDatabase database, final String sql) {
+        try (
+                Connection connection = DriverManager.getConnection(
+                        database.postgres.getJdbcUrl(),
+                        APP_USER,
+                        APP_USER_PASSWORD);
+                Statement statement = connection.createStatement();
+                ResultSet resultSet = statement.executeQuery(sql)
+        ) {
+            if (!resultSet.next()) {
+                throw new IllegalStateException("Query returned no rows: " + sql);
+            }
+            return resultSet.getLong(1);
+        } catch (final Exception exception) {
+            throw new IllegalStateException("Could not query integration test database", exception);
+        }
+    }
+
     protected static void registerGmdbIntegrationProperties(
             final DynamicPropertyRegistry registry,
             final GmdbIntegrationDatabase database) {

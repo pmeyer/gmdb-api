@@ -12,13 +12,14 @@ import lombok.experimental.Accessors;
 @Accessors(fluent = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class TranscriptionDetails extends AbstractResourceBundle {
+    @JsonProperty("pageNumber")
     private final Integer pageNumber;
 
     @Getter(lazy = true)
     private final String transcriptionUrl = getResourceUrl(ResourceSlug.TRANSCRIPTION).orElse(null);
 
     @JsonCreator
-    public TranscriptionDetails(@JsonProperty("pageNumber") final Integer pageNumber) {
+    public TranscriptionDetails(final Integer pageNumber) {
         super(null);
         this.pageNumber = pageNumber;
     }

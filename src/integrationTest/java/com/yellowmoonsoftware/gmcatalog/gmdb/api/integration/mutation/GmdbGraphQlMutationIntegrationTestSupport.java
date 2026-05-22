@@ -5,6 +5,7 @@ import org.springframework.boot.test.autoconfigure.graphql.tester.AutoConfigureH
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureHttpGraphQlTester
@@ -16,5 +17,11 @@ abstract class GmdbGraphQlMutationIntegrationTestSupport extends GmdbDatabaseInt
         final var database = createStartedDatabase();
         applyBaselineTestData(database);
         return database;
+    }
+
+    protected static void registerMutationIntegrationProperties(
+            final DynamicPropertyRegistry registry,
+            final GmdbIntegrationDatabase database) {
+        registerGmdbIntegrationProperties(registry, database);
     }
 }

@@ -15,7 +15,7 @@
         when not matched then
             insert (song_id, pub_id, details) values (s.song_id, s.pub_id, s.details)
         returning
-            t.id, t.name, merge_action() as action
+            t.id, t.song_id, t.pub_id, t.details, merge_action() as action
     </select>
 
     <select id="getTranscriptionById"
