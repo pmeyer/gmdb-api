@@ -50,4 +50,9 @@
             insert (transcription_id, transcriber_id) values (s.transcription_id, s.transcriber_id)
         returning tt.transcription_id, tt.transcriber_id, merge_action() as action
     </select>
+
+    <delete id="clearTranscriptionTranscribers">
+        delete from transcription_transcriber
+        where transcription_id = #{transcriptionId}
+    </delete>
 </mapper>
