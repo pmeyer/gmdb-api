@@ -1,6 +1,7 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.ResourceSlug;
 import lombok.Getter;
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 
 @Getter
 @Accessors(fluent = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class AlbumDetails extends AbstractResourceBundle {
     @JsonProperty
     private final LocalDate releaseDate;
@@ -23,4 +25,3 @@ public class AlbumDetails extends AbstractResourceBundle {
         this.releaseDate = releaseDate;
     }
 }
-

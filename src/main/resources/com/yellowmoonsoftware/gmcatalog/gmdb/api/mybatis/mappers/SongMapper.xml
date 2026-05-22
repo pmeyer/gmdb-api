@@ -9,7 +9,7 @@
         on (t.id = s.id) or (t.title = s.title and t.album_id = s.album_id)
         when matched then
             update set title = coalesce(s.title, t.title),
-                       details = t.details || s.title,
+                       details = merge_details(t.details, s.details),
                        album_id = coalesce(s.album_id, t.album_id)
         when not matched then
             insert (title, details, album_id) values (s.title, s.details, s.album_id)

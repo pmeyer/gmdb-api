@@ -41,7 +41,7 @@
                                                         and t_add.transcriber_id = t_del.transcriber_id)
             union all select transcription_id, transcriber_id, op from t_add
         ) as s
-        on (tt.transcription_id = s.transcription_id)
+        on (tt.transcription_id = s.transcription_id and tt.transcriber_id = s.transcriber_id)
         when matched and s.op = 'ADD' then
             do nothing
         when matched and s.op = 'DEL' then

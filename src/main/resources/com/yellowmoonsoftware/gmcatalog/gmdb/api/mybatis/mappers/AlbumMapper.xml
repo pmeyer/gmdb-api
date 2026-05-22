@@ -6,7 +6,7 @@
         using (
             values (#{input.id}::bigint, #{input.title}::text, #{input.details}::jsonb, #{input.primaryArtistId}::bigint)
         ) as s(id, title, details, primary_artist_id)
-        on (album.id = s.id) or (album.title = s.name and album.primary_artist_id = s.primary_artist_id)
+        on (album.id = s.id) or (album.title = s.title and album.primary_artist_id = s.primary_artist_id)
         when matched then
             update set title = coalesce(s.title, album.title),
                        details = merge_details(album.details, s.details),
