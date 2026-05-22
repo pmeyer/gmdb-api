@@ -6,13 +6,13 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.SongArtistIn;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongArtistInput;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.stream.Streams;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +21,7 @@ public class SongArtistService {
 
     @Transactional
     public Mono<Void> addSongArtists(final Long songId, final List<SongArtistInput> songArtists) {
-        return Flux.fromIterable(Optional.ofNullable(songArtists).orElse(List.of()))
+        return Flux.fromStream(Streams.of(songArtists))
                 .flatMap(sa -> {
                     if (sa.mode() == IdAndDataContainer.DataMode.REF) {
                         return Mono.just(new SongArtistIn(songId, sa.id(), sa.roles().toArray(new SongArtistRole[0])));
@@ -30,6 +30,7 @@ public class SongArtistService {
                             .map(a -> new SongArtistIn(songId, a.id(), sa.roles().toArray(new SongArtistRole[0])));
                 }, 4)
                 .collectList()
+                .filter(l -> !l.isEmpty())
                 .flatMapMany(artistService::upsertSongArtists)
                 .then();
     }
