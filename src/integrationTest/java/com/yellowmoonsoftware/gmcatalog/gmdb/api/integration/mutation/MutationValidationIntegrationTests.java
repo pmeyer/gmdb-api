@@ -514,6 +514,72 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
     }
 
     @Test
+    void addTranscriptionRejectsUnknownSongArtistReference() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final String songTitle = "Negative Test Unknown Song Artist Reference";
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "%s"
+                                    artists: [{
+                                        id: 999999999
+                                        roles: [PERFORMED_BY]
+                                    }]
+                                }
+                            }
+                            pageNumber: 995
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId, songTitle), "Unknown artist ID: 999999999");
+        assertThat(countSongsByTitle(songTitle)).isZero();
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 995)).isZero();
+    }
+
+    @Test
+    void addTranscriptionRejectsUnknownSongArtistIdAndDataBeforeUpsert() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final String artistName = "Negative Test Unknown Song Artist ID";
+        final String songTitle = "Negative Test Unknown Song Artist ID Song";
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "%s"
+                                    artists: [{
+                                        id: 999999999
+                                        data: {
+                                            name: "%s"
+                                            type: PERSON
+                                        }
+                                        roles: [PERFORMED_BY]
+                                    }]
+                                }
+                            }
+                            pageNumber: 996
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId, songTitle, artistName), "Unknown artist ID: 999999999");
+        assertThat(countArtistsByName(artistName)).isZero();
+        assertThat(countSongsByTitle(songTitle)).isZero();
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 996)).isZero();
+    }
+
+    @Test
     void addTranscriptionRejectsAlbumWithoutIdOrData() {
         final long pubId = pubIdForGuitarWorldNovember2018();
 
@@ -637,6 +703,88 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     }
                 }
                 """.formatted(pubId), "ArtistInput must have an ID or data");
+    }
+
+    @Test
+    void addTranscriptionRejectsUnknownAlbumPrimaryArtistReference() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final String albumTitle = "Negative Test Unknown Album Primary Artist Reference";
+        final String songTitle = "Negative Test Unknown Album Primary Artist Reference Song";
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "%s"
+                                    albumTrack: {
+                                        trackNumber: 1
+                                        album: {
+                                            data: {
+                                                title: "%s"
+                                                primaryArtist: { id: 999999999 }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            pageNumber: 997
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId, songTitle, albumTitle), "Unknown artist ID: 999999999");
+        assertThat(countAlbumsByTitle(albumTitle)).isZero();
+        assertThat(countSongsByTitle(songTitle)).isZero();
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 997)).isZero();
+    }
+
+    @Test
+    void addTranscriptionRejectsUnknownAlbumPrimaryArtistIdAndDataBeforeUpsert() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final String artistName = "Negative Test Unknown Album Primary Artist ID";
+        final String albumTitle = "Negative Test Unknown Album Primary Artist ID";
+        final String songTitle = "Negative Test Unknown Album Primary Artist ID Song";
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "%s"
+                                    albumTrack: {
+                                        trackNumber: 1
+                                        album: {
+                                            data: {
+                                                title: "%s"
+                                                primaryArtist: {
+                                                    id: 999999999
+                                                    data: {
+                                                        name: "%s"
+                                                        type: PERSON
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            pageNumber: 998
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId, songTitle, albumTitle, artistName), "Unknown artist ID: 999999999");
+        assertThat(countArtistsByName(artistName)).isZero();
+        assertThat(countAlbumsByTitle(albumTitle)).isZero();
+        assertThat(countSongsByTitle(songTitle)).isZero();
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 998)).isZero();
     }
 
     @Test
@@ -900,6 +1048,14 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                 from gmdb.song
                 where title = '%s'
                 """.formatted(title));
+    }
+
+    private static int countArtistsByName(final String name) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.artist
+                where name = '%s'
+                """.formatted(name));
     }
 
     private static int countAlbumsByTitle(final String title) {

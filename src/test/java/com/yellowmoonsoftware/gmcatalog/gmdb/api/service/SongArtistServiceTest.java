@@ -7,6 +7,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.SongArtistIn;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistData;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongArtistInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -40,6 +41,7 @@ class SongArtistServiceTest {
     void addSongArtistsBuildsReferenceAndUpsertedArtistInputs() {
         final SongArtistInput reference = new SongArtistInput(10L, null, Set.of(SongArtistRole.WORDS_BY));
         final SongArtistInput data = new SongArtistInput(null, new ArtistData("Alice", ArtistType.PERSON), Set.of(SongArtistRole.MUSIC_BY));
+        when(artistService.validateArtistId(10L)).thenReturn(Mono.just(10L));
         when(artistService.upsertArtist(new ArtistInput(null, data.data())))
             .thenReturn(Mono.just(new ArtistOut(20L, "Alice", ArtistType.PERSON, null)));
         when(artistService.upsertSongArtists(org.mockito.ArgumentMatchers.anyList())).thenReturn(Flux.empty());
@@ -48,6 +50,7 @@ class SongArtistServiceTest {
             .verifyComplete();
 
         final ArgumentCaptor<List<SongArtistIn>> captor = ArgumentCaptor.forClass(List.class);
+        verify(artistService).validateArtistId(10L);
         verify(artistService).upsertArtist(new ArtistInput(null, data.data()));
         verify(artistService).upsertSongArtists(captor.capture());
         assertThat(captor.getValue()).hasSize(2);
@@ -57,6 +60,23 @@ class SongArtistServiceTest {
         assertThat(captor.getValue().get(1).songId()).isEqualTo(1L);
         assertThat(captor.getValue().get(1).artistId()).isEqualTo(20L);
         assertThat(captor.getValue().get(1).roles()).containsExactly(SongArtistRole.MUSIC_BY);
+        verifyNoMoreInteractions(artistService);
+    }
+
+    @Test
+    void addSongArtistsRejectsUnknownReferenceIdBeforeUpsert() {
+        final SongArtistInput reference = new SongArtistInput(10L, null, Set.of(SongArtistRole.WORDS_BY));
+        when(artistService.validateArtistId(10L))
+                .thenReturn(Mono.error(new InvalidInputException("Unknown artist ID: 10")));
+
+        StepVerifier.create(songArtistService.addSongArtists(1L, List.of(reference)))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidInputException.class);
+                    assertThat(error).hasMessage("Unknown artist ID: 10");
+                })
+                .verify();
+
+        verify(artistService).validateArtistId(10L);
         verifyNoMoreInteractions(artistService);
     }
 

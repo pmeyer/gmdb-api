@@ -16,6 +16,7 @@ import java.util.Set;
 
 @Mapper
 public interface ArtistMapper {
+    Mono<Long> getArtistId(@Param("id") final Long id);
     Mono<ArtistOut> getArtistById(@Param("id") final Long id);
     Mono<ArtistOut> upsertArtist(@Param("input") final ArtistInput input);
     Flux<SongArtistOut> upsertSongArtists(@Param("songArtists") final List<SongArtistIn> songArtists);

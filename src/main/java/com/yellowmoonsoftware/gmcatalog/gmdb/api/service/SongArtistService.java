@@ -24,7 +24,10 @@ public class SongArtistService {
         return Flux.fromStream(Streams.of(songArtists))
                 .flatMap(sa -> {
                     if (sa.mode() == IdAndDataContainer.DataMode.REF) {
-                        return Mono.just(new SongArtistIn(songId, sa.id(), sa.roles().toArray(new SongArtistRole[0])));
+                        return artistService.validateArtistId(sa.id())
+                                .map(artistId -> new SongArtistIn(songId,
+                                        artistId,
+                                        sa.roles().toArray(new SongArtistRole[0])));
                     }
                     return artistService.upsertArtist(new ArtistInput(sa.id(), sa.data()))
                             .map(a -> new SongArtistIn(songId, a.id(), sa.roles().toArray(new SongArtistRole[0])));
