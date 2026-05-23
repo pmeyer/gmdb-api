@@ -32,6 +32,82 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
     }
 
     @Test
+    void upsertPubIndexRejectsNullInput() {
+        assertRequestError("""
+                mutation {
+                    upsertPubIndex(pubIndexInput: null) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
+    void upsertPubIndexRejectsDataMissingRequiredSerialNumber() {
+        assertRequestError("""
+                mutation {
+                    upsertPubIndex(pubIndexInput: {
+                        data: {
+                            name: "Negative Test Pub Index"
+                            type: BOOK
+                        }
+                    }) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
+    void addTranscriptionRejectsMissingRequiredPublicationIdArgument() {
+        assertRequestError("""
+                mutation {
+                    addTranscription(
+                        transcriptionInput: {
+                            song: { id: 1 }
+                            pageNumber: 12
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
+    void addTranscriptionRejectsNullRequiredPageNumber() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertRequestError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: { id: 1 }
+                            pageNumber: null
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "Validation error");
+    }
+
+    @Test
+    void addPubCoverImageRejectsNullRequiredCover() {
+        assertRequestError("""
+                mutation {
+                    addPubCoverImage(imgInput: {
+                        id: 1
+                        cover: null
+                    }) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
     void addTranscriptionRejectsSongWithoutIdOrData() {
         final long pubId = pubIdForGuitarWorldNovember2018();
 
@@ -299,6 +375,14 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                             assertThat(error.getErrorType().toString()).isEqualTo("ValidationError");
                             assertThat(error.getMessage()).contains(message);
                         }));
+    }
+
+    private void assertRequestError(final String document, final String message) {
+        graphQlTester.document(document)
+                .execute()
+                .errors()
+                .satisfy(errors -> assertThat(errors)
+                        .anySatisfy(error -> assertThat(error.getMessage()).contains(message)));
     }
 
     private static long pubIdForGuitarWorldNovember2018() {
