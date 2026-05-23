@@ -3,21 +3,37 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration.mutation;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.PubType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.graphql.test.tester.WebGraphQlTester;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.BodyInserters;
 
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
+import java.util.HexFormat;
+import java.util.Objects;
 
 import static com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.PubType.BOOK;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrationTestSupport {
+    private static final String COVER_IMAGE_UPLOAD_FILENAME = "gmdb-test-cover-image-upload.png";
 
     private static final GmdbIntegrationDatabase DATABASE = createStartedMutationDatabase();
 
     @Autowired
     private WebGraphQlTester graphQlTester;
+
+    @Autowired
+    private WebTestClient webTestClient;
 
     @DynamicPropertySource
     static void registerGmdbIntegrationProperties(final DynamicPropertyRegistry registry) {
@@ -194,6 +210,26 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
         assertThat(countTranscriptionTranscribers(songId, result.id(), transcriberId)).isOne();
     }
 
+    @Test
+    void addBookEditionStoresUploadedCoverImage() {
+        final long pubIndexId = pubIndexIdBySerialNumber("0898987660");
+
+        final var result = executeAddBookEditionWithCoverImage(pubIndexId);
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.name()).isEqualTo("Tom Petty & the Heartbreakers: Greatest Hits");
+        assertThat(result.type()).isEqualTo(BOOK);
+        assertThat(result.pubDate()).isEqualTo(LocalDate.of(2025, 10, 1));
+        assertThat(result.serialNumber()).isEqualTo("0898987660");
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.details()).satisfies(details -> {
+            assertThat(details.edition()).isEqualTo("Mutation Book Edition Cover Upload");
+            assertThat(details.cover()).contains(COVER_IMAGE_UPLOAD_FILENAME);
+        });
+        assertThat(countBookCoverImageResourcesWithUploadMetadata(result.id())).isOne();
+        assertResourceResponseMatchesCoverImageUpload(result.details().cover());
+    }
+
     private BookPubResponse addBookEdition(final String inputFields) {
         return graphQlTester.document("""
                         mutation {
@@ -218,6 +254,69 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
                 .path("addBookEdition")
                 .entity(BookPubResponse.class)
                 .get();
+    }
+
+    private BookCoverUploadPubResponse executeAddBookEditionWithCoverImage(final long pubIndexId) {
+        final MultipartBodyBuilder multipartBodyBuilder = new MultipartBodyBuilder();
+        multipartBodyBuilder.part("operations", """
+                {
+                    "query": "mutation($bookInput: BookInput!) { addBookEdition(bookInput: $bookInput) { id name type pubDate serialNumber pubIndexId details { ... on BookDetails { edition cover } } } }",
+                    "variables": {
+                        "bookInput": {
+                            "pubDate": "2025-10-01",
+                            "index": { "id": %d },
+                            "info": {
+                                "edition": "Mutation Book Edition Cover Upload",
+                                "cover": null
+                            },
+                            "transcriptions": []
+                        }
+                    }
+                }
+                """.formatted(pubIndexId));
+        multipartBodyBuilder.part("map", """
+                {
+                    "0": ["variables.bookInput.info.cover"]
+                }
+                """);
+        multipartBodyBuilder.part("0", new FileSystemResource(coverImageUploadPath()))
+                .contentType(MediaType.IMAGE_PNG);
+
+        final var response = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .post()
+                .uri("/graphql")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(multipartBodyBuilder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(BookCoverUploadGraphQlResponse.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.data()).isNotNull();
+        assertThat(response.data().addBookEdition()).isNotNull();
+        return response.data().addBookEdition();
+    }
+
+    private void assertResourceResponseMatchesCoverImageUpload(final String resourceUrl) {
+        assertThat(resourceUrl).isNotBlank();
+
+        final byte[] responseBody = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .get()
+                .uri(resourceUrl)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(byte[].class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(responseBody).isNotNull();
+        assertThat(sha256(responseBody)).isEqualTo(sha256(readCoverImageUpload()));
     }
 
     private static long pubIndexIdBySerialNumber(final String serialNumber) {
@@ -297,6 +396,17 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
                 """.formatted(pubIndexId));
     }
 
+    private static int countBookCoverImageResourcesWithUploadMetadata(final long pubId) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.pub
+                where id = %d
+                    and details->>'edition' = 'Mutation Book Edition Cover Upload'
+                    and details->'resources'->'COVER_IMAGE'->>'originalFilename' = '%s'
+                    and details->'resources'->'COVER_IMAGE'->>'mediaType' = 'image/png'
+                """.formatted(pubId, COVER_IMAGE_UPLOAD_FILENAME));
+    }
+
     private static int countTranscriptions(
             final long songId,
             final long pubId,
@@ -337,5 +447,53 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
     }
 
     private record BookDetailsResponse(String edition) {
+    }
+
+    private static Path coverImageUploadPath() {
+        try {
+            return Path.of(Objects.requireNonNull(
+                            AddBookEditionMutationIntegrationTests.class
+                                    .getClassLoader()
+                                    .getResource("test-upload-files/" + COVER_IMAGE_UPLOAD_FILENAME),
+                            "Could not find cover image upload test resource")
+                    .toURI());
+        } catch (final URISyntaxException exception) {
+            throw new IllegalStateException("Could not resolve cover image upload test resource", exception);
+        }
+    }
+
+    private static byte[] readCoverImageUpload() {
+        try {
+            return Files.readAllBytes(coverImageUploadPath());
+        } catch (final Exception exception) {
+            throw new IllegalStateException("Could not read cover image upload test resource", exception);
+        }
+    }
+
+    private static String sha256(final byte[] bytes) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+        } catch (final NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("Could not create SHA-256 digest", exception);
+        }
+    }
+
+    private record BookCoverUploadGraphQlResponse(BookCoverUploadGraphQlData data) {
+    }
+
+    private record BookCoverUploadGraphQlData(BookCoverUploadPubResponse addBookEdition) {
+    }
+
+    private record BookCoverUploadPubResponse(
+            Long id,
+            String name,
+            PubType type,
+            LocalDate pubDate,
+            String serialNumber,
+            Long pubIndexId,
+            BookCoverUploadDetailsResponse details) {
+    }
+
+    private record BookCoverUploadDetailsResponse(String edition, String cover) {
     }
 }

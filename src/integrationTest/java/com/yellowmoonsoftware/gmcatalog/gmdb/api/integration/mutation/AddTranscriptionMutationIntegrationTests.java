@@ -2,20 +2,38 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration.mutation;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.graphql.test.tester.WebGraphQlTester;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.BodyInserters;
 
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDate;
+import java.util.HexFormat;
 import java.util.List;
+import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegrationTestSupport {
+    private static final String ALBUM_ART_UPLOAD_FILENAME = "gmdb-test-album-art-upload.png";
+    private static final String TRANSCRIPTION_UPLOAD_FILENAME = "gmdb-test-transcription-upload.pdf";
 
     private static final GmdbIntegrationDatabase DATABASE = createStartedMutationDatabase();
 
     @Autowired
     private WebGraphQlTester graphQlTester;
+
+    @Autowired
+    private WebTestClient webTestClient;
 
     @DynamicPropertySource
     static void registerGmdbIntegrationProperties(final DynamicPropertyRegistry registry) {
@@ -345,6 +363,63 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         assertThat(countSongsByTitleAlbumAndTrackNumber("Mutation Test Album Song", albumId, 1)).isOne();
         assertThat(countTranscriptions(songId, pubId, 57)).isOne();
         assertThat(countTranscriptionTranscribers(result.id(), transcriberId)).isOne();
+    }
+
+    @Test
+    void addTranscriptionWithNewAlbumDataStoresUploadedAlbumArt() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long transcriberId = transcriberIdByName("Jeff Perrin");
+
+        final var result = executeAddTranscriptionWithAlbumCoverArt(pubId, transcriberId);
+
+        final long albumId = albumIdByTitle("Mutation Test Album Art Upload");
+        final long songId = songIdByTitleAndAlbum(
+                "Mutation Test Album Art Upload Song",
+                "Mutation Test Album Art Upload");
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.pageNumber()).isEqualTo(72);
+        assertThat(result.song()).satisfies(song -> {
+            assertThat(song.id()).isEqualTo(songId);
+            assertThat(song.title()).isEqualTo("Mutation Test Album Art Upload Song");
+            assertThat(song.album()).satisfies(album -> {
+                assertThat(album.id()).isEqualTo(albumId);
+                assertThat(album.title()).isEqualTo("Mutation Test Album Art Upload");
+                assertThat(album.trackNumber()).isEqualTo(7);
+                assertThat(album.releaseDate()).isEqualTo(LocalDate.of(2025, 10, 1));
+                assertThat(album.albumArtUrl()).contains(ALBUM_ART_UPLOAD_FILENAME);
+            });
+        });
+        assertThat(result.transcribers()).containsExactly(new TranscriberResponse(transcriberId, "Jeff Perrin"));
+
+        assertThat(countAlbumArtResources(
+                albumId,
+                "Mutation Test Album Art Upload",
+                "2025-10-01")).isOne();
+        assertThat(countSongsByTitleAlbumAndTrackNumber("Mutation Test Album Art Upload Song", albumId, 7)).isOne();
+        assertThat(countTranscriptions(songId, pubId, 72)).isOne();
+        assertThat(countTranscriptionTranscribers(result.id(), transcriberId)).isOne();
+        assertResourceResponseMatchesAlbumArtUpload(result.song().album().albumArtUrl());
+    }
+
+    @Test
+    void addTranscriptionStoresUploadedTranscriptionFile() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long transcriberId = transcriberIdByName("Jeff Perrin");
+
+        final var result = executeAddTranscriptionWithFile(pubId, transcriberId);
+        final long songId = standaloneSongIdByTitle("Mutation Test Transcription Upload Song");
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.url()).contains(TRANSCRIPTION_UPLOAD_FILENAME);
+        assertThat(result.pageNumber()).isEqualTo(74);
+        assertThat(result.song()).isEqualTo(new SongResponse(songId, "Mutation Test Transcription Upload Song"));
+        assertThat(result.transcribers()).containsExactly(new TranscriberResponse(transcriberId, "Jeff Perrin"));
+        assertThat(countStandaloneSongsByTitle("Mutation Test Transcription Upload Song")).isOne();
+        assertThat(countTranscriptions(songId, pubId, 74)).isOne();
+        assertThat(countTranscriptionResourcesWithUploadMetadata(result.id())).isOne();
+        assertThat(countTranscriptionTranscribers(result.id(), transcriberId)).isOne();
+        assertResourceResponseMatchesTranscriptionUpload(result.url());
     }
 
     @Test
@@ -728,6 +803,153 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 .get();
     }
 
+    private AlbumArtUploadTranscriptionResponse executeAddTranscriptionWithAlbumCoverArt(
+            final long pubId,
+            final long transcriberId) {
+
+        final MultipartBodyBuilder multipartBodyBuilder = new MultipartBodyBuilder();
+        multipartBodyBuilder.part("operations", """
+                {
+                    "query": "mutation($pubId: Long!, $transcriptionInput: TranscriptionInput!) { addTranscription(pubId: $pubId, transcriptionInput: $transcriptionInput) { id pageNumber song { id title album { id title trackNumber releaseDate albumArtUrl } } transcribers { id name } } }",
+                    "variables": {
+                        "pubId": %d,
+                        "transcriptionInput": {
+                            "song": {
+                                "data": {
+                                    "title": "Mutation Test Album Art Upload Song",
+                                    "artists": [],
+                                    "albumTrack": {
+                                        "trackNumber": 7,
+                                        "album": {
+                                            "data": {
+                                                "title": "Mutation Test Album Art Upload",
+                                                "coverArt": null,
+                                                "releaseDate": "2025-10-01"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "pageNumber": 72,
+                            "transcribers": [{ "id": %d }]
+                        }
+                    }
+                }
+                """.formatted(pubId, transcriberId));
+        multipartBodyBuilder.part("map", """
+                {
+                    "0": ["variables.transcriptionInput.song.data.albumTrack.album.data.coverArt"]
+                }
+                """);
+        multipartBodyBuilder.part("0", new FileSystemResource(albumArtUploadPath()))
+                .contentType(MediaType.IMAGE_PNG);
+
+        final var response = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .post()
+                .uri("/graphql")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(multipartBodyBuilder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AlbumArtUploadGraphQlResponse.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.data()).isNotNull();
+        assertThat(response.data().addTranscription()).isNotNull();
+        return response.data().addTranscription();
+    }
+
+    private TranscriptionResponse executeAddTranscriptionWithFile(
+            final long pubId,
+            final long transcriberId) {
+
+        final MultipartBodyBuilder multipartBodyBuilder = new MultipartBodyBuilder();
+        multipartBodyBuilder.part("operations", """
+                {
+                    "query": "mutation($pubId: Long!, $transcriptionInput: TranscriptionInput!) { addTranscription(pubId: $pubId, transcriptionInput: $transcriptionInput) { id url pageNumber song { id title } transcribers { id name } } }",
+                    "variables": {
+                        "pubId": %d,
+                        "transcriptionInput": {
+                            "song": {
+                                "data": {
+                                    "title": "Mutation Test Transcription Upload Song",
+                                    "artists": []
+                                }
+                            },
+                            "pageNumber": 74,
+                            "file": null,
+                            "transcribers": [{ "id": %d }]
+                        }
+                    }
+                }
+                """.formatted(pubId, transcriberId));
+        multipartBodyBuilder.part("map", """
+                {
+                    "0": ["variables.transcriptionInput.file"]
+                }
+                """);
+        multipartBodyBuilder.part("0", new FileSystemResource(transcriptionUploadPath()))
+                .contentType(MediaType.APPLICATION_PDF);
+
+        final var response = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .post()
+                .uri("/graphql")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(multipartBodyBuilder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(TranscriptionUploadGraphQlResponse.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.data()).isNotNull();
+        assertThat(response.data().addTranscription()).isNotNull();
+        return response.data().addTranscription();
+    }
+
+    private void assertResourceResponseMatchesAlbumArtUpload(final String resourceUrl) {
+        assertThat(resourceUrl).isNotBlank();
+
+        final byte[] responseBody = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .get()
+                .uri(resourceUrl)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(byte[].class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(responseBody).isNotNull();
+        assertThat(sha256(responseBody)).isEqualTo(sha256(readAlbumArtUpload()));
+    }
+
+    private void assertResourceResponseMatchesTranscriptionUpload(final String resourceUrl) {
+        assertThat(resourceUrl).isNotBlank();
+
+        final byte[] responseBody = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .get()
+                .uri(resourceUrl)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(byte[].class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(responseBody).isNotNull();
+        assertThat(sha256(responseBody)).isEqualTo(sha256(readTranscriptionUpload()));
+    }
+
     private static long pubIdForGuitarWorldNovember2018() {
         return queryForLong(DATABASE, """
                 select p.id
@@ -803,6 +1025,22 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     and primary_artist_id = %d
                     and details->>'releaseDate' = '%s'
                 """.formatted(title.replace("'", "''"), primaryArtistId, releaseDate));
+    }
+
+    private static int countAlbumArtResources(
+            final long albumId,
+            final String title,
+            final String releaseDate) {
+
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.album
+                where id = %d
+                    and title = '%s'
+                    and details->>'releaseDate' = '%s'
+                    and details->'resources'->'ALBUM_ART'->>'originalFilename' = '%s'
+                    and details->'resources'->'ALBUM_ART'->>'mediaType' = 'image/png'
+                """.formatted(albumId, title.replace("'", "''"), releaseDate, ALBUM_ART_UPLOAD_FILENAME));
     }
 
     private static long transcriptionId(final long songId, final long pubId) {
@@ -900,6 +1138,96 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 where transcription_id = %d
                     and transcriber_id = %d
                 """.formatted(transcriptionId, transcriberId));
+    }
+
+    private static int countTranscriptionResourcesWithUploadMetadata(final long transcriptionId) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.transcription
+                where id = %d
+                    and details->'resources'->'TRANSCRIPTION'->>'originalFilename' = '%s'
+                    and details->'resources'->'TRANSCRIPTION'->>'mediaType' = 'application/pdf'
+                """.formatted(transcriptionId, TRANSCRIPTION_UPLOAD_FILENAME));
+    }
+
+    private static Path albumArtUploadPath() {
+        try {
+            return Path.of(Objects.requireNonNull(
+                            AddTranscriptionMutationIntegrationTests.class
+                                    .getClassLoader()
+                                    .getResource("test-upload-files/" + ALBUM_ART_UPLOAD_FILENAME),
+                            "Could not find album art upload test resource")
+                    .toURI());
+        } catch (final URISyntaxException exception) {
+            throw new IllegalStateException("Could not resolve album art upload test resource", exception);
+        }
+    }
+
+    private static Path transcriptionUploadPath() {
+        try {
+            return Path.of(Objects.requireNonNull(
+                            AddTranscriptionMutationIntegrationTests.class
+                                    .getClassLoader()
+                                    .getResource("test-upload-files/" + TRANSCRIPTION_UPLOAD_FILENAME),
+                            "Could not find transcription upload test resource")
+                    .toURI());
+        } catch (final URISyntaxException exception) {
+            throw new IllegalStateException("Could not resolve transcription upload test resource", exception);
+        }
+    }
+
+    private static byte[] readAlbumArtUpload() {
+        try {
+            return Files.readAllBytes(albumArtUploadPath());
+        } catch (final Exception exception) {
+            throw new IllegalStateException("Could not read album art upload test resource", exception);
+        }
+    }
+
+    private static byte[] readTranscriptionUpload() {
+        try {
+            return Files.readAllBytes(transcriptionUploadPath());
+        } catch (final Exception exception) {
+            throw new IllegalStateException("Could not read transcription upload test resource", exception);
+        }
+    }
+
+    private static String sha256(final byte[] bytes) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+        } catch (final NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("Could not create SHA-256 digest", exception);
+        }
+    }
+
+    private record AlbumArtUploadGraphQlResponse(AlbumArtUploadGraphQlData data) {
+    }
+
+    private record AlbumArtUploadGraphQlData(AlbumArtUploadTranscriptionResponse addTranscription) {
+    }
+
+    private record TranscriptionUploadGraphQlResponse(TranscriptionUploadGraphQlData data) {
+    }
+
+    private record TranscriptionUploadGraphQlData(TranscriptionResponse addTranscription) {
+    }
+
+    private record AlbumArtUploadTranscriptionResponse(
+            Long id,
+            Integer pageNumber,
+            AlbumArtUploadSongResponse song,
+            List<TranscriberResponse> transcribers) {
+    }
+
+    private record AlbumArtUploadSongResponse(Long id, String title, AlbumArtUploadAlbumResponse album) {
+    }
+
+    private record AlbumArtUploadAlbumResponse(
+            Long id,
+            String title,
+            Integer trackNumber,
+            LocalDate releaseDate,
+            String albumArtUrl) {
     }
 
     private record TranscriptionResponse(

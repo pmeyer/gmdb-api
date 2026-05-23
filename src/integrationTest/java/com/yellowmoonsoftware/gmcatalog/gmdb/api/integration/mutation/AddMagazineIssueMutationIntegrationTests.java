@@ -3,21 +3,37 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration.mutation;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.PubType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 import org.springframework.graphql.test.tester.WebGraphQlTester;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.BodyInserters;
 
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
+import java.util.HexFormat;
+import java.util.Objects;
 
 import static com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.PubType.MAG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegrationTestSupport {
+    private static final String COVER_IMAGE_UPLOAD_FILENAME = "gmdb-test-cover-image-upload.png";
 
     private static final GmdbIntegrationDatabase DATABASE = createStartedMutationDatabase();
 
     @Autowired
     private WebGraphQlTester graphQlTester;
+
+    @Autowired
+    private WebTestClient webTestClient;
 
     @DynamicPropertySource
     static void registerGmdbIntegrationProperties(final DynamicPropertyRegistry registry) {
@@ -233,6 +249,28 @@ class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         assertThat(countTranscriptionTranscribers(songId, result.id(), transcriberId)).isOne();
     }
 
+    @Test
+    void addMagazineIssueStoresUploadedCoverImage() {
+        final long pubIndexId = pubIndexIdBySerialNumber("10456295");
+
+        final var result = executeAddMagazineIssueWithCoverImage(pubIndexId);
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.name()).isEqualTo("Guitar World");
+        assertThat(result.type()).isEqualTo(MAG);
+        assertThat(result.pubDate()).isEqualTo(LocalDate.of(2025, 10, 15));
+        assertThat(result.serialNumber()).isEqualTo("10456295");
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.details()).satisfies(details -> {
+            assertThat(details.volume()).isEqualTo("50");
+            assertThat(details.issue()).isEqualTo("10");
+            assertThat(details.issueName()).isEqualTo("Mutation Test Magazine Cover Upload");
+            assertThat(details.cover()).contains(COVER_IMAGE_UPLOAD_FILENAME);
+        });
+        assertThat(countMagazineCoverImageResourcesWithUploadMetadata(result.id())).isOne();
+        assertResourceResponseMatchesCoverImageUpload(result.details().cover());
+    }
+
     private MagPubResponse addMagazineIssue(final String inputFields) {
         return graphQlTester.document("""
                         mutation {
@@ -259,6 +297,71 @@ class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 .path("addMagazineIssue")
                 .entity(MagPubResponse.class)
                 .get();
+    }
+
+    private MagCoverUploadPubResponse executeAddMagazineIssueWithCoverImage(final long pubIndexId) {
+        final MultipartBodyBuilder multipartBodyBuilder = new MultipartBodyBuilder();
+        multipartBodyBuilder.part("operations", """
+                {
+                    "query": "mutation($magInput: MagazineInput!) { addMagazineIssue(magInput: $magInput) { id name type pubDate serialNumber pubIndexId details { ... on MagDetails { volume issue issueName cover } } } }",
+                    "variables": {
+                        "magInput": {
+                            "pubDate": "2025-10-15",
+                            "index": { "id": %d },
+                            "info": {
+                                "volume": "50",
+                                "issue": "10",
+                                "issueName": "Mutation Test Magazine Cover Upload",
+                                "cover": null
+                            },
+                            "transcriptions": []
+                        }
+                    }
+                }
+                """.formatted(pubIndexId));
+        multipartBodyBuilder.part("map", """
+                {
+                    "0": ["variables.magInput.info.cover"]
+                }
+                """);
+        multipartBodyBuilder.part("0", new FileSystemResource(coverImageUploadPath()))
+                .contentType(MediaType.IMAGE_PNG);
+
+        final var response = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .post()
+                .uri("/graphql")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(multipartBodyBuilder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(MagCoverUploadGraphQlResponse.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.data()).isNotNull();
+        assertThat(response.data().addMagazineIssue()).isNotNull();
+        return response.data().addMagazineIssue();
+    }
+
+    private void assertResourceResponseMatchesCoverImageUpload(final String resourceUrl) {
+        assertThat(resourceUrl).isNotBlank();
+
+        final byte[] responseBody = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .get()
+                .uri(resourceUrl)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(byte[].class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(responseBody).isNotNull();
+        assertThat(sha256(responseBody)).isEqualTo(sha256(readCoverImageUpload()));
     }
 
     private static long pubIndexIdBySerialNumber(final String serialNumber) {
@@ -350,6 +453,19 @@ class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 """.formatted(pubIndexId, issueName));
     }
 
+    private static int countMagazineCoverImageResourcesWithUploadMetadata(final long pubId) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.pub
+                where id = %d
+                    and details->>'volume' = '50'
+                    and details->>'issue' = '10'
+                    and details->>'issueName' = 'Mutation Test Magazine Cover Upload'
+                    and details->'resources'->'COVER_IMAGE'->>'originalFilename' = '%s'
+                    and details->'resources'->'COVER_IMAGE'->>'mediaType' = 'image/png'
+                """.formatted(pubId, COVER_IMAGE_UPLOAD_FILENAME));
+    }
+
     private static int countTranscriptions(
             final long songId,
             final long pubId,
@@ -390,5 +506,53 @@ class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     private record MagDetailsResponse(String volume, String issue, String issueName) {
+    }
+
+    private static Path coverImageUploadPath() {
+        try {
+            return Path.of(Objects.requireNonNull(
+                            AddMagazineIssueMutationIntegrationTests.class
+                                    .getClassLoader()
+                                    .getResource("test-upload-files/" + COVER_IMAGE_UPLOAD_FILENAME),
+                            "Could not find cover image upload test resource")
+                    .toURI());
+        } catch (final URISyntaxException exception) {
+            throw new IllegalStateException("Could not resolve cover image upload test resource", exception);
+        }
+    }
+
+    private static byte[] readCoverImageUpload() {
+        try {
+            return Files.readAllBytes(coverImageUploadPath());
+        } catch (final Exception exception) {
+            throw new IllegalStateException("Could not read cover image upload test resource", exception);
+        }
+    }
+
+    private static String sha256(final byte[] bytes) {
+        try {
+            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+        } catch (final NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("Could not create SHA-256 digest", exception);
+        }
+    }
+
+    private record MagCoverUploadGraphQlResponse(MagCoverUploadGraphQlData data) {
+    }
+
+    private record MagCoverUploadGraphQlData(MagCoverUploadPubResponse addMagazineIssue) {
+    }
+
+    private record MagCoverUploadPubResponse(
+            Long id,
+            String name,
+            PubType type,
+            LocalDate pubDate,
+            String serialNumber,
+            Long pubIndexId,
+            MagCoverUploadDetailsResponse details) {
+    }
+
+    private record MagCoverUploadDetailsResponse(String volume, String issue, String issueName, String cover) {
     }
 }
