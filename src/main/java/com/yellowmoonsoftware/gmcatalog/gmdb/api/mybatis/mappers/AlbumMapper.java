@@ -13,6 +13,7 @@ import java.util.Set;
 @Mapper
 public interface AlbumMapper {
     Mono<AlbumOut> upsertAlbum(@Param("input") final AlbumIn input);
+    Mono<Long> getAlbumId(@Param("id") final Long id);
     Mono<AlbumOut> getAlbumById(@Param("id") final Long id);
     Flux<AlbumOut> getAlbumsByIds(@Param("albumIds") final Set<Long> albumIds);
     Flux<AlbumOut> albumSearch(@Param("criteria") final AlbumSearchCriteria criteria);

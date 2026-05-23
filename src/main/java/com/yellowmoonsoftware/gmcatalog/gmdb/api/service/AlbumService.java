@@ -5,6 +5,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.AlbumIn;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.AlbumOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.ArtistOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.AlbumInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.AlbumMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,10 +23,18 @@ public class AlbumService {
 
     @Transactional
     public Mono<AlbumOut> upsertAlbum(final AlbumInput input) {
-        if (input.mode() == IdAndDataContainer.DataMode.REF) {
-            return albumMapper.getAlbumById(input.id());
-        }
+        final Mono<AlbumOut> upsertSignal = input.mode() == IdAndDataContainer.DataMode.REF
+                ? Mono.defer(() -> albumMapper.getAlbumById(input.id()))
+                : upsertAlbumData(input);
 
+        return input.id() == null
+                ? upsertSignal
+                : albumMapper.getAlbumId(input.id())
+                    .switchIfEmpty(Mono.error(new InvalidInputException("Unknown album ID: " + input.id())))
+                    .then(upsertSignal);
+    }
+
+    private Mono<AlbumOut> upsertAlbumData(final AlbumInput input) {
         return Mono.justOrEmpty(input.data().primaryArtist())
                 .flatMap(artistInput -> artistService.upsertArtist(artistInput)
                         .map(ArtistOut::id))

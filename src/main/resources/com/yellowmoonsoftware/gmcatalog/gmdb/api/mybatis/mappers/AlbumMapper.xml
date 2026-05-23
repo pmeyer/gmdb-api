@@ -21,6 +21,12 @@
         select id, title, details, primary_artist_id, null as action from album where id = #{id}
     </select>
 
+    <select id="getAlbumId" resultType="long">
+        select id
+        from album
+        where id = #{id}
+    </select>
+
     <select id="getAlbumsByIds" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.AlbumOut">
         select id, title, details, primary_artist_id, null as action from album where
         <foreach collection="albumIds" item="id" open="id in(" separator="," close=")">

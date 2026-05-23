@@ -541,6 +541,73 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
     }
 
     @Test
+    void addTranscriptionRejectsUnknownAlbumReference() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final String songTitle = "Negative Test Unknown Album Reference";
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "%s"
+                                    albumTrack: {
+                                        trackNumber: 1
+                                        album: { id: 999999999 }
+                                    }
+                                }
+                            }
+                            pageNumber: 993
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId, songTitle), "Unknown album ID: 999999999");
+        assertThat(countSongsByTitle(songTitle)).isZero();
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 993)).isZero();
+    }
+
+    @Test
+    void addTranscriptionRejectsUnknownAlbumIdAndDataBeforeUpsert() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final String albumTitle = "Negative Test Unknown Album ID";
+        final String songTitle = "Negative Test Unknown Album ID Song";
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "%s"
+                                    albumTrack: {
+                                        trackNumber: 1
+                                        album: {
+                                            id: 999999999
+                                            data: {
+                                                title: "%s"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            pageNumber: 994
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId, songTitle, albumTitle), "Unknown album ID: 999999999");
+        assertThat(countAlbumsByTitle(albumTitle)).isZero();
+        assertThat(countSongsByTitle(songTitle)).isZero();
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 994)).isZero();
+    }
+
+    @Test
     void addTranscriptionRejectsAlbumPrimaryArtistWithoutIdOrData() {
         final long pubId = pubIdForGuitarWorldNovember2018();
 
@@ -831,6 +898,14 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
         return queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.song
+                where title = '%s'
+                """.formatted(title));
+    }
+
+    private static int countAlbumsByTitle(final String title) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.album
                 where title = '%s'
                 """.formatted(title));
     }
