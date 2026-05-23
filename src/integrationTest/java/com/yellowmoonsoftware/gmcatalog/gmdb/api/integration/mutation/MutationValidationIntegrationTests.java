@@ -59,6 +59,38 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
     }
 
     @Test
+    void upsertPubIndexRejectsDataMissingRequiredName() {
+        assertRequestError("""
+                mutation {
+                    upsertPubIndex(pubIndexInput: {
+                        data: {
+                            type: BOOK
+                            serial: "NEG-PUB-IDX-MISSING-NAME"
+                        }
+                    }) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
+    void upsertPubIndexRejectsDataMissingRequiredType() {
+        assertRequestError("""
+                mutation {
+                    upsertPubIndex(pubIndexInput: {
+                        data: {
+                            name: "Negative Test Pub Index Missing Type"
+                            serial: "NEG-PUB-IDX-MISSING-TYPE"
+                        }
+                    }) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
     void addTranscriptionRejectsMissingRequiredPublicationIdArgument() {
         assertRequestError("""
                 mutation {
@@ -91,6 +123,237 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     }
                 }
                 """.formatted(pubId), "Validation error");
+    }
+
+    @Test
+    void addTranscriptionRejectsNullRequiredInput() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertRequestError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: null
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "Validation error");
+    }
+
+    @Test
+    void addTranscriptionRejectsNullRequiredSong() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertRequestError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: null
+                            pageNumber: 12
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "Validation error");
+    }
+
+    @Test
+    void addTranscriptionRejectsSongDataMissingRequiredTitle() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertRequestError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    artists: [{ id: 1, roles: [PERFORMED_BY] }]
+                                }
+                            }
+                            pageNumber: 12
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "Validation error");
+    }
+
+    @Test
+    void addTranscriptionRejectsSongArtistMissingRequiredRoles() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertRequestError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "Negative Test Missing Artist Roles"
+                                    artists: [{ id: 1 }]
+                                }
+                            }
+                            pageNumber: 12
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "Validation error");
+    }
+
+    @Test
+    void addTranscriptionRejectsAlbumTrackMissingRequiredTrackNumber() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertRequestError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "Negative Test Missing Track Number"
+                                    albumTrack: {
+                                        album: { id: 1 }
+                                    }
+                                }
+                            }
+                            pageNumber: 12
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "Validation error");
+    }
+
+    @Test
+    void addTranscriptionRejectsAlbumDataMissingRequiredTitle() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertRequestError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "Negative Test Missing Album Title"
+                                    albumTrack: {
+                                        trackNumber: 1
+                                        album: {
+                                            data: {
+                                                releaseDate: "2025-01-01"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            pageNumber: 12
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "Validation error");
+    }
+
+    @Test
+    void addTranscriptionRejectsArtistDataMissingRequiredType() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertRequestError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "Negative Test Missing Artist Type"
+                                    artists: [{
+                                        data: {
+                                            name: "Negative Test Artist Missing Type"
+                                        }
+                                        roles: [PERFORMED_BY]
+                                    }]
+                                }
+                            }
+                            pageNumber: 12
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "Validation error");
+    }
+
+    @Test
+    void addMagazineIssueRejectsNullRequiredInput() {
+        assertRequestError("""
+                mutation {
+                    addMagazineIssue(magInput: null) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
+    void addMagazineIssueRejectsInfoMissingRequiredIssueName() {
+        assertRequestError("""
+                mutation {
+                    addMagazineIssue(
+                        magInput: {
+                            pubDate: "2025-01-01"
+                            index: { id: 1 }
+                            info: { }
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
+    void addBookEditionRejectsNullRequiredInput() {
+        assertRequestError("""
+                mutation {
+                    addBookEdition(bookInput: null) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
+    void addPubCoverImageRejectsNullRequiredInput() {
+        assertRequestError("""
+                mutation {
+                    addPubCoverImage(imgInput: null) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
+    void addPubCoverImageRejectsMissingRequiredId() {
+        assertRequestError("""
+                mutation {
+                    addPubCoverImage(imgInput: {
+                        cover: null
+                    }) {
+                        id
+                    }
+                }
+                """, "Validation error");
     }
 
     @Test
