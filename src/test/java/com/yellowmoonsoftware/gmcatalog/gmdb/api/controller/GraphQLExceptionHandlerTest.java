@@ -1,6 +1,7 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.controller;
 
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InputValidationException;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import graphql.ErrorType;
 import graphql.GraphQLError;
 import jakarta.validation.ConstraintViolationException;
@@ -30,5 +31,15 @@ class GraphQLExceptionHandlerTest {
 
         assertThat(error.getErrorType()).isEqualTo(ErrorType.ValidationError);
         assertThat(error.getMessage()).isEqualTo("input failed");
+    }
+
+    @Test
+    void handlerInvalidInputExceptionReturnsValidationError() {
+        final InvalidInputException exception = new InvalidInputException("invalid input");
+
+        final GraphQLError error = handler.handlerInvalidInputException(exception);
+
+        assertThat(error.getErrorType()).isEqualTo(ErrorType.ValidationError);
+        assertThat(error.getMessage()).isEqualTo("invalid input");
     }
 }

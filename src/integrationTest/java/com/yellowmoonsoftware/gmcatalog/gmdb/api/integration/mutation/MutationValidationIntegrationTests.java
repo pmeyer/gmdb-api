@@ -629,6 +629,30 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
         assertThat(countPubIndicesBySerialNumber(serialNumber)).isZero();
     }
 
+    @Test
+    void addTranscriptionRejectsUnknownPublicationReferenceAndRollsBackSong() {
+        final String songTitle = "Negative Test Unknown Publication Song";
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: 999999999
+                        transcriptionInput: {
+                            song: {
+                                data: {
+                                    title: "%s"
+                                }
+                            }
+                            pageNumber: 12
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(songTitle), "Unknown publication ID: 999999999");
+        assertThat(countSongsByTitle(songTitle)).isZero();
+    }
+
     private void assertValidationError(final String document, final String message) {
         graphQlTester.document(document)
                 .execute()
@@ -678,6 +702,14 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                 from gmdb.pub_idx
                 where serial_number = '%s'
                 """.formatted(serialNumber));
+    }
+
+    private static int countSongsByTitle(final String title) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.song
+                where title = '%s'
+                """.formatted(title));
     }
 
     private static int countPubIndicesBySerialNumber(final String serialNumber) {

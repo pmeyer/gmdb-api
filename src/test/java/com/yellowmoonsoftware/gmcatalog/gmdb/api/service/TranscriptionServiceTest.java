@@ -6,6 +6,8 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriberInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriptionInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriptionMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -43,6 +45,9 @@ class TranscriptionServiceTest {
     private FileService fileService;
 
     @Mock
+    private PubMapper pubMapper;
+
+    @Mock
     private TranscriptionMapper transcriptionMapper;
 
     @Mock
@@ -61,6 +66,7 @@ class TranscriptionServiceTest {
         final List<TranscriberInput> transcribers = List.of(new TranscriberInput(2L, null));
         final TranscriptionInput input = new TranscriptionInput(songInput, 12, file, transcribers);
         final TranscriptionInOut output = transcriptionOut();
+        when(pubMapper.getPubId(20L)).thenReturn(Mono.just(20L));
         when(songService.upsertSong(songInput)).thenReturn(Mono.just(new SongOut(10L, "Opener", null, null, null)));
         when(transcriptionMapper.upsertTranscription(any(TranscriptionInOut.class))).thenReturn(Mono.just(output));
         when(fileService.put(file, ResourceSlug.TRANSCRIPTION, Map.of("id", output.details().resourceId())))
@@ -72,6 +78,7 @@ class TranscriptionServiceTest {
             .verifyComplete();
 
         final ArgumentCaptor<TranscriptionInOut> captor = ArgumentCaptor.forClass(TranscriptionInOut.class);
+        verify(pubMapper).getPubId(20L);
         verify(songService).upsertSong(songInput);
         verify(transcriptionMapper).upsertTranscription(captor.capture());
         assertThat(captor.getValue().songId()).isEqualTo(10L);
@@ -79,7 +86,7 @@ class TranscriptionServiceTest {
         assertThat(captor.getValue().details().pageNumber()).isEqualTo(12);
         verify(fileService).put(file, ResourceSlug.TRANSCRIPTION, Map.of("id", output.details().resourceId()));
         verify(transcriptionTranscriberService).addTranscriptionTranscribers(1L, transcribers);
-        verifyNoMoreInteractions(songService, transcriptionMapper, fileService, transcriptionTranscriberService);
+        verifyNoMoreInteractions(pubMapper, songService, transcriptionMapper, fileService, transcriptionTranscriberService);
     }
 
     @Test
@@ -87,6 +94,7 @@ class TranscriptionServiceTest {
         final SongInput songInput = new SongInput(1L, null);
         final TranscriptionInput input = new TranscriptionInput(songInput, 12, null, List.of());
         final TranscriptionInOut output = transcriptionOut();
+        when(pubMapper.getPubId(20L)).thenReturn(Mono.just(20L));
         when(songService.upsertSong(songInput)).thenReturn(Mono.just(new SongOut(10L, "Opener", null, null, null)));
         when(transcriptionMapper.upsertTranscription(any(TranscriptionInOut.class))).thenReturn(Mono.just(output));
         when(transcriptionTranscriberService.addTranscriptionTranscribers(1L, List.of())).thenReturn(Mono.empty());
@@ -95,11 +103,30 @@ class TranscriptionServiceTest {
             .expectNext(output)
             .verifyComplete();
 
+        verify(pubMapper).getPubId(20L);
         verify(songService).upsertSong(songInput);
         verify(transcriptionMapper).upsertTranscription(any(TranscriptionInOut.class));
         verify(transcriptionTranscriberService).addTranscriptionTranscribers(1L, List.of());
         verifyNoInteractions(fileService);
-        verifyNoMoreInteractions(songService, transcriptionMapper, transcriptionTranscriberService);
+        verifyNoMoreInteractions(pubMapper, songService, transcriptionMapper, transcriptionTranscriberService);
+    }
+
+    @Test
+    void upsertTranscriptionRejectsUnknownPublicationIdBeforeUpsertingSong() {
+        final SongInput songInput = new SongInput(1L, null);
+        final TranscriptionInput input = new TranscriptionInput(songInput, 12, null, List.of());
+        when(pubMapper.getPubId(20L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(transcriptionService.upsertTranscription(20L, input))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidInputException.class);
+                    assertThat(error).hasMessage("Unknown publication ID: 20");
+                })
+                .verify();
+
+        verify(pubMapper).getPubId(20L);
+        verifyNoMoreInteractions(pubMapper);
+        verifyNoInteractions(songService, transcriptionMapper, fileService, transcriptionTranscriberService);
     }
 
     private static TranscriptionInOut transcriptionOut() {
