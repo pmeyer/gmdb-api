@@ -9,5 +9,6 @@ import reactor.core.publisher.Mono;
 @Mapper
 public interface SongMapper {
     Mono<SongOut> upsertSong(@Param("input") final SongIn input);
+    Mono<Long> getSongId(@Param("id") final Long id);
     Mono<SongOut> getSongById(@Param("id") final Long id);
 }

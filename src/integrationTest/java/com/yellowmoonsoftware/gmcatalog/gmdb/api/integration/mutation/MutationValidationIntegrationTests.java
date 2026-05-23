@@ -422,6 +422,53 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
     }
 
     @Test
+    void addTranscriptionRejectsUnknownSongReference() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: { id: 999999999 }
+                            pageNumber: 991
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "Unknown song ID: 999999999");
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 991)).isZero();
+    }
+
+    @Test
+    void addTranscriptionRejectsUnknownSongIdAndDataBeforeUpsert() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final String songTitle = "Negative Test Unknown Song ID";
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: {
+                                id: 999999999
+                                data: {
+                                    title: "%s"
+                                }
+                            }
+                            pageNumber: 992
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId, songTitle), "Unknown song ID: 999999999");
+        assertThat(countSongsByTitle(songTitle)).isZero();
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 992)).isZero();
+    }
+
+    @Test
     void addTranscriptionRejectsTranscriberWithoutIdOrName() {
         final long pubId = pubIdForGuitarWorldNovember2018();
         final long songId = songIdByTitleAndAlbum("Rocket Queen", "Appetite For Destruction");
@@ -786,6 +833,15 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                 from gmdb.song
                 where title = '%s'
                 """.formatted(title));
+    }
+
+    private static int countTranscriptionsByPubIdAndPageNumber(final long pubId, final int pageNumber) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.transcription
+                where pub_id = %d
+                    and details->>'pageNumber' = '%d'
+                """.formatted(pubId, pageNumber));
     }
 
     private static int countPubsByIssueName(final String issueName) {

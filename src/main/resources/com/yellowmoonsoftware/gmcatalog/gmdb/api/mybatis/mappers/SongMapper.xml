@@ -17,6 +17,12 @@
             t.id, t.title, t.details, t.album_id, merge_action() as action
     </select>
 
+    <select id="getSongId" resultType="long">
+        select id
+        from song
+        where id = #{id}
+    </select>
+
     <select id="getSongById" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.SongOut">
         select id, title, details, album_id, null as action
         from song
