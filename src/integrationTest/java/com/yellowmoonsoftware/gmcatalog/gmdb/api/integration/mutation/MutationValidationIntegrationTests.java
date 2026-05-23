@@ -32,6 +32,38 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
     }
 
     @Test
+    void upsertPubIndexRejectsUnknownReferenceId() {
+        assertValidationError("""
+                mutation {
+                    upsertPubIndex(pubIndexInput: { id: 999999999 }) {
+                        id
+                    }
+                }
+                """, "Unknown publication index ID: 999999999");
+    }
+
+    @Test
+    void upsertPubIndexRejectsUnknownIdAndDataInputBeforeUpsert() {
+        final String serialNumber = "NEG-PUB-IDX-UNKNOWN-ID";
+
+        assertValidationError("""
+                mutation {
+                    upsertPubIndex(pubIndexInput: {
+                        id: 999999999
+                        data: {
+                            name: "Negative Test Unknown Pub Index ID"
+                            type: BOOK
+                            serial: "%s"
+                        }
+                    }) {
+                        id
+                    }
+                }
+                """.formatted(serialNumber), "Unknown publication index ID: 999999999");
+        assertThat(countPubIndicesBySerialNumber(serialNumber)).isZero();
+    }
+
+    @Test
     void upsertPubIndexRejectsNullInput() {
         assertRequestError("""
                 mutation {
@@ -513,6 +545,28 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
     }
 
     @Test
+    void addMagazineIssueRejectsUnknownPublicationIndexReference() {
+        final String issueName = "Negative Test Magazine Unknown Index";
+
+        assertValidationError("""
+                mutation {
+                    addMagazineIssue(
+                        magInput: {
+                            pubDate: "2025-01-01"
+                            index: { id: 999999999 }
+                            info: {
+                                issueName: "%s"
+                            }
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(issueName), "Unknown publication index ID: 999999999");
+        assertThat(countPubsByIssueName(issueName)).isZero();
+    }
+
+    @Test
     void addMagazineIssueRejectsBookPublicationIndex() {
         final long bookIndexId = pubIndexIdBySerialNumber("0898987660");
 
@@ -578,6 +632,28 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     }
                 }
                 """, "PubIndexInput must have an ID or data");
+    }
+
+    @Test
+    void addBookEditionRejectsUnknownPublicationIndexReference() {
+        final String edition = "Negative Test Book Unknown Index";
+
+        assertValidationError("""
+                mutation {
+                    addBookEdition(
+                        bookInput: {
+                            pubDate: "2025-01-01"
+                            index: { id: 999999999 }
+                            info: {
+                                edition: "%s"
+                            }
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(edition), "Unknown publication index ID: 999999999");
+        assertThat(countPubsByEdition(edition)).isZero();
     }
 
     @Test
@@ -710,6 +786,22 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                 from gmdb.song
                 where title = '%s'
                 """.formatted(title));
+    }
+
+    private static int countPubsByIssueName(final String issueName) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.pub
+                where details->>'issueName' = '%s'
+                """.formatted(issueName));
+    }
+
+    private static int countPubsByEdition(final String edition) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.pub
+                where details->>'edition' = '%s'
+                """.formatted(edition));
     }
 
     private static int countPubIndicesBySerialNumber(final String serialNumber) {
