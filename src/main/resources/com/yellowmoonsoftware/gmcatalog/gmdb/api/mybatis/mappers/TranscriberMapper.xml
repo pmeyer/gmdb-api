@@ -19,6 +19,12 @@
         select id, name, null as action from transcriber where id = #{id}
     </select>
 
+    <select id="getTranscriberId" resultType="long">
+        select id
+        from transcriber
+        where id = #{id}
+    </select>
+
     <select id="upsertTranscriptionTranscribers" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionTranscriber">
         with t_add as (
             select transcription_id, transcriber_id, op

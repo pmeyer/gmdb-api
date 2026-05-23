@@ -13,6 +13,7 @@ import java.util.List;
 @Mapper
 public interface TranscriberMapper {
     Mono<TranscriberOut> upsertTranscriber(@Param("input") final TranscriberInput input);
+    Mono<Long> getTranscriberId(@Param("id") final Long id);
     Mono<TranscriberOut> getTranscriberById(@Param("id") final Long id);
     Flux<TranscriptionTranscriber> upsertTranscriptionTranscribers(@Param("transcriptionTranscribers") final List<TranscriptionTranscriber> transcriptionTranscribers);
     Mono<Integer> clearTranscriptionTranscribers(@Param("transcriptionId") final Long transcriptionId);

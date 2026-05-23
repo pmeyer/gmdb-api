@@ -490,6 +490,55 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
     }
 
     @Test
+    void addTranscriptionRejectsUnknownTranscriberReference() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long songId = songIdByTitleAndAlbum("Rocket Queen", "Appetite For Destruction");
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: { id: %d }
+                            pageNumber: 999
+                            transcribers: [{ id: 999999999 }]
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId, songId), "Unknown transcriber ID: 999999999");
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 999)).isZero();
+    }
+
+    @Test
+    void addTranscriptionRejectsUnknownTranscriberIdAndDataBeforeUpsert() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long songId = songIdByTitleAndAlbum("Rocket Queen", "Appetite For Destruction");
+        final String transcriberName = "Negative Test Unknown Transcriber ID";
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            song: { id: %d }
+                            pageNumber: 1000
+                            transcribers: [{
+                                id: 999999999
+                                name: "%s"
+                            }]
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId, songId, transcriberName), "Unknown transcriber ID: 999999999");
+        assertThat(countTranscribersByName(transcriberName)).isZero();
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 1000)).isZero();
+    }
+
+    @Test
     void addTranscriptionRejectsSongArtistWithoutIdOrData() {
         final long pubId = pubIdForGuitarWorldNovember2018();
 
@@ -1054,6 +1103,14 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
         return queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.artist
+                where name = '%s'
+                """.formatted(name));
+    }
+
+    private static int countTranscribersByName(final String name) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.transcriber
                 where name = '%s'
                 """.formatted(name));
     }
