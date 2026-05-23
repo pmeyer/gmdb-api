@@ -2,13 +2,17 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.springframework.web.server.ResponseStatusException;
 import reactor.core.publisher.Mono;
+
+import java.io.FileNotFoundException;
 
 @Component
 @RequiredArgsConstructor
@@ -34,8 +38,10 @@ public class FileResourceHandler {
                 .ifPresent(mt -> {
                     builder.contentType(MediaType.parseMediaType(mt));
                 });
-        return builder
-                .body(BodyInserters
-                .fromDataBuffers(fileService.get(ResourceSlug.getResourceSlugByName(request.pathVariable("slug")), request.pathVariables())));
+        return builder.body(BodyInserters.fromDataBuffers(fileService
+                .get(ResourceSlug.getResourceSlugByName(request.pathVariable("slug")), request.pathVariables())
+                .onErrorMap(
+                        FileNotFoundException.class,
+                        exception -> new ResponseStatusException(HttpStatus.NOT_FOUND, exception.getMessage(), exception))));
     }
 }
