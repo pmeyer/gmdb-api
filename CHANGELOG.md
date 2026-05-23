@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.0.5](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.4...gmdb-api-v1.0.5) (2026-05-23)
+
+
+### Bug Fixes
+
+* avoid sending empty lists to upsertSongArtists mapper function ([#30](https://github.com/pmeyer/gmdb-api/issues/30)) ([b41fb29](https://github.com/pmeyer/gmdb-api/commit/b41fb2937d806417f702ffda3627351ae91bbddc))
+* date serialization in JsonbTypeHandlerAdapter ([d36925e](https://github.com/pmeyer/gmdb-api/commit/d36925ecd69fe07cde4e6ffe89e558bee81d42d8))
+* support mutation data upsert scenarios ([cc0b711](https://github.com/pmeyer/gmdb-api/commit/cc0b711df7ed5e97871fc171f4a819f5fad8dd52))
+* support transcription transcriber mutation permutations ([cb22135](https://github.com/pmeyer/gmdb-api/commit/cb22135cdb48b75c1e32e20edfeda72f4da27668))
+* update schema and annotate entry point with `@NonNull` to properly reflect semantic behavior ([4b0e849](https://github.com/pmeyer/gmdb-api/commit/4b0e849918bacdd1716799a5f7becb86ce61e903))
+
 ## [1.0.4](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.3...gmdb-api-v1.0.4) (2026-05-19)
 
 
