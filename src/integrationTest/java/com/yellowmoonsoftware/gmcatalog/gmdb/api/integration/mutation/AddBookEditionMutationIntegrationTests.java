@@ -82,6 +82,90 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
     }
 
     @Test
+    void addBookEditionWithOmittedOptionalFieldsCreatesPublication() {
+        final long pubIndexId = pubIndexIdBySerialNumber("0898987660");
+
+        final var result = addBookEdition("""
+                pubDate: "2025-07-01"
+                index: { id: %d }
+                """.formatted(pubIndexId));
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.name()).isEqualTo("Tom Petty & the Heartbreakers: Greatest Hits");
+        assertThat(result.type()).isEqualTo(BOOK);
+        assertThat(result.pubDate()).isEqualTo(LocalDate.of(2025, 7, 1));
+        assertThat(result.serialNumber()).isEqualTo("0898987660");
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.details()).isEqualTo(new BookDetailsResponse(null));
+        assertThat(countBookEditionsWithNullEdition(pubIndexId, LocalDate.of(2025, 7, 1))).isOne();
+    }
+
+    @Test
+    void addBookEditionWithOmittedPublicationDateCreatesPublication() {
+        final long pubIndexId = pubIndexIdBySerialNumber("0898987660");
+
+        final var result = addBookEdition("""
+                index: { id: %d }
+                """.formatted(pubIndexId));
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.name()).isEqualTo("Tom Petty & the Heartbreakers: Greatest Hits");
+        assertThat(result.type()).isEqualTo(BOOK);
+        assertThat(result.pubDate()).isNull();
+        assertThat(result.serialNumber()).isEqualTo("0898987660");
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.details()).isEqualTo(new BookDetailsResponse(null));
+        assertThat(countBookEditionsWithNullPublicationDateAndNullEdition(pubIndexId)).isOne();
+    }
+
+    @Test
+    void addBookEditionWithExistingIndexIdAndDataUpdatesPublicationIndex() {
+        addBookEdition("""
+                pubDate: "2025-08-01"
+                index: {
+                    data: {
+                        name: "Mutation Test Book Index Update Target"
+                        type: BOOK
+                        serial: "MUT-BOOK-ID-DATA-001"
+                    }
+                }
+                info: {
+                    edition: "Mutation Test Book Index Update First Edition"
+                }
+                """);
+
+        final long pubIndexId = pubIndexIdBySerialNumber("MUT-BOOK-ID-DATA-001");
+
+        final var result = addBookEdition("""
+                pubDate: "2025-09-01"
+                index: {
+                    id: %d
+                    data: {
+                        name: "Mutation Test Book Index Updated"
+                        type: BOOK
+                        serial: "MUT-BOOK-ID-DATA-UPDATED"
+                    }
+                }
+                info: {
+                    edition: "Mutation Test Book Index Update Second Edition"
+                }
+                """.formatted(pubIndexId));
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.name()).isEqualTo("Mutation Test Book Index Updated");
+        assertThat(result.type()).isEqualTo(BOOK);
+        assertThat(result.pubDate()).isEqualTo(LocalDate.of(2025, 9, 1));
+        assertThat(result.serialNumber()).isEqualTo("MUT-BOOK-ID-DATA-UPDATED");
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.details()).isEqualTo(new BookDetailsResponse(
+                "Mutation Test Book Index Update Second Edition"));
+        assertThat(countPubIndices("Mutation Test Book Index Update Target", BOOK, "MUT-BOOK-ID-DATA-001"))
+                .isZero();
+        assertThat(countPubIndices("Mutation Test Book Index Updated", BOOK, "MUT-BOOK-ID-DATA-UPDATED"))
+                .isOne();
+    }
+
+    @Test
     void addBookEditionWithNestedTranscriptionCreatesPublicationAndTranscription() {
         final long pubIndexId = pubIndexIdBySerialNumber("0898987660");
         final long songId = songIdByTitleAndAlbum("Learning to Fly", "Greatest Hits");
@@ -188,6 +272,29 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
                     and pub_date = '%s'::date
                     and details->>'edition' = '%s'
                 """.formatted(pubIndexId, pubDate, edition));
+    }
+
+    private static int countBookEditionsWithNullEdition(
+            final long pubIndexId,
+            final LocalDate pubDate) {
+
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.pub
+                where pub_idx_id = %d
+                    and pub_date = '%s'::date
+                    and details->>'edition' is null
+                """.formatted(pubIndexId, pubDate));
+    }
+
+    private static int countBookEditionsWithNullPublicationDateAndNullEdition(final long pubIndexId) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.pub
+                where pub_idx_id = %d
+                    and pub_date is null
+                    and details->>'edition' is null
+                """.formatted(pubIndexId));
     }
 
     private static int countTranscriptions(

@@ -70,4 +70,16 @@ class TranscriberServiceTest {
         verify(transcriberMapper).upsertTranscriptionTranscribers(input);
         verifyNoMoreInteractions(transcriberMapper);
     }
+
+    @Test
+    void clearTranscriptionTranscribersDelegatesToMapper() {
+        when(transcriberMapper.clearTranscriptionTranscribers(1L)).thenReturn(Mono.just(2));
+
+        StepVerifier.create(transcriberService.clearTranscriptionTranscribers(1L))
+            .expectNext(2)
+            .verifyComplete();
+
+        verify(transcriberMapper).clearTranscriptionTranscribers(1L);
+        verifyNoMoreInteractions(transcriberMapper);
+    }
 }

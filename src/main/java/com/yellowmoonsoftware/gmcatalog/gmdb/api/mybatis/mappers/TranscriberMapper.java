@@ -15,4 +15,5 @@ public interface TranscriberMapper {
     Mono<TranscriberOut> upsertTranscriber(@Param("input") final TranscriberInput input);
     Mono<TranscriberOut> getTranscriberById(@Param("id") final Long id);
     Flux<TranscriptionTranscriber> upsertTranscriptionTranscribers(@Param("transcriptionTranscribers") final List<TranscriptionTranscriber> transcriptionTranscribers);
+    Mono<Integer> clearTranscriptionTranscribers(@Param("transcriptionId") final Long transcriptionId);
 }

@@ -27,4 +27,8 @@ public class TranscriberService {
     public Flux<TranscriptionTranscriber> upsertTranscriptionTranscribers(final List<TranscriptionTranscriber> transcriptionTranscribers) {
         return transcriberMapper.upsertTranscriptionTranscribers(transcriptionTranscribers);
     }
+
+    public Mono<Integer> clearTranscriptionTranscribers(final Long transcriptionId) {
+        return transcriberMapper.clearTranscriptionTranscribers(transcriptionId);
+    }
 }

@@ -102,6 +102,114 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     @Test
+    void addTranscriptionWithOmittedTranscribersCreatesTranscriptionWithoutAssociations() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long albumId = albumIdByTitle("Appetite For Destruction");
+
+        final var result = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Omitted Transcribers Song"
+                            artists: []
+                            albumTrack: {
+                                trackNumber: 101
+                                album: { id: %d }
+                            }
+                        }
+                    }
+                    pageNumber: 60
+                }
+                """.formatted(pubId, albumId));
+
+        final long songId = songIdByTitleAndAlbum("Mutation Test Omitted Transcribers Song", "Appetite For Destruction");
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.pageNumber()).isEqualTo(60);
+        assertThat(result.song()).isEqualTo(new SongResponse(songId, "Mutation Test Omitted Transcribers Song"));
+        assertThat(result.transcribers()).isNull();
+        assertThat(countTranscriptions(songId, pubId, 60)).isOne();
+        assertThat(countTranscriptionTranscribers(result.id())).isZero();
+    }
+
+    @Test
+    void addTranscriptionWithEmptyTranscribersRemovesExistingAssociations() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long albumId = albumIdByTitle("Appetite For Destruction");
+        final long transcriberId = transcriberIdByName("Jeff Perrin");
+
+        final var original = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Empty Transcribers Song"
+                            artists: []
+                            albumTrack: {
+                                trackNumber: 102
+                                album: { id: %d }
+                            }
+                        }
+                    }
+                    pageNumber: 61
+                    transcribers: [{ id: %d }]
+                }
+                """.formatted(pubId, albumId, transcriberId));
+
+        final long songId = songIdByTitleAndAlbum("Mutation Test Empty Transcribers Song", "Appetite For Destruction");
+
+        assertThat(original.transcribers()).containsExactly(new TranscriberResponse(transcriberId, "Jeff Perrin"));
+        assertThat(countTranscriptionTranscribers(original.id(), transcriberId)).isOne();
+
+        final var result = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: { id: %d }
+                    pageNumber: 62
+                    transcribers: []
+                }
+                """.formatted(pubId, songId));
+
+        assertThat(result.id()).isEqualTo(original.id());
+        assertThat(result.pageNumber()).isEqualTo(62);
+        assertThat(result.song()).isEqualTo(new SongResponse(songId, "Mutation Test Empty Transcribers Song"));
+        assertThat(result.transcribers()).isNull();
+        assertThat(countTranscriptions(songId, pubId, 61)).isZero();
+        assertThat(countTranscriptions(songId, pubId, 62)).isOne();
+        assertThat(countTranscriptionTranscribers(result.id())).isZero();
+    }
+
+    @Test
+    void addTranscriptionWithOmittedOptionalSongDataCreatesStandaloneSong() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        final var result = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Standalone Song"
+                        }
+                    }
+                    pageNumber: 71
+                    transcribers: []
+                }
+                """.formatted(pubId));
+
+        final long songId = standaloneSongIdByTitle("Mutation Test Standalone Song");
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.pageNumber()).isEqualTo(71);
+        assertThat(result.song()).isEqualTo(new SongResponse(songId, "Mutation Test Standalone Song"));
+        assertThat(result.transcribers()).isNull();
+        assertThat(countStandaloneSongsByTitle("Mutation Test Standalone Song")).isOne();
+        assertThat(countSongArtists(songId)).isZero();
+        assertThat(countTranscriptions(songId, pubId, 71)).isOne();
+        assertThat(countTranscriptionTranscribers(result.id())).isZero();
+    }
+
+    @Test
     void addTranscriptionWithNewSongAndExistingAlbumAndArtistReferencesCreatesRelatedData() {
         final long pubId = pubIdForGuitarWorldNovember2018();
         final long albumId = albumIdByTitle("Appetite For Destruction");
@@ -327,6 +435,275 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         assertThat(countTranscriptionTranscribers(result.id(), transcriberId)).isOne();
     }
 
+    @Test
+    void addTranscriptionWithExistingTranscriberIdAndNameUpdatesTranscriber() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long albumId = albumIdByTitle("Appetite For Destruction");
+
+        addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Transcriber Update Song One"
+                            artists: []
+                            albumTrack: {
+                                trackNumber: 103
+                                album: { id: %d }
+                            }
+                        }
+                    }
+                    pageNumber: 63
+                    transcribers: [{ name: "Mutation Test Transcriber Update Target" }]
+                }
+                """.formatted(pubId, albumId));
+
+        final long transcriberId = transcriberIdByName("Mutation Test Transcriber Update Target");
+
+        final var result = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Transcriber Update Song Two"
+                            artists: []
+                            albumTrack: {
+                                trackNumber: 104
+                                album: { id: %d }
+                            }
+                        }
+                    }
+                    pageNumber: 64
+                    transcribers: [{
+                        id: %d
+                        name: "Mutation Test Transcriber Updated"
+                    }]
+                }
+                """.formatted(pubId, albumId, transcriberId));
+
+        final long songId = songIdByTitleAndAlbum(
+                "Mutation Test Transcriber Update Song Two",
+                "Appetite For Destruction");
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.transcribers()).containsExactly(new TranscriberResponse(
+                transcriberId,
+                "Mutation Test Transcriber Updated"));
+        assertThat(countTranscribersByName("Mutation Test Transcriber Update Target")).isZero();
+        assertThat(countTranscribersByName("Mutation Test Transcriber Updated")).isOne();
+        assertThat(countTranscriptionTranscribers(result.id(), transcriberId)).isOne();
+        assertThat(countTranscriptions(songId, pubId, 64)).isOne();
+    }
+
+    @Test
+    void addTranscriptionWithExistingSongIdAndDataUpdatesSong() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long albumId = albumIdByTitle("Appetite For Destruction");
+
+        final var original = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Song Update Target"
+                            artists: []
+                            albumTrack: {
+                                trackNumber: 105
+                                album: { id: %d }
+                            }
+                        }
+                    }
+                    pageNumber: 65
+                    transcribers: []
+                }
+                """.formatted(pubId, albumId));
+
+        final long songId = songIdByTitleAndAlbum("Mutation Test Song Update Target", "Appetite For Destruction");
+
+        final var result = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        id: %d
+                        data: {
+                            title: "Mutation Test Song Updated"
+                            artists: []
+                            albumTrack: {
+                                trackNumber: 106
+                                album: { id: %d }
+                            }
+                        }
+                    }
+                    pageNumber: 66
+                    transcribers: []
+                }
+                """.formatted(pubId, songId, albumId));
+
+        assertThat(result.id()).isEqualTo(original.id());
+        assertThat(result.song()).isEqualTo(new SongResponse(songId, "Mutation Test Song Updated"));
+        assertThat(countSongsByTitleAlbumAndTrackNumber(
+                "Mutation Test Song Update Target",
+                albumId,
+                105)).isZero();
+        assertThat(countSongsByTitleAlbumAndTrackNumber("Mutation Test Song Updated", albumId, 106)).isOne();
+        assertThat(countTranscriptions(songId, pubId, 65)).isZero();
+        assertThat(countTranscriptions(songId, pubId, 66)).isOne();
+    }
+
+    @Test
+    void addTranscriptionWithExistingAlbumIdAndDataUpdatesAlbumAndPrimaryArtist() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Album Id Update Song One"
+                            artists: []
+                            albumTrack: {
+                                trackNumber: 1
+                                album: {
+                                    data: {
+                                        title: "Mutation Test Album Id Update Target"
+                                        releaseDate: "2025-09-01"
+                                        primaryArtist: {
+                                            data: {
+                                                name: "Mutation Test Album Artist Update Target"
+                                                type: PERSON
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    pageNumber: 67
+                    transcribers: []
+                }
+                """.formatted(pubId));
+
+        final long albumId = albumIdByTitle("Mutation Test Album Id Update Target");
+        final long artistId = artistIdByNameAndType("Mutation Test Album Artist Update Target", "PERSON");
+
+        final var result = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Album Id Update Song Two"
+                            artists: []
+                            albumTrack: {
+                                trackNumber: 2
+                                album: {
+                                    id: %d
+                                    data: {
+                                        title: "Mutation Test Album Id Updated"
+                                        releaseDate: "2025-09-02"
+                                        primaryArtist: {
+                                            id: %d
+                                            data: {
+                                                name: "Mutation Test Album Artist Updated"
+                                                type: PERSON
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    pageNumber: 68
+                    transcribers: []
+                }
+                """.formatted(pubId, albumId, artistId));
+
+        final long songId = songIdByTitleAndAlbum("Mutation Test Album Id Update Song Two", "Mutation Test Album Id Updated");
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.song()).isEqualTo(new SongResponse(songId, "Mutation Test Album Id Update Song Two"));
+        assertThat(albumIdByTitle("Mutation Test Album Id Updated")).isEqualTo(albumId);
+        assertThat(artistIdByNameAndType("Mutation Test Album Artist Updated", "PERSON")).isEqualTo(artistId);
+        assertThat(countAlbumsByTitlePrimaryArtistAndReleaseDate(
+                "Mutation Test Album Id Update Target",
+                artistId,
+                "2025-09-01")).isZero();
+        assertThat(countAlbumsByTitlePrimaryArtistAndReleaseDate(
+                "Mutation Test Album Id Updated",
+                artistId,
+                "2025-09-02")).isOne();
+        assertThat(countArtistsByNameAndType("Mutation Test Album Artist Update Target", "PERSON")).isZero();
+        assertThat(countArtistsByNameAndType("Mutation Test Album Artist Updated", "PERSON")).isOne();
+    }
+
+    @Test
+    void addTranscriptionWithExistingSongArtistIdAndDataUpdatesArtistAndRoles() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long albumId = albumIdByTitle("Appetite For Destruction");
+
+        addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Song Artist Update Song One"
+                            artists: [{
+                                data: {
+                                    name: "Mutation Test Song Artist Update Target"
+                                    type: PERSON
+                                }
+                                roles: [PERFORMED_BY]
+                            }]
+                            albumTrack: {
+                                trackNumber: 107
+                                album: { id: %d }
+                            }
+                        }
+                    }
+                    pageNumber: 69
+                    transcribers: []
+                }
+                """.formatted(pubId, albumId));
+
+        final long artistId = artistIdByNameAndType("Mutation Test Song Artist Update Target", "PERSON");
+
+        final var result = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    song: {
+                        data: {
+                            title: "Mutation Test Song Artist Update Song Two"
+                            artists: [{
+                                id: %d
+                                data: {
+                                    name: "Mutation Test Song Artist Updated"
+                                    type: PERSON
+                                }
+                                roles: [PERFORMED_BY, WORDS_BY]
+                            }]
+                            albumTrack: {
+                                trackNumber: 108
+                                album: { id: %d }
+                            }
+                        }
+                    }
+                    pageNumber: 70
+                    transcribers: []
+                }
+                """.formatted(pubId, artistId, albumId));
+
+        final long songId = songIdByTitleAndAlbum(
+                "Mutation Test Song Artist Update Song Two",
+                "Appetite For Destruction");
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.song()).isEqualTo(new SongResponse(songId, "Mutation Test Song Artist Update Song Two"));
+        assertThat(artistIdByNameAndType("Mutation Test Song Artist Updated", "PERSON")).isEqualTo(artistId);
+        assertThat(countArtistsByNameAndType("Mutation Test Song Artist Update Target", "PERSON")).isZero();
+        assertThat(countArtistsByNameAndType("Mutation Test Song Artist Updated", "PERSON")).isOne();
+        assertThat(countSongArtistsByRole(songId, artistId, "PERFORMED_BY")).isOne();
+        assertThat(countSongArtistsByRole(songId, artistId, "WORDS_BY")).isOne();
+    }
+
     private TranscriptionResponse addTranscription(final String inputFields) {
         return graphQlTester.document("""
                         mutation {
@@ -405,6 +782,15 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 """.formatted(title.replace("'", "''")));
     }
 
+    private static long standaloneSongIdByTitle(final String title) {
+        return queryForLong(DATABASE, """
+                select id
+                from gmdb.song
+                where title = '%s'
+                    and album_id is null
+                """.formatted(title.replace("'", "''")));
+    }
+
     private static int countAlbumsByTitlePrimaryArtistAndReleaseDate(
             final String title,
             final long primaryArtistId,
@@ -462,6 +848,24 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     and album_id = %d
                     and details->>'trackNumber' = '%d'
                 """.formatted(title.replace("'", "''"), albumId, trackNumber));
+    }
+
+    private static int countStandaloneSongsByTitle(final String title) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.song
+                where title = '%s'
+                    and album_id is null
+                    and details ? 'trackNumber' = false
+                """.formatted(title.replace("'", "''")));
+    }
+
+    private static int countSongArtists(final long songId) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.song_artist
+                where song_id = %d
+                """.formatted(songId));
     }
 
     private static int countSongArtistsByRole(

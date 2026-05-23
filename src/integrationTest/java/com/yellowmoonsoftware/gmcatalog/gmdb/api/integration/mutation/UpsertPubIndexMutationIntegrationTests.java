@@ -99,6 +99,27 @@ class UpsertPubIndexMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
         assertThat(countPubIndices("Guitar For The Practicing Musician", MAG, "0738937X")).isZero();
     }
 
+    @Test
+    void upsertPubIndexWithMatchingSerialNumberUpdatesPublicationIndex() {
+        final var existing = getPubIndexBySerialNumber("10456295");
+
+        final var result = upsertPubIndex("""
+                data: {
+                    name: "Guitar World Serial Match Mutation Test"
+                    type: MAG
+                    serial: "10456295"
+                }
+                """);
+
+        assertThat(result).isEqualTo(pubIndex(
+                existing.id(),
+                "Guitar World Serial Match Mutation Test",
+                MAG,
+                "10456295"));
+        assertThat(countPubIndices("Guitar World Serial Match Mutation Test", MAG, "10456295")).isOne();
+        assertThat(countPubIndices("Guitar World", MAG, "10456295")).isZero();
+    }
+
     private PubIndexResponse upsertPubIndex(final String inputFields) {
         return graphQlTester.document("""
                         mutation {

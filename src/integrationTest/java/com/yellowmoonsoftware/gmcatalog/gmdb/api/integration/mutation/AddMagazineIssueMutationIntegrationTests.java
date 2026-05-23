@@ -96,6 +96,111 @@ class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     @Test
+    void addMagazineIssueWithOmittedOptionalFieldsCreatesPublication() {
+        final long pubIndexId = pubIndexIdBySerialNumber("10456295");
+
+        final var result = addMagazineIssue("""
+                pubDate: "2025-07-15"
+                index: { id: %d }
+                info: {
+                    issueName: "Mutation Test Magazine Optional Fields"
+                }
+                """.formatted(pubIndexId));
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.name()).isEqualTo("Guitar World");
+        assertThat(result.type()).isEqualTo(MAG);
+        assertThat(result.pubDate()).isEqualTo(LocalDate.of(2025, 7, 15));
+        assertThat(result.serialNumber()).isEqualTo("10456295");
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.details()).isEqualTo(new MagDetailsResponse(
+                null,
+                null,
+                "Mutation Test Magazine Optional Fields"));
+        assertThat(countMagazineIssuesWithNullVolumeAndIssue(
+                pubIndexId,
+                LocalDate.of(2025, 7, 15),
+                "Mutation Test Magazine Optional Fields")).isOne();
+    }
+
+    @Test
+    void addMagazineIssueWithOmittedPublicationDateCreatesPublication() {
+        final long pubIndexId = pubIndexIdBySerialNumber("10456295");
+
+        final var result = addMagazineIssue("""
+                index: { id: %d }
+                info: {
+                    issueName: "Mutation Test Magazine Without Publication Date"
+                }
+                """.formatted(pubIndexId));
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.name()).isEqualTo("Guitar World");
+        assertThat(result.type()).isEqualTo(MAG);
+        assertThat(result.pubDate()).isNull();
+        assertThat(result.serialNumber()).isEqualTo("10456295");
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.details()).isEqualTo(new MagDetailsResponse(
+                null,
+                null,
+                "Mutation Test Magazine Without Publication Date"));
+        assertThat(countMagazineIssuesWithNullPublicationDateAndNullVolumeAndIssue(
+                pubIndexId,
+                "Mutation Test Magazine Without Publication Date")).isOne();
+    }
+
+    @Test
+    void addMagazineIssueWithExistingIndexIdAndDataUpdatesPublicationIndex() {
+        addMagazineIssue("""
+                pubDate: "2025-08-15"
+                index: {
+                    data: {
+                        name: "Mutation Test Magazine Index Update Target"
+                        type: MAG
+                        serial: "MUT-MAG-ID-DATA-001"
+                    }
+                }
+                info: {
+                    issueName: "Mutation Test Magazine Index Update First Issue"
+                }
+                """);
+
+        final long pubIndexId = pubIndexIdBySerialNumber("MUT-MAG-ID-DATA-001");
+
+        final var result = addMagazineIssue("""
+                pubDate: "2025-09-15"
+                index: {
+                    id: %d
+                    data: {
+                        name: "Mutation Test Magazine Index Updated"
+                        type: MAG
+                        serial: "MUT-MAG-ID-DATA-UPDATED"
+                    }
+                }
+                info: {
+                    volume: "2"
+                    issue: "9"
+                    issueName: "Mutation Test Magazine Index Update Second Issue"
+                }
+                """.formatted(pubIndexId));
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.name()).isEqualTo("Mutation Test Magazine Index Updated");
+        assertThat(result.type()).isEqualTo(MAG);
+        assertThat(result.pubDate()).isEqualTo(LocalDate.of(2025, 9, 15));
+        assertThat(result.serialNumber()).isEqualTo("MUT-MAG-ID-DATA-UPDATED");
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.details()).isEqualTo(new MagDetailsResponse(
+                "2",
+                "9",
+                "Mutation Test Magazine Index Update Second Issue"));
+        assertThat(countPubIndices("Mutation Test Magazine Index Update Target", MAG, "MUT-MAG-ID-DATA-001"))
+                .isZero();
+        assertThat(countPubIndices("Mutation Test Magazine Index Updated", MAG, "MUT-MAG-ID-DATA-UPDATED"))
+                .isOne();
+    }
+
+    @Test
     void addMagazineIssueWithNestedTranscriptionCreatesPublicationAndTranscription() {
         final long pubIndexId = pubIndexIdBySerialNumber("10456295");
         final long songId = songIdByTitleAndAlbum("Substitute", "Meaty Beaty Big and Bouncy");
@@ -212,6 +317,37 @@ class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     and details->>'issue' = '%s'
                     and details->>'issueName' = '%s'
                 """.formatted(pubIndexId, pubDate, volume, issue, issueName));
+    }
+
+    private static int countMagazineIssuesWithNullVolumeAndIssue(
+            final long pubIndexId,
+            final LocalDate pubDate,
+            final String issueName) {
+
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.pub
+                where pub_idx_id = %d
+                    and pub_date = '%s'::date
+                    and details->>'volume' is null
+                    and details->>'issue' is null
+                    and details->>'issueName' = '%s'
+                """.formatted(pubIndexId, pubDate, issueName));
+    }
+
+    private static int countMagazineIssuesWithNullPublicationDateAndNullVolumeAndIssue(
+            final long pubIndexId,
+            final String issueName) {
+
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.pub
+                where pub_idx_id = %d
+                    and pub_date is null
+                    and details->>'volume' is null
+                    and details->>'issue' is null
+                    and details->>'issueName' = '%s'
+                """.formatted(pubIndexId, issueName));
     }
 
     private static int countTranscriptions(

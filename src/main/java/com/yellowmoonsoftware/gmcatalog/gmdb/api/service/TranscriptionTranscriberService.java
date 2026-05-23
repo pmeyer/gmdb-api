@@ -10,7 +10,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,7 +18,13 @@ public class TranscriptionTranscriberService {
 
     @Transactional
     public Mono<Void> addTranscriptionTranscribers(final Long transcriptionId, final List<TranscriberInput> transcribers) {
-        return Flux.fromIterable(Optional.ofNullable(transcribers).orElse(List.of()))
+        if (transcribers == null) {
+            return Mono.empty();
+        }
+        if (transcribers.isEmpty()) {
+            return transcriberService.clearTranscriptionTranscribers(transcriptionId).then();
+        }
+        return Flux.fromIterable(transcribers)
                 .flatMap(t -> {
                     if (t.mode() == IdAndDataContainer.DataMode.REF) {
                         return Mono.just(new TranscriptionTranscriber(transcriptionId, t.id(), null));

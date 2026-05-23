@@ -17,6 +17,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -52,13 +53,21 @@ class TranscriptionTranscriberServiceTest {
     }
 
     @Test
-    void addTranscriptionTranscribersTreatsNullListAsEmpty() {
-        when(transcriberService.upsertTranscriptionTranscribers(List.of())).thenReturn(Flux.empty());
-
+    void addTranscriptionTranscribersSkipsAssociationChangesWhenListIsNull() {
         StepVerifier.create(transcriptionTranscriberService.addTranscriptionTranscribers(1L, null))
             .verifyComplete();
 
-        verify(transcriberService).upsertTranscriptionTranscribers(List.of());
+        verifyNoInteractions(transcriberService);
+    }
+
+    @Test
+    void addTranscriptionTranscribersClearsAssociationsWhenListIsEmpty() {
+        when(transcriberService.clearTranscriptionTranscribers(1L)).thenReturn(Mono.just(2));
+
+        StepVerifier.create(transcriptionTranscriberService.addTranscriptionTranscribers(1L, List.of()))
+            .verifyComplete();
+
+        verify(transcriberService).clearTranscriptionTranscribers(1L);
         verifyNoMoreInteractions(transcriberService);
     }
 }
