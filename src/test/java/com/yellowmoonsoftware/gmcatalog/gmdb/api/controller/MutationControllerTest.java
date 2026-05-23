@@ -12,8 +12,10 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubCoverImageInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubIndexInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriptionInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.BookDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMutationMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.FileService;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.PublicationIndexService;
@@ -40,6 +42,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,6 +50,9 @@ class MutationControllerTest {
 
     @Mock
     private FileService fileService;
+
+    @Mock
+    private PubMapper pubMapper;
 
     @Mock
     private PubMutationMapper mapper;
@@ -114,14 +120,32 @@ class MutationControllerTest {
         when(cover.headers()).thenReturn(headers);
         final PubCoverImageInput input = new PubCoverImageInput(1L, cover);
         final PubSearchResult output = pubSearchResult();
+        when(pubMapper.getPubId(1L)).thenReturn(Mono.just(1L));
         when(mapper.updatePubCoverImage(org.mockito.ArgumentMatchers.eq(1L), any())).thenReturn(Mono.just(output));
         when(fileService.put(cover, ResourceSlug.COVER_IMAGE, Map.of("id", output.details().resourceId())))
             .thenReturn(Mono.just(new ResourceReference(ResourceSlug.COVER_IMAGE, "pub/1", "cover.jpg")));
 
         StepVerifier.create(mutationController.addPubCoverImage(input)).expectNext(output).verifyComplete();
 
+        verify(pubMapper).getPubId(1L);
         verify(mapper).updatePubCoverImage(org.mockito.ArgumentMatchers.eq(1L), any());
         verify(fileService).put(cover, ResourceSlug.COVER_IMAGE, Map.of("id", output.details().resourceId()));
+    }
+
+    @Test
+    void addPubCoverImageRejectsUnknownPublicationIdBeforeUpdatingDetailsOrStoringFile() {
+        final PubCoverImageInput input = new PubCoverImageInput(1L, cover);
+        when(pubMapper.getPubId(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(mutationController.addPubCoverImage(input))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidInputException.class);
+                    assertThat(error).hasMessage("Unknown publication ID: 1");
+                })
+                .verify();
+
+        verify(pubMapper).getPubId(1L);
+        verifyNoInteractions(mapper, fileService);
     }
 
     @Test

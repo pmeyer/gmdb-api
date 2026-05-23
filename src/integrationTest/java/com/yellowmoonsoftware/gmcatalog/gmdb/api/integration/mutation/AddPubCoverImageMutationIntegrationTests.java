@@ -1,5 +1,6 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.integration.mutation;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.PubType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.util.HexFormat;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -59,6 +62,17 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         assertResourceResponseMatchesUpload(result.details().cover());
     }
 
+    @Test
+    void addPubCoverImageRejectsUnknownPublicationId() {
+        final var response = executeAddPubCoverImageExpectingError(999999999L);
+
+        assertThat(response.errors())
+                .anySatisfy(error -> {
+                    assertThat(error.errorType()).isEqualTo("ValidationError");
+                    assertThat(error.message()).contains("Unknown publication ID: 999999999");
+                });
+    }
+
     private PubResponse executeAddPubCoverImage(final long pubId) {
         final MultipartBodyBuilder multipartBodyBuilder = new MultipartBodyBuilder();
         multipartBodyBuilder.part("operations", """
@@ -97,6 +111,44 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         assertThat(response.data()).isNotNull();
         assertThat(response.data().addPubCoverImage()).isNotNull();
         return response.data().addPubCoverImage();
+    }
+
+    private GraphQlErrorResponse executeAddPubCoverImageExpectingError(final long pubId) {
+        final MultipartBodyBuilder multipartBodyBuilder = new MultipartBodyBuilder();
+        multipartBodyBuilder.part("operations", """
+                {
+                    "query": "mutation($imgInput: PubCoverImageInput!) { addPubCoverImage(imgInput: $imgInput) { id } }",
+                    "variables": {
+                        "imgInput": {
+                            "id": %d,
+                            "cover": null
+                        }
+                    }
+                }
+                """.formatted(pubId));
+        multipartBodyBuilder.part("map", """
+                {
+                    "0": ["variables.imgInput.cover"]
+                }
+                """);
+        multipartBodyBuilder.part("0", new FileSystemResource(uploadPath()))
+                .contentType(MediaType.IMAGE_PNG);
+
+        final var response = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .post()
+                .uri("/graphql")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(multipartBodyBuilder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(GraphQlErrorResponse.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).isNotNull();
+        return response;
     }
 
     private void assertResourceResponseMatchesUpload(final String resourceUrl) {
@@ -181,6 +233,17 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     private record GraphQlResponse(GraphQlData data) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record GraphQlErrorResponse(List<GraphQlError> errors) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    private record GraphQlError(String message, Map<String, Object> extensions) {
+        private String errorType() {
+            return String.valueOf(extensions.get("classification"));
+        }
     }
 
     private record GraphQlData(PubResponse addPubCoverImage) {
