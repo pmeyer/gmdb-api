@@ -10,6 +10,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.AlbumInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistData;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.SongMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.AlbumDetails;
 import org.junit.jupiter.api.Test;
@@ -60,13 +61,70 @@ class SongServiceTest {
     void upsertSongLoadsExistingSongForReferenceInput() {
         final SongInput input = new SongInput(1L, null);
         final SongOut output = new SongOut(1L, "Opener", null, null, null);
+        when(songMapper.getSongId(1L)).thenReturn(Mono.just(1L));
         when(songMapper.getSongById(1L)).thenReturn(Mono.just(output));
 
         StepVerifier.create(songService.upsertSong(input))
             .expectNext(output)
             .verifyComplete();
 
+        verify(songMapper).getSongId(1L);
         verify(songMapper).getSongById(1L);
+        verifyNoMoreInteractions(songMapper);
+        verifyNoInteractions(albumService, songArtistService);
+    }
+
+    @Test
+    void upsertSongRejectsUnknownReferenceId() {
+        final SongInput input = new SongInput(1L, null);
+        when(songMapper.getSongId(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(songService.upsertSong(input))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidInputException.class);
+                    assertThat(error).hasMessage("Unknown song ID: 1");
+                })
+                .verify();
+
+        verify(songMapper).getSongId(1L);
+        verifyNoMoreInteractions(songMapper);
+        verifyNoInteractions(albumService, songArtistService);
+    }
+
+    @Test
+    void upsertSongValidatesExistingIdForIdAndDataInput() {
+        final SongInput.SongData data = new SongInput.SongData("Opener", List.of(), null);
+        final SongInput input = new SongInput(1L, data);
+        final SongOut output = new SongOut(1L, "Opener", null, null, null);
+        when(songMapper.getSongId(1L)).thenReturn(Mono.just(1L));
+        when(songMapper.upsertSong(any(SongIn.class))).thenReturn(Mono.just(output));
+        when(songArtistService.addSongArtists(1L, List.of())).thenReturn(Mono.empty());
+
+        StepVerifier.create(songService.upsertSong(input))
+                .expectNext(output)
+                .verifyComplete();
+
+        verify(songMapper).getSongId(1L);
+        verify(songMapper).upsertSong(any(SongIn.class));
+        verify(songArtistService).addSongArtists(1L, List.of());
+        verifyNoInteractions(albumService);
+        verifyNoMoreInteractions(songMapper, songArtistService);
+    }
+
+    @Test
+    void upsertSongRejectsUnknownIdAndDataInputBeforeUpsert() {
+        final SongInput.SongData data = new SongInput.SongData("Opener", List.of(), null);
+        final SongInput input = new SongInput(1L, data);
+        when(songMapper.getSongId(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(songService.upsertSong(input))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidInputException.class);
+                    assertThat(error).hasMessage("Unknown song ID: 1");
+                })
+                .verify();
+
+        verify(songMapper).getSongId(1L);
         verifyNoMoreInteractions(songMapper);
         verifyNoInteractions(albumService, songArtistService);
     }

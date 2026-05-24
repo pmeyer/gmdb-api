@@ -20,6 +20,12 @@
         select id, name, type, null as action from artist where id = #{id}
     </select>
 
+    <select id="getArtistId" resultType="long">
+        select id
+        from artist
+        where id = #{id}
+    </select>
+
     <select id="getArtistsByIds" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.ArtistOut">
         select id, name, type, null as action from artist where
         <foreach collection="artistIds" item="id" open="id in(" separator="," close=")">
@@ -113,5 +119,20 @@
                 </foreach>
             </trim>
         </if>
+    </select>
+
+    <select id="getSongArtistBySongIds" parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.SongArtist" >
+        select
+            a.id,
+            a.name,
+            a.type,
+            sa.song_id,
+            sa.roles
+        from song_artist sa
+            inner join artist a on sa.artist_id = a.id
+        where
+        <foreach collection="songIds" item="id" open="sa.song_id in(" separator="," close=")">
+            #{id}
+        </foreach>
     </select>
 </mapper>

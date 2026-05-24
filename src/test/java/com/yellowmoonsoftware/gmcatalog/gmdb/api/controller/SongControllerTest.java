@@ -13,7 +13,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.SongArtist;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.SongSearchResult;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.AlbumMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.ArtistMapper;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.DataResolversMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriptionMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.ResourceSlug;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
 class SongControllerTest {
 
     @Mock
-    private DataResolversMapper mapper;
+    private TranscriptionMapper transcriptionMapper;
 
     @Mock
     private AlbumMapper albumMapper;
@@ -99,33 +99,33 @@ class SongControllerTest {
     void artistsForSongGroupsArtistsBySong() {
         final SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
         final SongArtist artist = new SongArtist(20L, "Alice", ArtistType.PERSON, 1L, new SongArtistRole[]{SongArtistRole.WORDS_BY});
-        when(mapper.getSongArtistBySongIds(Set.of(1L))).thenReturn(Flux.just(artist));
+        when(artistMapper.getSongArtistBySongIds(Set.of(1L))).thenReturn(Flux.just(artist));
 
         StepVerifier.create(songController.artistsForSong(Set.of(song)))
             .assertNext(result -> assertThat(result).containsEntry(song, List.of(artist)))
             .verifyComplete();
 
-        verify(mapper).getSongArtistBySongIds(Set.of(1L));
+        verify(artistMapper).getSongArtistBySongIds(Set.of(1L));
     }
 
     @Test
     void artistsForSongSearchResultUsesCommonArtistFetch() {
         final SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
         final SongArtist artist = new SongArtist(20L, "Alice", ArtistType.PERSON, 1L, new SongArtistRole[]{SongArtistRole.WORDS_BY});
-        when(mapper.getSongArtistBySongIds(Set.of(1L))).thenReturn(Flux.just(artist));
+        when(artistMapper.getSongArtistBySongIds(Set.of(1L))).thenReturn(Flux.just(artist));
 
         StepVerifier.create(songController.artistsForSongSearchResult(Set.of(song)))
             .assertNext(result -> assertThat(result).containsEntry(song, List.of(artist)))
             .verifyComplete();
 
-        verify(mapper).getSongArtistBySongIds(Set.of(1L));
+        verify(artistMapper).getSongArtistBySongIds(Set.of(1L));
     }
 
     @Test
     void transcriptionsGroupsBySong() {
         final SongSearchResult song = new SongSearchResult(1L, "Opener", 3, 10L);
         final TranscriptionInOut transcription = transcriptionInOut(30L, 1L, 40L);
-        when(mapper.getSongTranscriptionBySongIds(Set.of(1L))).thenReturn(Flux.just(transcription));
+        when(transcriptionMapper.getSongTranscriptionBySongIds(Set.of(1L))).thenReturn(Flux.just(transcription));
 
         StepVerifier.create(songController.transcriptions(Set.of(song)))
             .assertNext(result -> {
@@ -140,7 +140,7 @@ class SongControllerTest {
             })
             .verifyComplete();
 
-        verify(mapper).getSongTranscriptionBySongIds(Set.of(1L));
+        verify(transcriptionMapper).getSongTranscriptionBySongIds(Set.of(1L));
     }
 
     private static AlbumOut albumOut() {

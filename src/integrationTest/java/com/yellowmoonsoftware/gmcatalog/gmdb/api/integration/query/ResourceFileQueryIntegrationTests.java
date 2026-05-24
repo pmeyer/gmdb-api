@@ -67,6 +67,14 @@ class ResourceFileQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestS
                 Path.of("pub", PUB_RESOURCE_ID, "cover-img"));
     }
 
+    @Test
+    void missingResourceReturnsNotFound() {
+        webTestClient.get()
+                .uri("/resources/pub/00000000-0000-0000-0000-000000000000/cover-img")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
+
     private void assertResourceResponseMatchesTestResource(final String resourceUrl, final Path testResourcePath) {
         assertThat(resourceUrl).isNotBlank();
 

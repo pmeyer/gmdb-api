@@ -27,7 +27,8 @@ public class TranscriptionTranscriberService {
         return Flux.fromIterable(transcribers)
                 .flatMap(t -> {
                     if (t.mode() == IdAndDataContainer.DataMode.REF) {
-                        return Mono.just(new TranscriptionTranscriber(transcriptionId, t.id(), null));
+                        return transcriberService.validateTranscriberId(t.id())
+                                .map(transcriberId -> new TranscriptionTranscriber(transcriptionId, transcriberId, null));
                     }
                     return transcriberService.upsertTranscriber(t)
                             .map(tOut -> new TranscriptionTranscriber(transcriptionId, tOut.id(), null));

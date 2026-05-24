@@ -4,7 +4,8 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.*;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcription;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMutationMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ import java.util.Map;
 public class MutationController {
 
     private final FileService fileService;
-    private final PubMutationMapper mapper;
+    private final PubMapper pubMapper;
     private final PublicationService publicationService;
     private final PublicationIndexService pubIndexService;
     private final TranscriptionService transcriptionService;
@@ -44,7 +45,9 @@ public class MutationController {
 
     @MutationMapping("addPubCoverImage")
     public Mono<PubSearchResult> addPubCoverImage(@Argument("imgInput") final PubCoverImageInput imgInput) {
-        return mapper.updatePubCoverImage(imgInput.id(), imgInput.toDetails())
+        return pubMapper.getPubId(imgInput.id())
+                .switchIfEmpty(Mono.error(new InvalidInputException("Unknown publication ID: " + imgInput.id())))
+                .then(Mono.defer(() -> pubMapper.updatePubCoverImage(imgInput.id(), imgInput.toDetails())))
                 .flatMap(r -> fileService
                         .put(imgInput.cover(), ResourceSlug.COVER_IMAGE, Map.of("id", r.details().resourceId()))
                         .thenReturn(r));
@@ -55,4 +58,3 @@ public class MutationController {
         return pubIndexService.upsertPublicationIndex(pubIndexInput);
     }
 }
-

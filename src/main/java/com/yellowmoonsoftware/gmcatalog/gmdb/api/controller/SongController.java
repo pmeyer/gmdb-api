@@ -5,7 +5,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.ArtistOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.*;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.AlbumMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.ArtistMapper;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.DataResolversMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriptionMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
 import org.springframework.stereotype.Controller;
@@ -24,9 +24,9 @@ import static java.util.stream.Collectors.toMap;
 @Controller
 @RequiredArgsConstructor
 public class SongController {
-    private final DataResolversMapper mapper;
     private final AlbumMapper albumMapper;
     private final ArtistMapper artistMapper;
+    private final TranscriptionMapper transcriptionMapper;
     private final SharedDataResolvers sharedDataResolvers;
 
     @BatchMapping(typeName = "Song", field = "album")
@@ -73,7 +73,7 @@ public class SongController {
         final Map<Long, SongSearchResult> songMap = songs.stream()
                 .collect(toMap(SongSearchResult::id, s -> s));
 
-        return mapper.getSongArtistBySongIds(songMap.keySet())
+        return artistMapper.getSongArtistBySongIds(songMap.keySet())
                 .collect(groupingBy(a -> songMap.get(a.songId())));
     }
 
@@ -82,7 +82,7 @@ public class SongController {
         final Map<Long, SongSearchResult> songMap = songs.stream()
                 .collect(toMap(SongSearchResult::id, s -> s));
 
-        return mapper.getSongTranscriptionBySongIds(songMap.keySet())
+        return transcriptionMapper.getSongTranscriptionBySongIds(songMap.keySet())
                 .map(Transcription::from)
                 .collect(groupingBy(a -> songMap.get(a.songId())));
     }

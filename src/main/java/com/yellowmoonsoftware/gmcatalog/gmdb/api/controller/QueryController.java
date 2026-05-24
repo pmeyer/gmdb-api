@@ -5,7 +5,9 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.*;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.*;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.AlbumMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.ArtistMapper;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.GMDBMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.SongMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriberMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.PublicationIndexService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
@@ -17,14 +19,16 @@ import reactor.core.publisher.Flux;
 @RequiredArgsConstructor
 public class QueryController {
 
-    private final GMDBMapper gmdbMapper;
+    private final SongMapper songMapper;
+    private final PubMapper pubMapper;
+    private final TranscriberMapper transcriberMapper;
     private final PublicationIndexService publicationIndexService;
     private final AlbumMapper albumMapper;
     private final ArtistMapper artistMapper;
 
     @QueryMapping
     public Flux<SongSearchResult> songSearch(@Argument final SongSearchCriteria criteria) {
-        return gmdbMapper.songSearch(criteria);
+        return songMapper.songSearch(criteria);
     }
 
     @QueryMapping
@@ -34,7 +38,7 @@ public class QueryController {
 
     @QueryMapping
     public Flux<PubSearchResult> pubSearch(@Argument final PubSearchCriteria criteria) {
-        return gmdbMapper.pubSearch(criteria);
+        return pubMapper.pubSearch(criteria);
     }
 
     @QueryMapping
@@ -49,7 +53,7 @@ public class QueryController {
 
     @QueryMapping
     public Flux<Transcriber> transcriberSearch(@Argument final String searchName) {
-        return gmdbMapper.getTranscribers(searchName);
+        return transcriberMapper.getTranscribers(searchName);
     }
 
     @QueryMapping

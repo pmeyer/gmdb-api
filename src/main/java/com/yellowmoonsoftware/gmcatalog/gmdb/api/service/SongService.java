@@ -6,6 +6,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.SongDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.SongIn;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.SongOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.SongMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,10 +26,18 @@ public class SongService {
 
     @Transactional
     public Mono<SongOut> upsertSong(final SongInput input) {
-        if (input.mode() == IdAndDataContainer.DataMode.REF) {
-            return songMapper.getSongById(input.id());
-        }
+        final Mono<SongOut> upsertSignal = input.mode() == IdAndDataContainer.DataMode.REF
+                ? Mono.defer(() -> songMapper.getSongById(input.id()))
+                : upsertSongData(input);
 
+        return input.id() == null
+                ? upsertSignal
+                : songMapper.getSongId(input.id())
+                    .switchIfEmpty(Mono.error(new InvalidInputException("Unknown song ID: " + input.id())))
+                    .then(upsertSignal);
+    }
+
+    private Mono<SongOut> upsertSongData(final SongInput input) {
         final Mono<Optional<AlbumTrack>> albumTrackSignal = Mono.justOrEmpty(input.data().albumTrack())
                 .flatMap(albumTrack -> albumService
                         .upsertAlbum(albumTrack.album())
@@ -47,5 +56,4 @@ public class SongService {
                         .thenReturn(songOut));
     }
 }
-
 

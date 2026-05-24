@@ -8,6 +8,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.AlbumData;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.AlbumInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistData;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.ArtistInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.AlbumDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.AlbumMapper;
 import org.junit.jupiter.api.Test;
@@ -55,13 +56,66 @@ class AlbumServiceTest {
     void upsertAlbumLoadsExistingAlbumForReferenceInput() {
         final AlbumInput input = new AlbumInput(1L, null);
         final AlbumOut output = albumOut(1L);
+        when(albumMapper.getAlbumId(1L)).thenReturn(Mono.just(1L));
         when(albumMapper.getAlbumById(1L)).thenReturn(Mono.just(output));
 
         StepVerifier.create(albumService.upsertAlbum(input))
             .expectNext(output)
             .verifyComplete();
 
+        verify(albumMapper).getAlbumId(1L);
         verify(albumMapper).getAlbumById(1L);
+        verifyNoMoreInteractions(albumMapper);
+        verifyNoInteractions(fileService, artistService);
+    }
+
+    @Test
+    void upsertAlbumRejectsUnknownReferenceId() {
+        final AlbumInput input = new AlbumInput(1L, null);
+        when(albumMapper.getAlbumId(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(albumService.upsertAlbum(input))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidInputException.class);
+                    assertThat(error).hasMessage("Unknown album ID: 1");
+                })
+                .verify();
+
+        verify(albumMapper).getAlbumId(1L);
+        verifyNoMoreInteractions(albumMapper);
+        verifyNoInteractions(fileService, artistService);
+    }
+
+    @Test
+    void upsertAlbumValidatesExistingIdForIdAndDataInput() {
+        final AlbumInput input = new AlbumInput(1L, new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), null));
+        final AlbumOut output = albumOut(1L);
+        when(albumMapper.getAlbumId(1L)).thenReturn(Mono.just(1L));
+        when(albumMapper.upsertAlbum(any(AlbumIn.class))).thenReturn(Mono.just(output));
+
+        StepVerifier.create(albumService.upsertAlbum(input))
+                .expectNext(output)
+                .verifyComplete();
+
+        verify(albumMapper).getAlbumId(1L);
+        verify(albumMapper).upsertAlbum(any(AlbumIn.class));
+        verifyNoInteractions(fileService, artistService);
+        verifyNoMoreInteractions(albumMapper);
+    }
+
+    @Test
+    void upsertAlbumRejectsUnknownIdAndDataInputBeforeUpsert() {
+        final AlbumInput input = new AlbumInput(1L, new AlbumData("Live Set", null, LocalDate.of(2020, 4, 5), null));
+        when(albumMapper.getAlbumId(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(albumService.upsertAlbum(input))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidInputException.class);
+                    assertThat(error).hasMessage("Unknown album ID: 1");
+                })
+                .verify();
+
+        verify(albumMapper).getAlbumId(1L);
         verifyNoMoreInteractions(albumMapper);
         verifyNoInteractions(fileService, artistService);
     }

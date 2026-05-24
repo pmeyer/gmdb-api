@@ -4,8 +4,8 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.PubType;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubIndexCriteria;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubIndexInput;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.GMDBMapper;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMutationMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubIndexMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -15,6 +15,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -23,10 +24,7 @@ import static org.mockito.Mockito.when;
 class PublicationIndexServiceTest {
 
     @Mock
-    private GMDBMapper gmdbMapper;
-
-    @Mock
-    private PubMutationMapper pubMutationMapper;
+    private PubIndexMapper pubIndexMapper;
 
     @InjectMocks
     private PublicationIndexService publicationIndexService;
@@ -35,41 +33,91 @@ class PublicationIndexServiceTest {
     void upsertPublicationIndexDelegatesToUpsertForDataInput() {
         final PubIndexInput input = new PubIndexInput(null, new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1"));
         final PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
-        when(pubMutationMapper.upsertPubIndex(input)).thenReturn(Mono.just(output));
+        when(pubIndexMapper.upsertPubIndex(input)).thenReturn(Mono.just(output));
 
         StepVerifier.create(publicationIndexService.upsertPublicationIndex(input))
             .expectNext(output)
             .verifyComplete();
 
-        verify(pubMutationMapper).upsertPubIndex(input);
-        verifyNoMoreInteractions(pubMutationMapper, gmdbMapper);
+        verify(pubIndexMapper).upsertPubIndex(input);
+        verifyNoMoreInteractions(pubIndexMapper);
     }
 
     @Test
     void upsertPublicationIndexLoadsExistingIndexForReferenceInput() {
         final PubIndexInput input = new PubIndexInput(1L, null);
         final PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
-        when(gmdbMapper.getPubIndex(1L)).thenReturn(Mono.just(output));
+        when(pubIndexMapper.getPubIndexId(1L)).thenReturn(Mono.just(1L));
+        when(pubIndexMapper.getPubIndex(1L)).thenReturn(Mono.just(output));
 
         StepVerifier.create(publicationIndexService.upsertPublicationIndex(input))
             .expectNext(output)
             .verifyComplete();
 
-        verify(gmdbMapper).getPubIndex(1L);
-        verifyNoMoreInteractions(pubMutationMapper, gmdbMapper);
+        verify(pubIndexMapper).getPubIndexId(1L);
+        verify(pubIndexMapper).getPubIndex(1L);
+        verifyNoMoreInteractions(pubIndexMapper);
+    }
+
+    @Test
+    void upsertPublicationIndexValidatesExistingIndexForIdAndDataInput() {
+        final PubIndexInput input = new PubIndexInput(1L, new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1"));
+        final PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
+        when(pubIndexMapper.getPubIndexId(1L)).thenReturn(Mono.just(1L));
+        when(pubIndexMapper.upsertPubIndex(input)).thenReturn(Mono.just(output));
+
+        StepVerifier.create(publicationIndexService.upsertPublicationIndex(input))
+                .expectNext(output)
+                .verifyComplete();
+
+        verify(pubIndexMapper).getPubIndexId(1L);
+        verify(pubIndexMapper).upsertPubIndex(input);
+        verifyNoMoreInteractions(pubIndexMapper);
+    }
+
+    @Test
+    void upsertPublicationIndexRejectsUnknownReferenceId() {
+        final PubIndexInput input = new PubIndexInput(1L, null);
+        when(pubIndexMapper.getPubIndexId(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(publicationIndexService.upsertPublicationIndex(input))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidInputException.class);
+                    assertThat(error).hasMessage("Unknown publication index ID: 1");
+                })
+                .verify();
+
+        verify(pubIndexMapper).getPubIndexId(1L);
+        verifyNoMoreInteractions(pubIndexMapper);
+    }
+
+    @Test
+    void upsertPublicationIndexRejectsUnknownIdAndDataInputBeforeUpsert() {
+        final PubIndexInput input = new PubIndexInput(1L, new PubIndexInput.Data("Guide", PubType.BOOK, "ISBN-1"));
+        when(pubIndexMapper.getPubIndexId(1L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(publicationIndexService.upsertPublicationIndex(input))
+                .expectErrorSatisfies(error -> {
+                    assertThat(error).isInstanceOf(InvalidInputException.class);
+                    assertThat(error).hasMessage("Unknown publication index ID: 1");
+                })
+                .verify();
+
+        verify(pubIndexMapper).getPubIndexId(1L);
+        verifyNoMoreInteractions(pubIndexMapper);
     }
 
     @Test
     void getPublicationIndicesDelegatesToMutationMapper() {
         final PubIndexCriteria criteria = new PubIndexCriteria(PubType.BOOK);
         final PubIndexOut output = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
-        when(pubMutationMapper.getPubIndices(criteria)).thenReturn(Flux.just(output));
+        when(pubIndexMapper.getPubIndices(criteria)).thenReturn(Flux.just(output));
 
         StepVerifier.create(publicationIndexService.getPublicationIndices(criteria))
             .expectNext(output)
             .verifyComplete();
 
-        verify(pubMutationMapper).getPubIndices(criteria);
-        verifyNoMoreInteractions(pubMutationMapper, gmdbMapper);
+        verify(pubIndexMapper).getPubIndices(criteria);
+        verifyNoMoreInteractions(pubIndexMapper);
     }
 }

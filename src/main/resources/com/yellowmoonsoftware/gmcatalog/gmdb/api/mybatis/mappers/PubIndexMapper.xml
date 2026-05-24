@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubIndexMapper">
+    <select id="getPubIndexId" resultType="long">
+        select id
+        from pub_idx
+        where id = #{id}
+    </select>
+
+    <select id="getPubIndex" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut">
+        select
+            id,
+            name,
+            type,
+            serial_number,
+            null as action
+        from pub_idx
+        where id = #{pubIdxId}
+    </select>
+
+    <select id="upsertPubIndex" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut">
+        merge into pub_idx as t
+        using (
+            values (#{pubIdx.id}::bigint, #{pubIdx.data.name}::text, #{pubIdx.data.type}::pub_type, #{pubIdx.data.serial}::text)
+        ) as s(id, name, type, serial_number)
+        on (t.id = s.id) or (t.serial_number = s.serial_number) or (t.name = s.name and t.type = s.type)
+        when matched then
+            update set name = COALESCE(s.name, t.name),
+                       type = COALESCE(s.type, t.type),
+                       serial_number = COALESCE(s.serial_number, t.serial_number)
+        when not matched then
+            insert (name, type, serial_number) values (s.name, s.type, s.serial_number)
+        returning
+            t.id, t.name, t.type, t.serial_number, merge_action()
+    </select>
+
+    <select id="getPubIndices"
+            parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubIndexCriteria"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut">
+        select
+            pi.id,
+            pi.name,
+            pi.type,
+            pi.serial_number
+        from pub_idx pi
+        <where>
+            <if test="criteria.type != null">
+                pi.type = #{criteria.type}::pub_type
+            </if>
+        </where>
+        order by name asc
+    </select>
+</mapper>
