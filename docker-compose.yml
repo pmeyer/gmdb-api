@@ -1,0 +1,17 @@
+services:
+  gmdb-api:
+    image: ghcr.io/pmeyer/gmdb-api:${GMDB_API_IMAGE_TAG:-latest}
+    build:
+      context: .
+      args:
+        JAR_FILE: target/gmdb-api-${GMDB_API_VERSION:?Set GMDB_API_VERSION to the packaged project version}.jar
+    environment:
+      FILE_SERVICE_ROOT: /var/lib/gmdb/file-repo
+      SPRING_R2DBC_MYBATIS_R2DBC_URL: ${GMDB_DATABASE_URL:?Set GMDB_DATABASE_URL to an R2DBC PostgreSQL URL}
+      SPRING_R2DBC_MYBATIS_USERNAME: ${GMDB_DATABASE_USERNAME:-gmdb_app_user}
+      GMDB_APP_USER_PASSWORD: ${GMDB_APP_USER_PASSWORD:?Set GMDB_APP_USER_PASSWORD}
+      SERVER_PORT: 8080
+    ports:
+      - "${GMDB_API_PORT:-8080}:8080"
+    volumes:
+      - "${GMDB_FILE_REPO_ROOT:?Set GMDB_FILE_REPO_ROOT to the host file repository root}:/var/lib/gmdb/file-repo"
