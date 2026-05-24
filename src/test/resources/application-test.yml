@@ -1,2 +1,7 @@
+spring:
+  r2dbc:
+    mybatis:
+      r2dbc-url: r2dbc:postgresql://localhost:1970/gmdb
+
 file-service:
   root: ./files

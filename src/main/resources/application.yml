@@ -9,7 +9,7 @@ spring:
       max-idle-time: 60000
       max-life-time: 180000
     mybatis:
-      r2dbc-url: r2dbc:postgresql://meyernas01.local:1970/gmdb
+      r2dbc-url: ${GMDB_URL}
       username: gmdb_app_user
       password: ${GMDB_APP_USER_PASSWORD}
   threads:

@@ -13,7 +13,7 @@ To run a published image with Docker Compose:
 
 ```shell
 export GMDB_API_IMAGE_TAG='latest'
-export GMDB_DATABASE_URL='r2dbc:postgresql://host.docker.internal:1970/gmdb'
+export GMDB_URL='r2dbc:postgresql://host.docker.internal:1970/gmdb'
 export GMDB_DATABASE_USERNAME='gmdb_app_user'
 export GMDB_APP_USER_PASSWORD='...'
 export GMDB_FILE_REPO_ROOT="$HOME/gmdb/file-repo"
@@ -38,8 +38,7 @@ Runtime configuration is supplied through environment variables:
 - `FILE_SERVICE_ROOT`: In-container file repository root. The image defaults this to `/var/lib/gmdb/file-repo`, and
   `docker-compose.yml` uses that value.
 - `GMDB_FILE_REPO_ROOT`: Host path mounted by `docker-compose.yml` to `FILE_SERVICE_ROOT`.
-- `SPRING_R2DBC_MYBATIS_R2DBC_URL`: R2DBC PostgreSQL URL consumed directly by Spring Boot.
-- `GMDB_DATABASE_URL`: Compose convenience variable mapped to `SPRING_R2DBC_MYBATIS_R2DBC_URL`.
+- `GMDB_URL`: R2DBC PostgreSQL URL consumed by the application.
 - `SPRING_R2DBC_MYBATIS_USERNAME`: Database username consumed directly by Spring Boot. The image and Compose default to
   `gmdb_app_user`.
 - `GMDB_DATABASE_USERNAME`: Compose convenience variable mapped to `SPRING_R2DBC_MYBATIS_USERNAME`.
