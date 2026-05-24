@@ -12,8 +12,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriptionInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InputValidationException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.BookDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.GMDBMapper;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMutationMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,10 +40,7 @@ import static org.mockito.Mockito.when;
 class PublicationServiceTest {
 
     @Mock
-    private GMDBMapper gmdbMapper;
-
-    @Mock
-    private PubMutationMapper pubMutationMapper;
+    private PubMapper pubMapper;
 
     @Mock
     private PublicationIndexService pubIndexService;
@@ -74,23 +70,23 @@ class PublicationServiceTest {
         final PubOut pubOut = new PubOut(10L, input.pubDate(), 1L, bookDetails(), null);
         final PubSearchResult result = new PubSearchResult(10L, "Guide", PubType.BOOK, pubOut.details(), input.pubDate(), "ISBN-1", 1L);
         when(pubIndexService.upsertPublicationIndex(index)).thenReturn(Mono.just(pubIndex));
-        when(pubMutationMapper.upsertPublication(any())).thenReturn(Mono.just(pubOut));
+        when(pubMapper.upsertPublication(any())).thenReturn(Mono.just(pubOut));
         when(fileService.put(cover, ResourceSlug.COVER_IMAGE, Map.of("id", pubOut.details().resourceId())))
             .thenReturn(Mono.just(new ResourceReference(ResourceSlug.COVER_IMAGE, "pub/10", "cover.jpg")));
         when(transcriptionService.upsertTranscription(10L, transcription))
             .thenReturn(Mono.just(new TranscriptionInOut(20L, 30L, 10L, null, null)));
-        when(gmdbMapper.getPub(10L)).thenReturn(Mono.just(result));
+        when(pubMapper.getPub(10L)).thenReturn(Mono.just(result));
 
         StepVerifier.create(publicationService.addPub(input))
             .expectNext(result)
             .verifyComplete();
 
         verify(pubIndexService).upsertPublicationIndex(index);
-        verify(pubMutationMapper).upsertPublication(any());
+        verify(pubMapper).upsertPublication(any());
         verify(fileService).put(cover, ResourceSlug.COVER_IMAGE, Map.of("id", pubOut.details().resourceId()));
         verify(transcriptionService).upsertTranscription(10L, transcription);
-        verify(gmdbMapper).getPub(10L);
-        verifyNoMoreInteractions(pubIndexService, pubMutationMapper, fileService, transcriptionService, gmdbMapper);
+        verify(pubMapper).getPub(10L);
+        verifyNoMoreInteractions(pubIndexService, pubMapper, fileService, transcriptionService);
     }
 
     @Test
@@ -108,7 +104,7 @@ class PublicationServiceTest {
 
         verify(pubIndexService).upsertPublicationIndex(index);
         verifyNoMoreInteractions(pubIndexService);
-        verifyNoInteractions(pubMutationMapper, fileService, transcriptionService, gmdbMapper);
+        verifyNoInteractions(pubMapper, fileService, transcriptionService);
     }
 
     @Test

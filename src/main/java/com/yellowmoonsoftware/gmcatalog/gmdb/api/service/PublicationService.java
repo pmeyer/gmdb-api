@@ -8,8 +8,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIn;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.GMDBMapper;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMutationMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,8 +24,7 @@ import java.util.function.BiConsumer;
 @Service
 @RequiredArgsConstructor
 public class PublicationService {
-    private final GMDBMapper gmdbMapper;
-    private final PubMutationMapper pubMutationMapper;
+    private final PubMapper pubMapper;
 
     private final PublicationIndexService pubIndexService;
     private final FileService fileService;
@@ -36,7 +34,7 @@ public class PublicationService {
     public Mono<PubSearchResult> addPub(final AbstractPubInput<?, ? extends PubDetails> pubInput) {
         return pubIndexService.upsertPublicationIndex(pubInput.index())
                 .handle(Validation.expectedPubIndexPubType(pubInput.supportedPubType()))
-                .flatMap(pubIdx -> pubMutationMapper.upsertPublication(PubIn.forNewPub(pubIdx.id(), pubInput)))
+                .flatMap(pubIdx -> pubMapper.upsertPublication(PubIn.forNewPub(pubIdx.id(), pubInput)))
                 .flatMap(out -> {
                     final Mono<ResourceReference> fileSignal = Mono.justOrEmpty(pubInput.info().cover())
                             .flatMap(blob -> fileService.put(blob, ResourceSlug.COVER_IMAGE, Map.of("id", out.details().resourceId())));
@@ -45,7 +43,7 @@ public class PublicationService {
                             .flatMap(t -> transcriptionService.upsertTranscription(out.id(), t));
 
                     return Mono.when(fileSignal, transcriptionSignal)
-                            .then(gmdbMapper.getPub(out.id()));
+                            .then(pubMapper.getPub(out.id()));
                 });
     }
 
@@ -63,4 +61,3 @@ public class PublicationService {
         }
     }
 }
-

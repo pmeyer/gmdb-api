@@ -6,4 +6,154 @@
         from pub
         where id = #{id}
     </select>
+
+    <select id="addPub" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult">
+        with pid as (
+        <choose>
+            <when test="pubIdx.flag.name() == 'UPSERT'">
+                insert into pub_idx (name, type, serial_number)
+                values (#{pubIdx.name}, #{pubType}, #{pubIdx.serial})
+                on conflict serial_number do update set name = COALESCE(#{pubIdx.name}, name)
+                returning *
+            </when>
+            <otherwise>
+                select pidx.id, pidx.name, pidx.type, pidx.serial_number, pidx.id as pub_index_id
+                from pub_idx pidx
+                where pidx.type = #{pubType} and
+                <choose>
+                    <when test="pubIdx.id != null">
+                        pidx.id = #{pubIdx.id}
+                    </when>
+                    <when test="pubIdx.serial != null">
+                        pidx.serial_number = #{pubIdx.serial}
+                    </when>
+                    <otherwise>
+                        1=0
+                    </otherwise>
+                </choose>
+            </otherwise>
+        </choose>
+        ),
+        ins_pub as (
+        insert into pub (pub_date, pub_idx_id, details)
+        values (#{pubDate}, (select id from pid), #{pubDetails})
+        returning *
+        )
+        select
+        p.id,
+        pi.name,
+        pi.type,
+        p.details || jsonb_build_object('@type', pi.type::text) as details,
+        p.pub_date,
+        pi.serial_number
+        from ins_pub p
+        inner join pid pi on p.pub_idx_id = pi.id
+    </select>
+
+    <select id="updatePubCoverImage"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult"><![CDATA[
+        with upd_pub as (
+            update pub
+                set details = details || jsonb_build_object('resources',
+                                                            coalesce(details->'resources', '{}') || #{cover}->'resources')
+                where id = #{id}
+                returning *
+        )
+        select
+            p.id,
+            pi.name,
+            pi.type,
+            p.details || jsonb_build_object('@type', pi.type::text) as details,
+            p.pub_date,
+            pi.serial_number,
+            pi.id as pub_index_id
+        from upd_pub p
+                 inner join pub_idx pi on p.pub_idx_id = pi.id
+    ]]></select>
+
+    <select id="upsertPublication" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubOut">
+        merge into pub
+        using (
+            values (#{pubIn.id}::bigint, #{pubIn.pubDate}::date, #{pubIn.pubIdxId}::bigint, #{pubIn.details}::jsonb)
+        ) as s(id, pub_date, pub_idx_id, details)
+        on (pub.id = s.id)
+        when matched then
+            update set pub_date = COALESCE(s.pub_date, pub.pub_date),
+                       pub_idx_id = COALESCE(s.pub_idx_id, pub.pub_idx_id),
+                       details = merge_details(pub.details, s.details)
+        when not matched then
+            insert (pub_date, pub_idx_id, details) values (s.pub_date, s.pub_idx_id, s.details)
+            returning
+                pub.id, pub.pub_date, pub.pub_idx_id, pub.details, merge_action()
+    </select>
+
+    <sql id="pubSearchSelect">
+        select
+            p.id,
+            pi.name,
+            pi.type,
+            p.details || jsonb_build_object('@type', pi.type::text) as details,
+            p.pub_date,
+            pi.serial_number,
+            pi.id as pub_index_id
+        from pub p
+                 inner join pub_idx pi on p.pub_idx_id = pi.id
+    </sql>
+
+    <select id="getPub"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult">
+        <include refid="pubSearchSelect"/>
+        where p.id = #{pubId}
+    </select>
+
+    <select id="pubSearch"
+            parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubSearchCriteria"
+            resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult">
+        <include refid="pubSearchSelect"/>
+        <where>
+            <if test="criteria.hasTranscriptions">
+                exists(select * from transcription t where t.pub_id = p.id)
+            </if>
+            <if test="criteria.searchName != null and criteria.searchName != ''">
+                and (name ~* #{criteria.searchName} or coalesce(details->>'issueName', details->>'edition') ~* #{criteria.searchName})
+            </if>
+            <if test="criteria.type != null">
+                and pi.type = #{criteria.type}::pub_type
+            </if>
+            <trim prefix="and (p.pub_date is null or (" prefixOverrides="AND " suffix="))">
+                <if test="criteria.dateStart != null">
+                    p.pub_date &gt;= #{criteria.dateStart}
+                </if>
+                <if test="criteria.dateEnd != null">
+                    and p.pub_date &lt;= #{criteria.dateEnd}
+                </if>
+            </trim>
+        </where>
+        order by p.pub_date nulls first,
+            pi.name,
+            p.details->>'volume' nulls first,
+            p.details->>'issue' nulls first,
+            p.details->>'issueName' nulls first,
+            p.details->>'edition' nulls first,
+            p.id
+    </select>
+
+    <select id="getPublicationByTranscriptionIds" parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.TranscriptionPublication">
+        select
+            p.id,
+            pi.name,
+            pi.type,
+            p.details || jsonb_build_object('@type', pi.type::text) as details,
+            p.pub_date,
+            pi.serial_number,
+            pi.id as pub_index_id,
+            t.id transcription_id
+        from pub p
+            inner join pub_idx pi on p.pub_idx_id = pi.id
+            inner join transcription t on p.id = t.pub_id
+        where
+        <foreach collection="transcriptionIds" item="id" open="t.id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
 </mapper>

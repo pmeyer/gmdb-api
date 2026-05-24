@@ -22,4 +22,32 @@
             resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut">
         select id, song_id, pub_id, details, null as action from transcription where id = #{id}
     </select>
+
+    <select id="getSongTranscriptionBySongIds"  parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut">
+        select
+            t.id,
+            t.song_id,
+            t.pub_id,
+            t.details,
+            null as action
+        from transcription t
+        where
+        <foreach collection="songIds" item="id" open="t.song_id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getSongTranscriptionsByPubIds" parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut">
+        select
+            t.id,
+            t.song_id,
+            t.pub_id,
+            t.details,
+            null as action
+        from transcription t
+        where
+        <foreach collection="pubIds" item="id" open="t.pub_id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
 </mapper>

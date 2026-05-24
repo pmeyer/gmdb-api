@@ -120,4 +120,19 @@
             </trim>
         </if>
     </select>
+
+    <select id="getSongArtistBySongIds" parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.SongArtist" >
+        select
+            a.id,
+            a.name,
+            a.type,
+            sa.song_id,
+            sa.roles
+        from song_artist sa
+            inner join artist a on sa.artist_id = a.id
+        where
+        <foreach collection="songIds" item="id" open="sa.song_id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
 </mapper>

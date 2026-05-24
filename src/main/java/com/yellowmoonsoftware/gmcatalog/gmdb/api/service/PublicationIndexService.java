@@ -5,9 +5,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubIndexCriteria;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubIndexInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.PubIndexOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.GMDBMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubIndexMapper;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMutationMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -16,14 +14,12 @@ import reactor.core.publisher.Mono;
 @Service
 @RequiredArgsConstructor
 public class PublicationIndexService {
-    private final GMDBMapper gmdbMapper;
     private final PubIndexMapper pubIndexMapper;
-    private final PubMutationMapper pubMutationMapper;
 
     public Mono<PubIndexOut> upsertPublicationIndex(final PubIndexInput pubIndexInput) {
         final Mono<PubIndexOut> upsertSignal = pubIndexInput.mode() != IdAndDataContainer.DataMode.REF
-                ? Mono.defer(() -> pubMutationMapper.upsertPubIndex(pubIndexInput))
-                : Mono.defer(() -> gmdbMapper.getPubIndex(pubIndexInput.id()));
+                ? Mono.defer(() -> pubIndexMapper.upsertPubIndex(pubIndexInput))
+                : Mono.defer(() -> pubIndexMapper.getPubIndex(pubIndexInput.id()));
 
         return pubIndexInput.id() == null
                 ? upsertSignal
@@ -33,6 +29,6 @@ public class PublicationIndexService {
     }
 
     public Flux<PubIndexOut> getPublicationIndices(final PubIndexCriteria criteria) {
-        return pubMutationMapper.getPubIndices(criteria);
+        return pubIndexMapper.getPubIndices(criteria);
     }
 }

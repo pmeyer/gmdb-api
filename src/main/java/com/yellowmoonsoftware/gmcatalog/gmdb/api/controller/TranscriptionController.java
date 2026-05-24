@@ -4,7 +4,8 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcriber;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcription;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.TranscriptionPublication;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.DataResolversMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriberMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
 import org.springframework.graphql.data.method.annotation.SchemaMapping;
@@ -21,14 +22,15 @@ import static java.util.stream.Collectors.*;
 @RequiredArgsConstructor
 @SchemaMapping(typeName = "Transcription")
 public class TranscriptionController {
-    private final DataResolversMapper mapper;
+    private final TranscriberMapper transcriberMapper;
+    private final PubMapper pubMapper;
 
     @BatchMapping(field = "transcribers")
     public Mono<Map<Transcription, List<Transcriber>>> transcribers(final Set<Transcription> transcriptions) {
         final Map<Long, Transcription> transcriptionMap = transcriptions.stream()
                         .collect(toMap(Transcription::id, t -> t));
 
-        return mapper.getTranscribersByTranscriptionIds(transcriptionMap.keySet())
+        return transcriberMapper.getTranscribersByTranscriptionIds(transcriptionMap.keySet())
                 .collect(groupingBy(tt -> transcriptionMap.get(tt.transcriptionId()),
                         toList()));
     }
@@ -38,7 +40,7 @@ public class TranscriptionController {
         final Map<Long, Transcription> transcriptionMap = transcriptions.stream()
                 .collect(toMap(Transcription::id, t -> t));
 
-        return mapper.getPublicationByTranscriptionIds(transcriptionMap.keySet())
+        return pubMapper.getPublicationByTranscriptionIds(transcriptionMap.keySet())
                 .collectMap(TranscriptionPublication::transcriptionId)
                 .map(m -> m.entrySet()
                         .stream()

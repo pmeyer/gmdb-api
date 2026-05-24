@@ -16,7 +16,6 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInp
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.BookDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMapper;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMutationMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.FileService;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.PublicationIndexService;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.PublicationService;
@@ -53,9 +52,6 @@ class MutationControllerTest {
 
     @Mock
     private PubMapper pubMapper;
-
-    @Mock
-    private PubMutationMapper mapper;
 
     @Mock
     private PublicationService publicationService;
@@ -121,14 +117,14 @@ class MutationControllerTest {
         final PubCoverImageInput input = new PubCoverImageInput(1L, cover);
         final PubSearchResult output = pubSearchResult();
         when(pubMapper.getPubId(1L)).thenReturn(Mono.just(1L));
-        when(mapper.updatePubCoverImage(org.mockito.ArgumentMatchers.eq(1L), any())).thenReturn(Mono.just(output));
+        when(pubMapper.updatePubCoverImage(org.mockito.ArgumentMatchers.eq(1L), any())).thenReturn(Mono.just(output));
         when(fileService.put(cover, ResourceSlug.COVER_IMAGE, Map.of("id", output.details().resourceId())))
             .thenReturn(Mono.just(new ResourceReference(ResourceSlug.COVER_IMAGE, "pub/1", "cover.jpg")));
 
         StepVerifier.create(mutationController.addPubCoverImage(input)).expectNext(output).verifyComplete();
 
         verify(pubMapper).getPubId(1L);
-        verify(mapper).updatePubCoverImage(org.mockito.ArgumentMatchers.eq(1L), any());
+        verify(pubMapper).updatePubCoverImage(org.mockito.ArgumentMatchers.eq(1L), any());
         verify(fileService).put(cover, ResourceSlug.COVER_IMAGE, Map.of("id", output.details().resourceId()));
     }
 
@@ -145,7 +141,7 @@ class MutationControllerTest {
                 .verify();
 
         verify(pubMapper).getPubId(1L);
-        verifyNoInteractions(mapper, fileService);
+        verifyNoInteractions(fileService);
     }
 
     @Test
