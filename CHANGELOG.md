@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.6...gmdb-api-v1.1.0) (2026-05-24)
+
+
+### Features
+
+* publish API container images ([0317a46](https://github.com/pmeyer/gmdb-api/commit/0317a466650f123beb62e38e4277cc5a43483c72))
+* publish API container images ([dad0831](https://github.com/pmeyer/gmdb-api/commit/dad083138d1ad08f3178219301b48afc810c870c))
+
 ## [1.0.6](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.5...gmdb-api-v1.0.6) (2026-05-24)
 
 
