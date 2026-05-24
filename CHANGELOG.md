@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.2.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.1.0...gmdb-api-v1.2.0) (2026-05-24)
+
+
+### Features
+
+* reorganize project documentation ([0449ee2](https://github.com/pmeyer/gmdb-api/commit/0449ee29d6861677e9137a738754ea32d5f4db78))
+
+
+### Documentation
+
+* document GraphQL API semantics ([f9fe9d5](https://github.com/pmeyer/gmdb-api/commit/f9fe9d598779e2cbc44a39b456a0dbb3e3baac06))
+* document GraphQL API semantics ([b19618d](https://github.com/pmeyer/gmdb-api/commit/b19618d7c35ae25ef4636808f8f2efd0c652a704))
+
 ## [1.1.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.6...gmdb-api-v1.1.0) (2026-05-24)
 
 
