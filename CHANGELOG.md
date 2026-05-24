@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.6](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.5...gmdb-api-v1.0.6) (2026-05-24)
+
+
+### Bug Fixes
+
+* return not found for missing file resources ([a344f58](https://github.com/pmeyer/gmdb-api/commit/a344f582d4579b04030635232b912aff8135018e))
+* validate album references ([27cee1f](https://github.com/pmeyer/gmdb-api/commit/27cee1ffbe3bb65ce3c29b65b6bb0910aa149a92))
+* validate artist references ([8caf604](https://github.com/pmeyer/gmdb-api/commit/8caf604f80dc48e8f655344ae5620b2c7c1e9984))
+* validate publication cover image references ([78109a3](https://github.com/pmeyer/gmdb-api/commit/78109a35293a45698a8bf952a1993936e01a5072))
+* validate publication index references ([635c221](https://github.com/pmeyer/gmdb-api/commit/635c221c60e6fd3d86c360a8a92cdacba952ad79))
+* validate song references ([a9337f7](https://github.com/pmeyer/gmdb-api/commit/a9337f796a2fc3769a0619f8ab62d9a53a788590))
+* validate transcriber references ([03c3d8b](https://github.com/pmeyer/gmdb-api/commit/03c3d8b1929d59cbc90a06bb19e1622aee4411a7))
+* validate transcription publication references ([2fdb0a7](https://github.com/pmeyer/gmdb-api/commit/2fdb0a7036110897ded8e6936a64c9750499c040))
+
 ## [1.0.5](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.0.4...gmdb-api-v1.0.5) (2026-05-23)
 
 
