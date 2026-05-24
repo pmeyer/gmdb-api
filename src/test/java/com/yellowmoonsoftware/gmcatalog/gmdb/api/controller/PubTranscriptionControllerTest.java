@@ -4,7 +4,8 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.SongSearchResult;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcriber;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcription;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.TranscriptionTranscriber;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.DataResolversMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.SongMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriberMapper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -24,7 +25,10 @@ import static org.mockito.Mockito.when;
 class PubTranscriptionControllerTest {
 
     @Mock
-    private DataResolversMapper mapper;
+    private SongMapper songMapper;
+
+    @Mock
+    private TranscriberMapper transcriberMapper;
 
     @InjectMocks
     private PubTranscriptionController controller;
@@ -34,7 +38,7 @@ class PubTranscriptionControllerTest {
         final Transcription first = new Transcription(1L, "url1", 12, 10L, 100L);
         final Transcription second = new Transcription(2L, "url2", 13, 10L, 100L);
         final SongSearchResult song = new SongSearchResult(10L, "Opener", 3, 20L);
-        when(mapper.getSongsBySongIds(Set.of(10L))).thenReturn(Flux.just(song));
+        when(songMapper.getSongsBySongIds(Set.of(10L))).thenReturn(Flux.just(song));
 
         StepVerifier.create(controller.song(Set.of(first, second)))
             .assertNext(result -> assertThat(result)
@@ -42,19 +46,19 @@ class PubTranscriptionControllerTest {
                 .containsEntry(second, song))
             .verifyComplete();
 
-        verify(mapper).getSongsBySongIds(Set.of(10L));
+        verify(songMapper).getSongsBySongIds(Set.of(10L));
     }
 
     @Test
     void transcribersGroupsByTranscription() {
         final Transcription transcription = new Transcription(1L, "url", 12, 10L, 100L);
         final TranscriptionTranscriber transcriber = new TranscriptionTranscriber(20L, "Alice", 1L);
-        when(mapper.getTranscribersByTranscriptionIds(Set.of(1L))).thenReturn(Flux.just(transcriber));
+        when(transcriberMapper.getTranscribersByTranscriptionIds(Set.of(1L))).thenReturn(Flux.just(transcriber));
 
         StepVerifier.create(controller.transcribers(Set.of(transcription)))
             .assertNext(result -> assertThat(result).containsEntry(transcription, List.of((Transcriber) transcriber)))
             .verifyComplete();
 
-        verify(mapper).getTranscribersByTranscriptionIds(Set.of(1L));
+        verify(transcriberMapper).getTranscribersByTranscriptionIds(Set.of(1L));
     }
 }

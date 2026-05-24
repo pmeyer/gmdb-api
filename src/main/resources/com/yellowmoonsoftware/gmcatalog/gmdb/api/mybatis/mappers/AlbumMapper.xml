@@ -83,4 +83,27 @@
             </trim>
         </if>
     </select>
+
+    <select id="getAlbumsFromIds" parameterType="java.util.Set" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.AlbumSearchResult">
+        select
+            a.id,
+            a.title,
+            d.release_date,
+            d.album_cover_url,
+            case when a.primary_artist_id is not null then
+                     json_build_object('id', aa.id, 'name', aa.name, 'type', aa.type)
+                end artist
+        from album a
+                 join lateral (select
+                                   case
+                                       when (a.details->>'releaseDate') ~ '^\d\d\d\d-\d\d-\d\d$' then (a.details->>'releaseDate')::date
+                                       end release_date,
+                                   a.details->>'albumCoverUrl' album_cover_url
+            ) as d on true
+                 left join artist aa on a.primary_artist_id = aa.id
+        where
+        <foreach collection="albumIds" item="id" open="a.id in(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
  </mapper>

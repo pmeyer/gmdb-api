@@ -16,7 +16,9 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.SongSearchResult;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcriber;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.AlbumMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.ArtistMapper;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.GMDBMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.SongMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriberMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.PublicationIndexService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +38,13 @@ import static org.mockito.Mockito.when;
 class QueryControllerTest {
 
     @Mock
-    private GMDBMapper gmdbMapper;
+    private SongMapper songMapper;
+
+    @Mock
+    private PubMapper pubMapper;
+
+    @Mock
+    private TranscriberMapper transcriberMapper;
 
     @Mock
     private PublicationIndexService publicationIndexService;
@@ -54,11 +62,11 @@ class QueryControllerTest {
     void songSearchDelegatesToMapper() {
         final SongSearchCriteria criteria = new SongSearchCriteria("song", null, null, null, null, null, null);
         final SongSearchResult result = new SongSearchResult(1L, "Song", 3, 4L);
-        when(gmdbMapper.songSearch(criteria)).thenReturn(Flux.just(result));
+        when(songMapper.songSearch(criteria)).thenReturn(Flux.just(result));
 
         StepVerifier.create(queryController.songSearch(criteria)).expectNext(result).verifyComplete();
 
-        verify(gmdbMapper).songSearch(criteria);
+        verify(songMapper).songSearch(criteria);
     }
 
     @Test
@@ -76,11 +84,11 @@ class QueryControllerTest {
     void pubSearchDelegatesToMapper() {
         final PubSearchCriteria criteria = new PubSearchCriteria("guide", PubType.BOOK, null, null, null);
         final PubSearchResult result = new PubSearchResult(1L, "Guide", PubType.BOOK, new com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.BookDetails("First"), null, "ISBN-1", 2L);
-        when(gmdbMapper.pubSearch(criteria)).thenReturn(Flux.just(result));
+        when(pubMapper.pubSearch(criteria)).thenReturn(Flux.just(result));
 
         StepVerifier.create(queryController.pubSearch(criteria)).expectNext(result).verifyComplete();
 
-        verify(gmdbMapper).pubSearch(criteria);
+        verify(pubMapper).pubSearch(criteria);
     }
 
     @Test
@@ -106,11 +114,11 @@ class QueryControllerTest {
     @Test
     void transcriberSearchDelegatesToMapper() {
         final Transcriber result = new Transcriber(1L, "Alice");
-        when(gmdbMapper.getTranscribers("alice")).thenReturn(Flux.just(result));
+        when(transcriberMapper.getTranscribers("alice")).thenReturn(Flux.just(result));
 
         StepVerifier.create(queryController.transcriberSearch("alice")).expectNext(result).verifyComplete();
 
-        verify(gmdbMapper).getTranscribers("alice");
+        verify(transcriberMapper).getTranscribers("alice");
     }
 
     @Test

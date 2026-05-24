@@ -3,7 +3,8 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.controller;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.SongSearchResult;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcriber;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.Transcription;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.DataResolversMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.SongMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriberMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
 import org.springframework.stereotype.Controller;
@@ -18,14 +19,15 @@ import static java.util.stream.Collectors.*;
 @Controller
 @RequiredArgsConstructor
 public class PubTranscriptionController {
-    private final DataResolversMapper mapper;
+    private final SongMapper songMapper;
+    private final TranscriberMapper transcriberMapper;
 
     @BatchMapping(typeName = "PubTranscription", field = "song")
     public Mono<Map<Transcription, SongSearchResult>> song(final Set<Transcription> transcriptions) {
         final Map<Long, List<Transcription>> transcriptionMap = transcriptions.stream()
                 .collect(groupingBy(Transcription::songId));
 
-        return mapper.getSongsBySongIds(transcriptionMap.keySet())
+        return songMapper.getSongsBySongIds(transcriptionMap.keySet())
                 .flatMapIterable(s -> transcriptionMap.get(s.id())
                         .stream().map(t -> Map.entry(t, s)).toList())
                 .collect(toMap(Map.Entry::getKey, Map.Entry::getValue));
@@ -36,7 +38,7 @@ public class PubTranscriptionController {
         final Map<Long, Transcription> transcriptionMap = transcriptions.stream()
                 .collect(toMap(Transcription::id, t -> t));
 
-        return mapper.getTranscribersByTranscriptionIds(transcriptionMap.keySet())
+        return transcriberMapper.getTranscribersByTranscriptionIds(transcriptionMap.keySet())
                 .collect(groupingBy(tt -> transcriptionMap.get(tt.transcriptionId()),
                         toList()));
     }

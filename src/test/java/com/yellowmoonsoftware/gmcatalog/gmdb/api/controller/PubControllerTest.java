@@ -6,7 +6,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.BookDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
-import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.DataResolversMapper;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.TranscriptionMapper;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.service.ResourceSlug;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.when;
 class PubControllerTest {
 
     @Mock
-    private DataResolversMapper mapper;
+    private TranscriptionMapper transcriptionMapper;
 
     @InjectMocks
     private PubController pubController;
@@ -37,7 +37,7 @@ class PubControllerTest {
     void transcriptionsGroupsTranscriptionsByPublication() {
         final PubSearchResult publication = new PubSearchResult(1L, "Guide", PubType.BOOK, new BookDetails("First"), null, "ISBN-1", 2L);
         final TranscriptionInOut transcription = transcriptionInOut(10L, 20L, 1L);
-        when(mapper.getSongTranscriptionsByPubIds(Set.of(1L))).thenReturn(Flux.just(transcription));
+        when(transcriptionMapper.getSongTranscriptionsByPubIds(Set.of(1L))).thenReturn(Flux.just(transcription));
 
         StepVerifier.create(pubController.transcriptions(Set.of(publication)))
             .assertNext(result -> {
@@ -52,7 +52,7 @@ class PubControllerTest {
             })
             .verifyComplete();
 
-        verify(mapper).getSongTranscriptionsByPubIds(Set.of(1L));
+        verify(transcriptionMapper).getSongTranscriptionsByPubIds(Set.of(1L));
     }
 
     private static TranscriptionInOut transcriptionInOut(final Long id, final Long songId, final Long pubId) {
