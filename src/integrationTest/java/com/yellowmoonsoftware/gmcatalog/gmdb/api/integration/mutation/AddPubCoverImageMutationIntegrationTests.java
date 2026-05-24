@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegrationTestSupport {
     private static final String COVER_IMAGE_UPLOAD_FILENAME = "gmdb-test-cover-image-upload.png";
+    private static final String COVER_IMAGE_REPLACEMENT_UPLOAD_FILENAME = "gmdb-test-cover-image-upload-alt.png";
 
     private static final GmdbIntegrationDatabase DATABASE = createStartedMutationDatabase();
 
@@ -58,8 +59,30 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
             assertThat(details.cover()).contains(COVER_IMAGE_UPLOAD_FILENAME);
         });
 
-        assertThat(countCoverImageResourcesWithUploadMetadata(pubId)).isOne();
-        assertResourceResponseMatchesUpload(result.details().cover());
+        assertThat(countCoverImageResourcesWithUploadMetadata(pubId, COVER_IMAGE_UPLOAD_FILENAME)).isOne();
+        assertResourceResponseMatchesUpload(result.details().cover(), COVER_IMAGE_UPLOAD_FILENAME);
+    }
+
+    @Test
+    void addPubCoverImageReplacesExistingCoverImageForPublicationWithExistingImage() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        assertThat(countCoverImageResources(pubId)).isOne();
+
+        final var result = executeAddPubCoverImage(pubId, COVER_IMAGE_REPLACEMENT_UPLOAD_FILENAME);
+
+        assertThat(result.id()).isEqualTo(pubId);
+        assertThat(result.name()).isEqualTo("Guitar World");
+        assertThat(result.type()).isEqualTo(PubType.MAG);
+        assertThat(result.pubDate()).isEqualTo(LocalDate.of(2018, 11, 1));
+        assertThat(result.details()).satisfies(details -> {
+            assertThat(details.volume()).isEqualTo("39");
+            assertThat(details.issue()).isEqualTo("11");
+            assertThat(details.issueName()).isEqualTo("November 2018");
+            assertThat(details.cover()).contains(COVER_IMAGE_REPLACEMENT_UPLOAD_FILENAME);
+        });
+
+        assertThat(countCoverImageResourcesWithUploadMetadata(pubId, COVER_IMAGE_REPLACEMENT_UPLOAD_FILENAME)).isOne();
+        assertResourceResponseMatchesUpload(result.details().cover(), COVER_IMAGE_REPLACEMENT_UPLOAD_FILENAME);
     }
 
     @Test
@@ -74,6 +97,10 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     private PubResponse executeAddPubCoverImage(final long pubId) {
+        return executeAddPubCoverImage(pubId, COVER_IMAGE_UPLOAD_FILENAME);
+    }
+
+    private PubResponse executeAddPubCoverImage(final long pubId, final String filename) {
         final MultipartBodyBuilder multipartBodyBuilder = new MultipartBodyBuilder();
         multipartBodyBuilder.part("operations", """
                 {
@@ -91,7 +118,7 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     "0": ["variables.imgInput.cover"]
                 }
                 """);
-        multipartBodyBuilder.part("0", new FileSystemResource(uploadPath()))
+        multipartBodyBuilder.part("0", new FileSystemResource(uploadPath(filename)))
                 .contentType(MediaType.IMAGE_PNG);
 
         final var response = webTestClient.mutate()
@@ -131,7 +158,7 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     "0": ["variables.imgInput.cover"]
                 }
                 """);
-        multipartBodyBuilder.part("0", new FileSystemResource(uploadPath()))
+        multipartBodyBuilder.part("0", new FileSystemResource(uploadPath(COVER_IMAGE_UPLOAD_FILENAME)))
                 .contentType(MediaType.IMAGE_PNG);
 
         final var response = webTestClient.mutate()
@@ -151,7 +178,7 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         return response;
     }
 
-    private void assertResourceResponseMatchesUpload(final String resourceUrl) {
+    private void assertResourceResponseMatchesUpload(final String resourceUrl, final String filename) {
         assertThat(resourceUrl).isNotBlank();
 
         final byte[] responseBody = webTestClient.mutate()
@@ -166,7 +193,7 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 .getResponseBody();
 
         assertThat(responseBody).isNotNull();
-        assertThat(sha256(responseBody)).isEqualTo(sha256(readUpload()));
+        assertThat(sha256(responseBody)).isEqualTo(sha256(readUpload(filename)));
     }
 
     private static long pubIdForGuitarWorldHoliday2018() {
@@ -181,6 +208,18 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 """);
     }
 
+    private static long pubIdForGuitarWorldNovember2018() {
+        return queryForLong(DATABASE, """
+                select p.id
+                from gmdb.pub p
+                    inner join gmdb.pub_idx pi on p.pub_idx_id = pi.id
+                where pi.name = 'Guitar World'
+                    and p.details->>'volume' = '39'
+                    and p.details->>'issue' = '11'
+                    and p.details->>'issueName' = 'November 2018'
+                """);
+    }
+
     private static int countCoverImageResources(final long pubId) {
         return queryForInt(DATABASE, """
                 select count(*)
@@ -190,25 +229,26 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 """.formatted(pubId));
     }
 
-    private static int countCoverImageResourcesWithUploadMetadata(final long pubId) {
+    private static int countCoverImageResourcesWithUploadMetadata(final long pubId, final String filename) {
         return queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.pub
                 where id = %d
-                    and details->>'volume' = '39'
-                    and details->>'issue' = '13'
-                    and details->>'issueName' = 'Holiday 2018'
-                    and details->'resources'->'COVER_IMAGE'->>'originalFilename' = '%s'
-                    and details->'resources'->'COVER_IMAGE'->>'mediaType' = 'image/png'
-                """.formatted(pubId, COVER_IMAGE_UPLOAD_FILENAME));
+                    and exists (
+                        select *
+                        from jsonb_each(details->'resources') as resource(name, attributes)
+                        where attributes->>'originalFilename' = '%s'
+                            and attributes->>'mediaType' = 'image/png'
+                    )
+                """.formatted(pubId, filename));
     }
 
-    private static Path uploadPath() {
+    private static Path uploadPath(final String filename) {
         try {
             return Path.of(Objects.requireNonNull(
                             AddPubCoverImageMutationIntegrationTests.class
                                     .getClassLoader()
-                                    .getResource("test-upload-files/" + COVER_IMAGE_UPLOAD_FILENAME),
+                                    .getResource("test-upload-files/" + filename),
                             "Could not find upload test resource")
                     .toURI());
         } catch (final URISyntaxException exception) {
@@ -216,9 +256,9 @@ class AddPubCoverImageMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         }
     }
 
-    private static byte[] readUpload() {
+    private static byte[] readUpload(final String filename) {
         try {
-            return Files.readAllBytes(uploadPath());
+            return Files.readAllBytes(uploadPath(filename));
         } catch (final Exception exception) {
             throw new IllegalStateException("Could not read upload test resource", exception);
         }
