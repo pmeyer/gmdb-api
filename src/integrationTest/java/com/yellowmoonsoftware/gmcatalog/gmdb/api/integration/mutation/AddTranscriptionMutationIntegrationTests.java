@@ -25,7 +25,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegrationTestSupport {
     private static final String ALBUM_ART_UPLOAD_FILENAME = "gmdb-test-album-art-upload.png";
+    private static final String ALBUM_ART_REPLACEMENT_UPLOAD_FILENAME = "gmdb-test-album-art-upload-alt.png";
     private static final String TRANSCRIPTION_UPLOAD_FILENAME = "gmdb-test-transcription-upload.pdf";
+    private static final String TRANSCRIPTION_REPLACEMENT_UPLOAD_FILENAME = "gmdb-test-transcription-upload-alt.pdf";
 
     private static final GmdbIntegrationDatabase DATABASE = createStartedMutationDatabase();
 
@@ -403,6 +405,46 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     @Test
+    void addTranscriptionWithExistingAlbumDataReplacesUploadedAlbumArt() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long albumId = albumIdByTitle("Appetite For Destruction");
+        final long transcriberId = transcriberIdByName("Jeff Perrin");
+
+        final var result = executeAddTranscriptionReplacingExistingAlbumCoverArt(pubId, albumId, transcriberId);
+        final long songId = songIdByTitleAndAlbum(
+                "Mutation Test Existing Album Art Replacement Song",
+                "Appetite For Destruction");
+
+        assertThat(result.id()).isPositive();
+        assertThat(result.pageNumber()).isEqualTo(73);
+        assertThat(result.song()).satisfies(song -> {
+            assertThat(song.id()).isEqualTo(songId);
+            assertThat(song.title()).isEqualTo("Mutation Test Existing Album Art Replacement Song");
+            assertThat(song.album()).satisfies(album -> {
+                assertThat(album.id()).isEqualTo(albumId);
+                assertThat(album.title()).isEqualTo("Appetite For Destruction");
+                assertThat(album.trackNumber()).isEqualTo(8);
+                assertThat(album.releaseDate()).isEqualTo(LocalDate.of(1987, 7, 21));
+                assertThat(album.albumArtUrl()).contains(ALBUM_ART_REPLACEMENT_UPLOAD_FILENAME);
+            });
+        });
+        assertThat(result.transcribers()).containsExactly(new TranscriberResponse(transcriberId, "Jeff Perrin"));
+
+        assertThat(countAlbumArtResourcesWithUploadMetadata(
+                albumId,
+                ALBUM_ART_REPLACEMENT_UPLOAD_FILENAME)).isOne();
+        assertThat(countSongsByTitleAlbumAndTrackNumber(
+                "Mutation Test Existing Album Art Replacement Song",
+                albumId,
+                8)).isOne();
+        assertThat(countTranscriptions(songId, pubId, 73)).isOne();
+        assertThat(countTranscriptionTranscribers(result.id(), transcriberId)).isOne();
+        assertResourceResponseMatchesAlbumArtUpload(
+                result.song().album().albumArtUrl(),
+                ALBUM_ART_REPLACEMENT_UPLOAD_FILENAME);
+    }
+
+    @Test
     void addTranscriptionStoresUploadedTranscriptionFile() {
         final long pubId = pubIdForGuitarWorldNovember2018();
         final long transcriberId = transcriberIdByName("Jeff Perrin");
@@ -420,6 +462,28 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         assertThat(countTranscriptionResourcesWithUploadMetadata(result.id())).isOne();
         assertThat(countTranscriptionTranscribers(result.id(), transcriberId)).isOne();
         assertResourceResponseMatchesTranscriptionUpload(result.url());
+    }
+
+    @Test
+    void addTranscriptionReplacesUploadedTranscriptionFileForExistingTranscription() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long songId = songIdByTitleAndAlbum("Rocket Queen", "Appetite For Destruction");
+        final long existingTranscriptionId = transcriptionId(songId, pubId);
+        final long transcriberId = transcriberIdByName("Jeff Perrin");
+
+        final var result = executeAddTranscriptionReplacingExistingFile(pubId, songId, transcriberId);
+
+        assertThat(result.id()).isEqualTo(existingTranscriptionId);
+        assertThat(result.url()).contains(TRANSCRIPTION_REPLACEMENT_UPLOAD_FILENAME);
+        assertThat(result.pageNumber()).isEqualTo(99);
+        assertThat(result.song()).isEqualTo(new SongResponse(songId, "Rocket Queen"));
+        assertThat(result.transcribers()).containsExactly(new TranscriberResponse(transcriberId, "Jeff Perrin"));
+        assertThat(countTranscriptions(songId, pubId, 99)).isOne();
+        assertThat(countTranscriptionResourcesWithUploadMetadata(
+                result.id(),
+                TRANSCRIPTION_REPLACEMENT_UPLOAD_FILENAME)).isOne();
+        assertThat(countTranscriptionTranscribers(result.id(), transcriberId)).isOne();
+        assertResourceResponseMatchesTranscriptionUpload(result.url(), TRANSCRIPTION_REPLACEMENT_UPLOAD_FILENAME);
     }
 
     @Test
@@ -914,7 +978,120 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         return response.data().addTranscription();
     }
 
+    private AlbumArtUploadTranscriptionResponse executeAddTranscriptionReplacingExistingAlbumCoverArt(
+            final long pubId,
+            final long albumId,
+            final long transcriberId) {
+
+        final MultipartBodyBuilder multipartBodyBuilder = new MultipartBodyBuilder();
+        multipartBodyBuilder.part("operations", """
+                {
+                    "query": "mutation($pubId: Long!, $transcriptionInput: TranscriptionInput!) { addTranscription(pubId: $pubId, transcriptionInput: $transcriptionInput) { id pageNumber song { id title album { id title trackNumber releaseDate albumArtUrl } } transcribers { id name } } }",
+                    "variables": {
+                        "pubId": %d,
+                        "transcriptionInput": {
+                            "song": {
+                                "data": {
+                                    "title": "Mutation Test Existing Album Art Replacement Song",
+                                    "artists": [],
+                                    "albumTrack": {
+                                        "trackNumber": 8,
+                                        "album": {
+                                            "id": %d,
+                                            "data": {
+                                                "title": "Appetite For Destruction",
+                                                "coverArt": null,
+                                                "releaseDate": "1987-07-21"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "pageNumber": 73,
+                            "transcribers": [{ "id": %d }]
+                        }
+                    }
+                }
+                """.formatted(pubId, albumId, transcriberId));
+        multipartBodyBuilder.part("map", """
+                {
+                    "0": ["variables.transcriptionInput.song.data.albumTrack.album.data.coverArt"]
+                }
+                """);
+        multipartBodyBuilder.part("0", new FileSystemResource(albumArtUploadPath(ALBUM_ART_REPLACEMENT_UPLOAD_FILENAME)))
+                .contentType(MediaType.IMAGE_PNG);
+
+        final var response = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .post()
+                .uri("/graphql")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(multipartBodyBuilder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(AlbumArtUploadGraphQlResponse.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.data()).isNotNull();
+        assertThat(response.data().addTranscription()).isNotNull();
+        return response.data().addTranscription();
+    }
+
+    private TranscriptionResponse executeAddTranscriptionReplacingExistingFile(
+            final long pubId,
+            final long songId,
+            final long transcriberId) {
+
+        final MultipartBodyBuilder multipartBodyBuilder = new MultipartBodyBuilder();
+        multipartBodyBuilder.part("operations", """
+                {
+                    "query": "mutation($pubId: Long!, $transcriptionInput: TranscriptionInput!) { addTranscription(pubId: $pubId, transcriptionInput: $transcriptionInput) { id url pageNumber song { id title } transcribers { id name } } }",
+                    "variables": {
+                        "pubId": %d,
+                        "transcriptionInput": {
+                            "song": { "id": %d },
+                            "pageNumber": 99,
+                            "file": null,
+                            "transcribers": [{ "id": %d }]
+                        }
+                    }
+                }
+                """.formatted(pubId, songId, transcriberId));
+        multipartBodyBuilder.part("map", """
+                {
+                    "0": ["variables.transcriptionInput.file"]
+                }
+                """);
+        multipartBodyBuilder.part("0", new FileSystemResource(transcriptionUploadPath(TRANSCRIPTION_REPLACEMENT_UPLOAD_FILENAME)))
+                .contentType(MediaType.APPLICATION_PDF);
+
+        final var response = webTestClient.mutate()
+                .codecs(configurer -> configurer.defaultCodecs().maxInMemorySize(2 * 1024 * 1024))
+                .build()
+                .post()
+                .uri("/graphql")
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .body(BodyInserters.fromMultipartData(multipartBodyBuilder.build()))
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(TranscriptionUploadGraphQlResponse.class)
+                .returnResult()
+                .getResponseBody();
+
+        assertThat(response).isNotNull();
+        assertThat(response.data()).isNotNull();
+        assertThat(response.data().addTranscription()).isNotNull();
+        return response.data().addTranscription();
+    }
+
     private void assertResourceResponseMatchesAlbumArtUpload(final String resourceUrl) {
+        assertResourceResponseMatchesAlbumArtUpload(resourceUrl, ALBUM_ART_UPLOAD_FILENAME);
+    }
+
+    private void assertResourceResponseMatchesAlbumArtUpload(final String resourceUrl, final String filename) {
         assertThat(resourceUrl).isNotBlank();
 
         final byte[] responseBody = webTestClient.mutate()
@@ -929,10 +1106,14 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 .getResponseBody();
 
         assertThat(responseBody).isNotNull();
-        assertThat(sha256(responseBody)).isEqualTo(sha256(readAlbumArtUpload()));
+        assertThat(sha256(responseBody)).isEqualTo(sha256(readAlbumArtUpload(filename)));
     }
 
     private void assertResourceResponseMatchesTranscriptionUpload(final String resourceUrl) {
+        assertResourceResponseMatchesTranscriptionUpload(resourceUrl, TRANSCRIPTION_UPLOAD_FILENAME);
+    }
+
+    private void assertResourceResponseMatchesTranscriptionUpload(final String resourceUrl, final String filename) {
         assertThat(resourceUrl).isNotBlank();
 
         final byte[] responseBody = webTestClient.mutate()
@@ -947,7 +1128,7 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 .getResponseBody();
 
         assertThat(responseBody).isNotNull();
-        assertThat(sha256(responseBody)).isEqualTo(sha256(readTranscriptionUpload()));
+        assertThat(sha256(responseBody)).isEqualTo(sha256(readTranscriptionUpload(filename)));
     }
 
     private static long pubIdForGuitarWorldNovember2018() {
@@ -1041,6 +1222,16 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     and details->'resources'->'ALBUM_ART'->>'originalFilename' = '%s'
                     and details->'resources'->'ALBUM_ART'->>'mediaType' = 'image/png'
                 """.formatted(albumId, title.replace("'", "''"), releaseDate, ALBUM_ART_UPLOAD_FILENAME));
+    }
+
+    private static int countAlbumArtResourcesWithUploadMetadata(final long albumId, final String filename) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.album
+                where id = %d
+                    and details->'resources'->'ALBUM_ART'->>'originalFilename' = '%s'
+                    and details->'resources'->'ALBUM_ART'->>'mediaType' = 'image/png'
+                """.formatted(albumId, filename));
     }
 
     private static long transcriptionId(final long songId, final long pubId) {
@@ -1141,21 +1332,32 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     private static int countTranscriptionResourcesWithUploadMetadata(final long transcriptionId) {
+        return countTranscriptionResourcesWithUploadMetadata(transcriptionId, TRANSCRIPTION_UPLOAD_FILENAME);
+    }
+
+    private static int countTranscriptionResourcesWithUploadMetadata(
+            final long transcriptionId,
+            final String filename) {
+
         return queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.transcription
                 where id = %d
                     and details->'resources'->'TRANSCRIPTION'->>'originalFilename' = '%s'
                     and details->'resources'->'TRANSCRIPTION'->>'mediaType' = 'application/pdf'
-                """.formatted(transcriptionId, TRANSCRIPTION_UPLOAD_FILENAME));
+                """.formatted(transcriptionId, filename));
     }
 
     private static Path albumArtUploadPath() {
+        return albumArtUploadPath(ALBUM_ART_UPLOAD_FILENAME);
+    }
+
+    private static Path albumArtUploadPath(final String filename) {
         try {
             return Path.of(Objects.requireNonNull(
                             AddTranscriptionMutationIntegrationTests.class
                                     .getClassLoader()
-                                    .getResource("test-upload-files/" + ALBUM_ART_UPLOAD_FILENAME),
+                                    .getResource("test-upload-files/" + filename),
                             "Could not find album art upload test resource")
                     .toURI());
         } catch (final URISyntaxException exception) {
@@ -1164,11 +1366,15 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     private static Path transcriptionUploadPath() {
+        return transcriptionUploadPath(TRANSCRIPTION_UPLOAD_FILENAME);
+    }
+
+    private static Path transcriptionUploadPath(final String filename) {
         try {
             return Path.of(Objects.requireNonNull(
                             AddTranscriptionMutationIntegrationTests.class
                                     .getClassLoader()
-                                    .getResource("test-upload-files/" + TRANSCRIPTION_UPLOAD_FILENAME),
+                                    .getResource("test-upload-files/" + filename),
                             "Could not find transcription upload test resource")
                     .toURI());
         } catch (final URISyntaxException exception) {
@@ -1177,16 +1383,24 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     private static byte[] readAlbumArtUpload() {
+        return readAlbumArtUpload(ALBUM_ART_UPLOAD_FILENAME);
+    }
+
+    private static byte[] readAlbumArtUpload(final String filename) {
         try {
-            return Files.readAllBytes(albumArtUploadPath());
+            return Files.readAllBytes(albumArtUploadPath(filename));
         } catch (final Exception exception) {
             throw new IllegalStateException("Could not read album art upload test resource", exception);
         }
     }
 
     private static byte[] readTranscriptionUpload() {
+        return readTranscriptionUpload(TRANSCRIPTION_UPLOAD_FILENAME);
+    }
+
+    private static byte[] readTranscriptionUpload(final String filename) {
         try {
-            return Files.readAllBytes(transcriptionUploadPath());
+            return Files.readAllBytes(transcriptionUploadPath(filename));
         } catch (final Exception exception) {
             throw new IllegalStateException("Could not read transcription upload test resource", exception);
         }
