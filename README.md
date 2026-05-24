@@ -71,6 +71,8 @@ The GraphQL API will also provide the ability to add new transcriptions and publ
 support uploading files to the database as part of a GraphQL mutation using a custom type, handler, and protocol 
 conforming to the [GraphQL multipart request specification](https://github.com/jaydenseric/graphql-multipart-request-spec).
 
+Detailed operation and input semantics are documented in the [GraphQL API Guide](GRAPHQL_API.md).
+
 ## Mutations, Metadata and Blob Storage
 Mutations supporting the addition or update of metadata to the database along with storage of associated files will need
 to:

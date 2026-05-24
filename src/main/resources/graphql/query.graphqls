@@ -1,4 +1,11 @@
+"""
+64-bit integer identifier or count value.
+"""
 scalar Long
+
+"""
+Calendar date serialized as an ISO-8601 date string.
+"""
 scalar Date
 
 type Query {
@@ -88,71 +95,221 @@ input SongSearchCriteria {
     pubs: [Long!]
 }
 
+"""
+Song search result with optional album, artist, and transcription details.
+"""
 type SongSearchResult {
+    """
+    Song id.
+    """
     id: Long!
+    """
+    Song title.
+    """
     title: String!
+    """
+    Album track context when the song is associated with an album.
+    """
     album: SongAlbum
+    """
+    Artists directly associated with the song.
+    """
     artists: [SongArtist!]
+    """
+    Transcriptions for this song.
+    """
     transcriptions: [Transcription!]
 }
 
+"""
+Song data returned as a nested object from other result types.
+"""
 type Song {
+    """
+    Song id.
+    """
     id: Long!
+    """
+    Song title.
+    """
     title: String!
+    """
+    Album track context when the song is associated with an album.
+    """
     album: SongAlbum
+    """
+    Artists directly associated with the song.
+    """
     artists: [SongArtist!]
 }
 
+"""
+Album context for a song, including the song's track number on that album.
+"""
 type SongAlbum {
+    """
+    Album id.
+    """
     id: Long!
+    """
+    Album title.
+    """
     title: String!
+    """
+    Song track number on this album.
+    """
     trackNumber: Int
+    """
+    Album release date.
+    """
     releaseDate: Date
+    """
+    Relative resource URL for album art when cover art exists.
+    """
     albumArtUrl: String
+    """
+    Primary album artist when one is associated with the album.
+    """
     artist: Artist
 }
 
+"""
+Roles an artist can have on a song.
+"""
 enum SongArtistRole {
+    """
+    Artist wrote the words or lyrics.
+    """
     WORDS_BY
+    """
+    Artist wrote the music.
+    """
     MUSIC_BY
+    """
+    Artist performed the transcribed song.
+    """
     PERFORMED_BY
 }
 
+"""
+Artist associated directly with a song and the roles the artist has on that song.
+"""
 type SongArtist {
+    """
+    Artist id.
+    """
     id: Long!
+    """
+    Artist display name.
+    """
     name: String!
+    """
+    Artist type.
+    """
     type: ArtistType!
+    """
+    Direct song roles for this artist.
+    """
     roles: [SongArtistRole!]!
 }
 
+"""
+Artist classification.
+"""
 enum ArtistType {
+    """
+    Artist is a band or group.
+    """
     BAND
+    """
+    Artist is a person.
+    """
     PERSON
 }
 
+"""
+Publication data returned with a transcription.
+"""
 type TranscriptionPub {
+    """
+    Publication id.
+    """
     id: Long!
+    """
+    Publication index name.
+    """
     name: String!
+    """
+    Publication type.
+    """
     type: PubType!
+    """
+    Publication-specific details.
+    """
     details: PubDetails!
+    """
+    Publication date, when known.
+    """
     pubDate: Date
+    """
+    Publication index serial number.
+    """
     serialNumber: String!
+    """
+    Publication index id.
+    """
     pubIndexId: Long!
 }
 
+"""
+Transcription data returned with song search results.
+"""
 type Transcription {
+    """
+    Transcription id.
+    """
     id: Long!
+    """
+    Relative resource URL for the transcription file when one exists.
+    """
     url: String
+    """
+    First page of the transcription within the publication.
+    """
     pageNumber: Int
+    """
+    Publication containing the transcription.
+    """
     pub: TranscriptionPub
+    """
+    Transcribers credited for this transcription.
+    """
     transcribers: [Transcriber!]
 }
 
+"""
+Transcription data returned with publication-oriented operations.
+"""
 type PubTranscription {
+    """
+    Transcription id.
+    """
     id: Long!
+    """
+    Relative resource URL for the transcription file when one exists.
+    """
     url: String
+    """
+    First page of the transcription within the publication.
+    """
     pageNumber: Int
+    """
+    Song being transcribed.
+    """
     song: Song!
+    """
+    Transcribers credited for this transcription.
+    """
     transcribers: [Transcriber!]
 }
 
@@ -194,9 +351,21 @@ Artist roles that can be used by artist and song search criteria. WORDS_BY, MUSI
 song artist roles. ALBUM_ARTIST refers to the primary artist associated with a song's album.
 """
 enum ArtistSearchRole {
+    """
+    Artist wrote the words or lyrics.
+    """
     WORDS_BY
+    """
+    Artist wrote the music.
+    """
     MUSIC_BY
+    """
+    Artist performed the transcribed song.
+    """
     PERFORMED_BY
+    """
+    Artist is the primary artist on the song's album.
+    """
     ALBUM_ARTIST
 }
 
@@ -227,10 +396,25 @@ input ArtistSearchCriteria {
     orderBy: [ArtistOrderBySpec!]
 }
 
+"""
+Artist search result, including the roles that caused or describe the match.
+"""
 type ArtistSearchResult {
+    """
+    Artist id.
+    """
     id: Long!
+    """
+    Artist display name.
+    """
     name: String!
+    """
+    Artist type.
+    """
     type: ArtistType!
+    """
+    Roles matched or represented for this artist in the result set.
+    """
     matchedRoles: [ArtistSearchRole!]!
 }
 
@@ -276,30 +460,87 @@ input PubSearchCriteria {
     hasTranscriptions: Boolean
 }
 
+"""
+Common publication details interface. The cover field is a relative resource URL when a cover image exists.
+"""
 interface PubDetails {
+    """
+    Relative resource URL for publication cover art when one exists.
+    """
     cover: String
 }
 
+"""
+Magazine issue details.
+"""
 type MagDetails implements PubDetails {
+    """
+    Relative resource URL for publication cover art when one exists.
+    """
     cover: String
+    """
+    Magazine volume.
+    """
     volume: String
+    """
+    Magazine issue number.
+    """
     issue: String
+    """
+    Magazine issue display name.
+    """
     issueName: String
 }
 
+"""
+Book edition details.
+"""
 type BookDetails implements PubDetails {
+    """
+    Relative resource URL for publication cover art when one exists.
+    """
     cover: String
+    """
+    Book edition name or number.
+    """
     edition: String
 }
 
+"""
+Publication search result. The details concrete type depends on the publication type.
+"""
 type PubSearchResult {
+    """
+    Publication id.
+    """
     id: Long!
+    """
+    Publication index name.
+    """
     name: String!
+    """
+    Publication type.
+    """
     type: PubType!
+    """
+    Publication-specific details.
+    """
     details: PubDetails!
+    """
+    Publication date, when known.
+    """
     pubDate: Date
+    """
+    Publication index serial number.
+    """
     serialNumber: String!
+    """
+    Publication index id.
+    """
     pubIndexId: Long!
+    """
+    Transcriptions appearing in this publication.
+    """
     transcriptions: [PubTranscription!]
 }
 
@@ -360,22 +601,61 @@ input AlbumSearchCriteria {
     orderBy: [AlbumOrderBySpec!]
 }
 
+"""
+Album search result.
+"""
 type AlbumSearchResult {
+    """
+    Album id.
+    """
     id: Long!
+    """
+    Album title.
+    """
     title: String!
+    """
+    Album release date, when known.
+    """
     releaseDate: Date
+    """
+    Relative resource URL for album art when one exists.
+    """
     albumArtUrl: String
+    """
+    Primary album artist when one is associated with the album.
+    """
     artist: Artist
 }
 
+"""
+Artist reference returned by search and nested result objects.
+"""
 type Artist {
+    """
+    Artist id.
+    """
     id: Long!
+    """
+    Artist display name.
+    """
     name: String!
+    """
+    Artist type.
+    """
     type: ArtistType!
 }
 
+"""
+Transcriber reference.
+"""
 type Transcriber {
+    """
+    Transcriber id.
+    """
     id: Long!
+    """
+    Transcriber display name.
+    """
     name: String!
 }
 
@@ -389,9 +669,24 @@ input PubIndexCriteria {
     type: PubType
 }
 
+"""
+Publication index result.
+"""
 type PubIndexResult {
+    """
+    Publication index id.
+    """
     id: Long!
+    """
+    Publication index name.
+    """
     name: String!
+    """
+    Publication type.
+    """
     type: PubType!
+    """
+    Publication serial number.
+    """
     serialNumber: String!
 }
