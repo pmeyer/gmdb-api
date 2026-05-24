@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.2.0...gmdb-api-v1.2.1) (2026-05-24)
+
+
+### Bug Fixes
+
+* require database url configuration ([c30068c](https://github.com/pmeyer/gmdb-api/commit/c30068cb44d71e71a06a3679d8175a69fc76543f))
+
 ## [1.2.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.1.0...gmdb-api-v1.2.0) (2026-05-24)
 
 
