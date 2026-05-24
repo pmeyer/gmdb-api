@@ -1,9 +1,27 @@
+"""
+Sort direction for order-by specifications.
+"""
 enum OrderByDirection {
+    """
+    Sort from lowest to highest values.
+    """
     ASC
+    """
+    Sort from highest to lowest values.
+    """
     DESC
 }
 
+"""
+Null placement for order-by specifications.
+"""
 enum OrderByNulls {
+    """
+    Place null values before non-null values.
+    """
     NULLS_FIRST
+    """
+    Place null values after non-null values.
+    """
     NULLS_LAST
 }

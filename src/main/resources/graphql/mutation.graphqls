@@ -1,203 +1,366 @@
+"""
+Arbitrary JSON value used by custom scalar mappings.
+"""
 scalar JSON
+
+"""
+Multipart file upload value. Fields of this type require GraphQL multipart request formatting.
+"""
 scalar Upload
 
 type Mutation {
-    # Adds a transcription do the GMag Database
+    """
+    Adds or updates a song transcription in an existing publication. The operation upserts the song, optional album,
+    optional artists, transcription row, and optional transcriber associations based on the supplied input.
+    """
     addTranscription(pubId: Long!, transcriptionInput: TranscriptionInput!): PubTranscription!
-    # Adds a magazine issue to the GMag Database
+
+    """
+    Adds or updates a magazine issue, optionally including its cover image and initial song transcriptions.
+    """
     addMagazineIssue(magInput: MagazineInput!): PubSearchResult!
-    # Adds a book edition to the GMag Database
+
+    """
+    Adds or updates a book edition, optionally including its cover image and initial song transcriptions.
+    """
     addBookEdition(bookInput: BookInput!): PubSearchResult!
-    # Associates a cover image with an existing publication
+
+    """
+    Replaces or adds the cover image for an existing publication.
+    """
     addPubCoverImage(imgInput: PubCoverImageInput!): PubSearchResult!
-    # Inserts/updates a pub index
+
+    """
+    Inserts, updates, or resolves a publication index entry.
+    """
     upsertPubIndex(pubIndexInput: PubIndexInput!): PubIndexResult!
 }
 
-# Magazine issue input
+"""
+Input for adding or updating a magazine issue. The publication index identifies the magazine title, while info carries
+issue-specific metadata.
+"""
 input MagazineInput {
-    # Date of issue publication
+    """
+    Date associated with this magazine issue. When omitted, the publication is stored without a publication date.
+    """
     pubDate: Date
-    # The publication data (e.g. ISBN, etc)
+
+    """
+    Existing or new publication index for the magazine title.
+    """
     index: PubIndexInput!
-    # Magazine issue information
+
+    """
+    Magazine issue-specific metadata.
+    """
     info: MagazineIssueInput!
-    # Song transcriptions appearing in the magazine issue
+
+    """
+    Optional transcriptions appearing in the magazine issue.
+    """
     transcriptions: [TranscriptionInput!]
 }
-# Magazine issue information
-# In order to upload a the magazine cover image, the request must be made
-# using the GraphQL multipart request specification:
-# https://github.com/jaydenseric/graphql-multipart-request-spec
+
+"""
+Magazine issue metadata. Cover uploads must use the GraphQL multipart request specification.
+"""
 input MagazineIssueInput {
-    # Magazine volume (typically a number)
+    """
+    Magazine volume, typically a number or short label.
+    """
     volume: String
-    # Magazine issue (typically a number denoting its sequence in a volume)
+
+    """
+    Magazine issue number or sequence within a volume.
+    """
     issue: String
-    # The name of the issue
+
+    """
+    Display name for the issue.
+    """
     issueName: String!
-    # Magazine cover image
+
+    """
+    Optional magazine cover image upload. Supplying a file stores or replaces the publication cover resource.
+    """
     cover: Upload
 }
 
-# Book input
+"""
+Input for adding or updating a book edition. The publication index identifies the book title, while info carries
+edition-specific metadata.
+"""
 input BookInput {
-    # Date of edition publication
+    """
+    Date associated with this book edition. When omitted, the publication is stored without a publication date.
+    """
     pubDate: Date
-    # The publication data (e.g. ISBN, etc)
+
+    """
+    Existing or new publication index for the book title.
+    """
     index: PubIndexInput!
-    # Edition specific info
+
+    """
+    Book edition-specific metadata.
+    """
     info: BookEditionInput! = { }
-    # Song transcriptions appearing in the book edition
+
+    """
+    Optional transcriptions appearing in the book edition.
+    """
     transcriptions: [TranscriptionInput!]
 }
 
-# Book edition information
-# In order to upload a the book cover image, the request must be made
-# using the GraphQL multipart request specification:
-# https://github.com/jaydenseric/graphql-multipart-request-spec
+"""
+Book edition metadata. Cover uploads must use the GraphQL multipart request specification.
+"""
 input BookEditionInput {
-    # The edition name or number
+    """
+    Edition name or number.
+    """
     edition: String
-    # Book cover image
+
+    """
+    Optional book cover image upload. Supplying a file stores or replaces the publication cover resource.
+    """
     cover: Upload
 }
 
-# Publication index input
-# A publication "index" is general data about a publication.  It describes the type of
-# publication (e.g. a Book or Magazine), name and serial number (i.e. typically ISBN).
-# A publication will have one or more publications (e.g. magazine issues or book editions).
-# An existing publication index ID or data for a new or updated index must be provided.
-# This is validated prior to execution of the mutation.
+"""
+Identifies a publication index by id or supplies data for a new or updated index. When data is supplied with an id, the
+existing index is updated. When data is supplied without an id, natural matching may reuse an existing index.
+"""
 input PubIndexInput {
-    # Existing publication index ID
+    """
+    Existing publication index id.
+    """
     id: Long
-    # Data for a new publication index (or update to an existing publication index, if ID is provided)
+
+    """
+    Data for a new index or for updating the referenced index.
+    """
     data: PubIndexData
 }
 
-# Detailed data for a publication index.
-# A publication "index" is general data about a publication.  It describes the type of
-# publication (e.g. a Book or Magazine), name and serial number (i.e. typically ISBN).
-# A publication will have one or more publications (e.g. magazine issues or book editions).
+"""
+Publication index data shared by book editions and magazine issues.
+"""
 input PubIndexData {
-    # Publication name - typically the name of a book or a periodically printed magazine
+    """
+    Publication title.
+    """
     name: String!
-    # The type of publication
+
+    """
+    Publication type. Magazine issue mutations require MAG; book edition mutations require BOOK.
+    """
     type: PubType!
-    # Typically ISBN for a book or magazine
+
+    """
+    Serial identifier for the publication index, typically ISBN for books.
+    """
     serial: String!
 }
 
+"""
+Input for storing or replacing a cover image on an existing publication.
+"""
 input PubCoverImageInput {
+    """
+    Existing publication id.
+    """
     id: Long!
+
+    """
+    Cover image file. The request must use the GraphQL multipart request specification.
+    """
     cover: Upload!
 }
 
-######
-
-# Song transcription input.
-# In order to upload a file of the transcription, the request must be made
-# using the GraphQL multipart request specification:
-# https://github.com/jaydenseric/graphql-multipart-request-spec
+"""
+Input for adding or updating a transcription for a song in a publication. The transcription is uniquely resolved by the
+song and publication.
+"""
 input TranscriptionInput {
-    # Song being transcribed
+    """
+    Existing or new song being transcribed.
+    """
     song: SongInput!
-    # First page of the transcription within the transcript's publication
+
+    """
+    First page of the transcription within the publication.
+    """
     pageNumber: Int!
-    # The transcription file
+
+    """
+    Optional transcription file upload. Supplying a file stores or replaces the transcription resource.
+    """
     file: Upload
-    # The transcribers
+
+    """
+    Optional transcriber list. When omitted, existing associations are left alone for an update; when supplied as an
+    empty list, existing transcriber associations are removed.
+    """
     transcribers: [TranscriberInput!]
 }
 
-# Song input
-# An existing song ID or data for a new or updated song must be provided.
-# This is validated prior to execution of the mutation.
+"""
+Identifies a song by id or supplies data for a new or updated song. When data is supplied with an id, the existing song
+is updated. When data is supplied without an id, natural matching may reuse an existing song.
+"""
 input SongInput {
-    # Existing song ID
+    """
+    Existing song id.
+    """
     id: Long
-    # Data for a new song (or update an existing song, if ID is provided)
+
+    """
+    Data for a new song or for updating the referenced song.
+    """
     data: SongData
 }
 
-# Data describing a song
+"""
+Song metadata and optional related album and artist data.
+"""
 input SongData {
-    # Song title
+    """
+    Song title.
+    """
     title: String!
-    # Artists and their roles on a song
+
+    """
+    Artists associated directly with the song and their roles. Omit this field to leave existing associations unchanged.
+    """
     artists: [SongArtistInput!]
-    # Album track information for the song
+
+    """
+    Optional album track data for the song.
+    """
     albumTrack: AlbumTrackInput
 }
 
-# Input specification for an artist on a song.
-# An existing artist ID or data for a new or updated artist must be provided.
-# This is validated prior to execution of the mutation.
+"""
+Identifies or supplies an artist directly associated with a song.
+"""
 input SongArtistInput {
-    # Existing artist ID
+    """
+    Existing artist id.
+    """
     id: Long
-    # Data for a new artist (or update to an existing artist, if ID is provided)
+
+    """
+    Data for a new artist or for updating the referenced artist.
+    """
     data: ArtistData
-    # Artists role on the song
+
+    """
+    Roles this artist has on the song.
+    """
     roles: [SongArtistRole!]!
 }
 
-# Input for an album on which a song rendition is heard
+"""
+Song position on an album and the album to associate with the song.
+"""
 input AlbumTrackInput {
-    # Track number on the album for the song
+    """
+    Track number on the album for this song.
+    """
     trackNumber: Int!
-    # Album information
+
+    """
+    Existing or new album information.
+    """
     album: AlbumInput!
 }
 
-# Album input
-# An existing album ID or data for a new or updated album must be provided.
-# This is validated prior to execution of the mutation.
+"""
+Identifies an album by id or supplies data for a new or updated album. When data is supplied with an id, the existing
+album is updated. When data is supplied without an id, natural matching may reuse an existing album.
+"""
 input AlbumInput {
-    # Existing album ID
+    """
+    Existing album id.
+    """
     id: Long
-    # Data for a new album (or update to an existing album, if ID is provided)
+
+    """
+    Data for a new album or for updating the referenced album.
+    """
     data: AlbumData
 }
 
-# Data describing an album
-# In order to upload album cover-art, the request must be made
-# using the GraphQL multipart request specification:
-# https://github.com/jaydenseric/graphql-multipart-request-spec
+"""
+Album metadata. Cover art uploads must use the GraphQL multipart request specification.
+"""
 input AlbumData {
-    # Album title
+    """
+    Album title.
+    """
     title: String!
-    # Album cover-art file
+
+    """
+    Optional album cover art upload. Supplying a file stores or replaces the album art resource.
+    """
     coverArt: Upload
-    # Album release date
+
+    """
+    Album release date.
+    """
     releaseDate: Date
-    # Primary artist associated with the album
+
+    """
+    Optional primary artist for the album.
+    """
     primaryArtist: ArtistInput
 }
 
-# Artist input
-# An existing artist ID or data for a new or updated artist must be provided.
-# This is validated prior to execution of the mutation.
+"""
+Identifies an artist by id or supplies data for a new or updated artist. When data is supplied with an id, the existing
+artist is updated. When data is supplied without an id, natural matching by name and type may reuse an existing artist.
+"""
 input ArtistInput {
-    # Existing album ID
+    """
+    Existing artist id.
+    """
     id: Long
-    # Data for a new artist (or update to an existing artist, if ID is provided)
+
+    """
+    Data for a new artist or for updating the referenced artist.
+    """
     data: ArtistData
 }
 
-# Data describing an artist
+"""
+Artist metadata.
+"""
 input ArtistData {
-    # The artist name
+    """
+    Artist display name.
+    """
     name: String!
-    # The type of the artist
+
+    """
+    Artist type.
+    """
     type: ArtistType!
 }
 
-# Transcriber input
-# An existing transcriber ID or name for a new or updated transcriber must be provided.
-# This is validated prior to execution of the mutation.
+"""
+Identifies a transcriber by id or supplies a name for a new or updated transcriber. Natural matching by name may reuse an
+existing transcriber.
+"""
 input TranscriberInput {
+    """
+    Existing transcriber id.
+    """
     id: Long
+
+    """
+    Transcriber name.
+    """
     name: String
 }
