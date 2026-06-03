@@ -14,8 +14,9 @@ class PubSearchCriteriaTest {
         final LocalDate dateStart = LocalDate.of(2020, 1, 1);
         final LocalDate dateEnd = LocalDate.of(2024, 1, 1);
 
-        final PubSearchCriteria criteria = new PubSearchCriteria("guide", PubType.BOOK, dateStart, dateEnd, true);
+        final PubSearchCriteria criteria = new PubSearchCriteria(1L, "guide", PubType.BOOK, dateStart, dateEnd, true);
 
+        assertThat(criteria.id()).isEqualTo(1L);
         assertThat(criteria.searchName()).isEqualTo("guide");
         assertThat(criteria.type()).isEqualTo(PubType.BOOK);
         assertThat(criteria.dateStart()).isEqualTo(dateStart);
@@ -25,14 +26,14 @@ class PubSearchCriteriaTest {
 
     @Test
     void supportsRecordEqualityAndStringRepresentation() {
-        final PubSearchCriteria criteria = new PubSearchCriteria("guide", PubType.BOOK, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
-        final PubSearchCriteria sameValues = new PubSearchCriteria("guide", PubType.BOOK, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
-        final PubSearchCriteria differentType = new PubSearchCriteria("guide", PubType.MAG, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
+        final PubSearchCriteria criteria = new PubSearchCriteria(1L, "guide", PubType.BOOK, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
+        final PubSearchCriteria sameValues = new PubSearchCriteria(1L, "guide", PubType.BOOK, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
+        final PubSearchCriteria differentType = new PubSearchCriteria(1L, "guide", PubType.MAG, LocalDate.of(2020, 1, 1), LocalDate.of(2024, 1, 1), true);
 
         assertThat(criteria)
             .isEqualTo(sameValues)
             .hasSameHashCodeAs(sameValues)
             .isNotEqualTo(differentType);
-        assertThat(criteria.toString()).contains("searchName=guide", "hasTranscriptions=true");
+        assertThat(criteria.toString()).contains("id=1", "searchName=guide", "hasTranscriptions=true");
     }
 }
