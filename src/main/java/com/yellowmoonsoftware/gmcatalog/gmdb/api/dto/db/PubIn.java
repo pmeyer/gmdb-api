@@ -8,8 +8,7 @@ public record PubIn(Long id,
                     LocalDate pubDate,
                     Long pubIdxId,
                     PubDetails details) {
-    static public PubIn forNewPub(final Long pubIdxId, final AbstractPubInput<?, ? extends PubDetails> input) {
-        return new PubIn(null, input.pubDate(), pubIdxId, input.info().toDetails());
+    static public PubIn from(final Long pubIdxId, final AbstractPubInput<?, ? extends PubDetails> input) {
+        return new PubIn(input.id(), input.pubDate(), pubIdxId, input.info().toDetails());
     }
 }
-

@@ -9,11 +9,12 @@ import java.util.List;
 
 public class MagazineInput extends AbstractPubInput<MagazineIssueInput, MagDetails> {
     @JsonCreator
-    public MagazineInput(final LocalDate pubDate,
+    public MagazineInput(final Long pubId,
+                         final LocalDate pubDate,
                          final PubIndexInput index,
                          final MagazineIssueInput info,
                          final List<TranscriptionInput> transcriptions) {
-        super(pubDate, index, info, transcriptions);
+        super(pubId, pubDate, index, info, transcriptions);
     }
 
     @Override
@@ -21,4 +22,3 @@ public class MagazineInput extends AbstractPubInput<MagazineIssueInput, MagDetai
         return PubType.MAG;
     }
 }
-

@@ -42,6 +42,11 @@ issue-specific metadata.
 """
 input MagazineInput {
     """
+    Existing publication id to update. Omit to create a new magazine issue.
+    """
+    pubId: Long
+
+    """
     Date associated with this magazine issue. When omitted, the publication is stored without a publication date.
     """
     pubDate: Date
@@ -92,6 +97,11 @@ Input for adding or updating a book edition. The publication index identifies th
 edition-specific metadata.
 """
 input BookInput {
+    """
+    Existing publication id to update. Omit to create a new book edition.
+    """
+    pubId: Long
+
     """
     Date associated with this book edition. When omitted, the publication is stored without a publication date.
     """

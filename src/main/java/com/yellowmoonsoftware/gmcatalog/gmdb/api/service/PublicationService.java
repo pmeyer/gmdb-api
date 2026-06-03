@@ -3,6 +3,7 @@ package com.yellowmoonsoftware.gmcatalog.gmdb.api.service;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.PubType;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.AbstractPubInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InputValidationException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
@@ -32,9 +33,10 @@ public class PublicationService {
 
     @Transactional
     public Mono<PubSearchResult> addPub(final AbstractPubInput<?, ? extends PubDetails> pubInput) {
-        return pubIndexService.upsertPublicationIndex(pubInput.index())
+        return validatePublication(pubInput)
+                .then(Mono.defer(() -> pubIndexService.upsertPublicationIndex(pubInput.index())))
                 .handle(Validation.expectedPubIndexPubType(pubInput.supportedPubType()))
-                .flatMap(pubIdx -> pubMapper.upsertPublication(PubIn.forNewPub(pubIdx.id(), pubInput)))
+                .flatMap(pubIdx -> pubMapper.upsertPublication(PubIn.from(pubIdx.id(), pubInput)))
                 .flatMap(out -> {
                     final Mono<ResourceReference> fileSignal = Mono.justOrEmpty(pubInput.info().cover())
                             .flatMap(blob -> fileService.put(blob, ResourceSlug.COVER_IMAGE, Map.of("id", out.details().resourceId())));
@@ -47,6 +49,14 @@ public class PublicationService {
                 });
     }
 
+    private Mono<PubSearchResult> validatePublication(final AbstractPubInput<?, ? extends PubDetails> pubInput) {
+        return pubInput.id() == null
+                ? Mono.empty()
+                : pubMapper.getPub(pubInput.id())
+                    .switchIfEmpty(Mono.error(new InvalidInputException("Unknown publication ID: " + pubInput.id())))
+                    .handle(Validation.expectedPublicationPubType(pubInput.supportedPubType()));
+    }
+
     static class Validation {
         public static BiConsumer<PubIndexOut, SynchronousSink<PubIndexOut>> expectedPubIndexPubType(final PubType expected) {
             return (pubIdxOut, sink) -> {
@@ -56,6 +66,18 @@ public class PublicationService {
                                     expected, pubIdxOut.type())));
                 } else {
                     sink.next(pubIdxOut);
+                }
+            };
+        }
+
+        public static BiConsumer<PubSearchResult, SynchronousSink<PubSearchResult>> expectedPublicationPubType(final PubType expected) {
+            return (pubOut, sink) -> {
+                if (expected != pubOut.type()) {
+                    sink.error(new InputValidationException(
+                            String.format("Pub type mismatch: input is for pub type %s, but publication specified is for pub type %s.",
+                                    expected, pubOut.type())));
+                } else {
+                    sink.next(pubOut);
                 }
             };
         }

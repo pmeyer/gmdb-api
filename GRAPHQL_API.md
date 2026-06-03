@@ -96,13 +96,15 @@ serial metadata used by concrete magazine issues or book editions.
 
 ### `addMagazineIssue(magInput: MagazineInput!)`
 
-Creates or updates a magazine issue. The nested publication index must resolve to a `MAG` publication index. The mutation
-can also upload a cover image and create initial transcriptions for the issue.
+Creates or updates a magazine issue. Supplying `magInput.pubId` updates the existing publication row; omitting it creates
+a new issue. The nested publication index must resolve to a `MAG` publication index. The mutation can also upload a cover
+image and create initial transcriptions for the issue.
 
 ### `addBookEdition(bookInput: BookInput!)`
 
-Creates or updates a book edition. The nested publication index must resolve to a `BOOK` publication index. The mutation
-can also upload a cover image and create initial transcriptions for the edition.
+Creates or updates a book edition. Supplying `bookInput.pubId` updates the existing publication row; omitting it creates a
+new edition. The nested publication index must resolve to a `BOOK` publication index. The mutation can also upload a cover
+image and create initial transcriptions for the edition.
 
 ### `addPubCoverImage(imgInput: PubCoverImageInput!)`
 

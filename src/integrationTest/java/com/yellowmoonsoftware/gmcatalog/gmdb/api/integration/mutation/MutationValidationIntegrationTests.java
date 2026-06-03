@@ -878,6 +878,63 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
     }
 
     @Test
+    void addMagazineIssueRejectsUnknownPublicationId() {
+        final String serialNumber = "NEG-MAG-UNKNOWN-PUB-ID";
+        final String issueName = "Negative Test Magazine Unknown Publication ID";
+
+        assertValidationError("""
+                mutation {
+                    addMagazineIssue(
+                        magInput: {
+                            pubId: 999999999
+                            pubDate: "2025-01-01"
+                            index: {
+                                data: {
+                                    name: "Negative Test Magazine Unknown Publication ID"
+                                    type: MAG
+                                    serial: "%s"
+                                }
+                            }
+                            info: {
+                                issueName: "%s"
+                            }
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(serialNumber, issueName), "Unknown publication ID: 999999999");
+        assertThat(countPubIndicesBySerialNumber(serialNumber)).isZero();
+        assertThat(countPubsByIssueName(issueName)).isZero();
+    }
+
+    @Test
+    void addMagazineIssueRejectsBookPublicationId() {
+        final long bookPubId = pubIdForTomPettyGreatestHitsFirstPrinting();
+        final long magazineIndexId = pubIndexIdBySerialNumber("10456295");
+        final String issueName = "Negative Test Magazine With Book Publication ID";
+
+        assertValidationError("""
+                mutation {
+                    addMagazineIssue(
+                        magInput: {
+                            pubId: %d
+                            pubDate: "2025-01-01"
+                            index: { id: %d }
+                            info: {
+                                issueName: "%s"
+                            }
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(bookPubId, magazineIndexId, issueName),
+                "Pub type mismatch: input is for pub type MAG, but publication specified is for pub type BOOK.");
+        assertThat(countPubsByIssueName(issueName)).isZero();
+    }
+
+    @Test
     void addMagazineIssueRejectsBookPublicationIndex() {
         final long bookIndexId = pubIndexIdBySerialNumber("0898987660");
 
@@ -964,6 +1021,63 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     }
                 }
                 """.formatted(edition), "Unknown publication index ID: 999999999");
+        assertThat(countPubsByEdition(edition)).isZero();
+    }
+
+    @Test
+    void addBookEditionRejectsUnknownPublicationId() {
+        final String serialNumber = "NEG-BOOK-UNKNOWN-PUB-ID";
+        final String edition = "Negative Test Book Unknown Publication ID";
+
+        assertValidationError("""
+                mutation {
+                    addBookEdition(
+                        bookInput: {
+                            pubId: 999999999
+                            pubDate: "2025-01-01"
+                            index: {
+                                data: {
+                                    name: "Negative Test Book Unknown Publication ID"
+                                    type: BOOK
+                                    serial: "%s"
+                                }
+                            }
+                            info: {
+                                edition: "%s"
+                            }
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(serialNumber, edition), "Unknown publication ID: 999999999");
+        assertThat(countPubIndicesBySerialNumber(serialNumber)).isZero();
+        assertThat(countPubsByEdition(edition)).isZero();
+    }
+
+    @Test
+    void addBookEditionRejectsMagazinePublicationId() {
+        final long magazinePubId = pubIdForGuitarWorldNovember2018();
+        final long bookIndexId = pubIndexIdBySerialNumber("0898987660");
+        final String edition = "Negative Test Book With Magazine Publication ID";
+
+        assertValidationError("""
+                mutation {
+                    addBookEdition(
+                        bookInput: {
+                            pubId: %d
+                            pubDate: "2025-01-01"
+                            index: { id: %d }
+                            info: {
+                                edition: "%s"
+                            }
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(magazinePubId, bookIndexId, edition),
+                "Pub type mismatch: input is for pub type BOOK, but publication specified is for pub type MAG.");
         assertThat(countPubsByEdition(edition)).isZero();
     }
 
@@ -1070,6 +1184,16 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                         and serial_number = '10456295'
                 )
                     and pub_date = '2018-11-01'
+                """);
+    }
+
+    private static long pubIdForTomPettyGreatestHitsFirstPrinting() {
+        return queryForLong(DATABASE, """
+                select p.id
+                from gmdb.pub p
+                    inner join gmdb.pub_idx pi on p.pub_idx_id = pi.id
+                where pi.serial_number = '0898987660'
+                    and p.details->>'edition' = 'First Printing'
                 """);
     }
 

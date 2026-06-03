@@ -112,6 +112,51 @@ class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     @Test
+    void addMagazineIssueWithPubIdUpdatesExistingPublication() {
+        final long pubIndexId = pubIndexIdBySerialNumber("10456295");
+        final var existing = addMagazineIssue("""
+                pubDate: "2025-03-15"
+                index: { id: %d }
+                info: {
+                    volume: "51"
+                    issue: "3"
+                    issueName: "Mutation Test Magazine Issue Before Update"
+                }
+                """.formatted(pubIndexId));
+
+        final var result = addMagazineIssue("""
+                pubId: %d
+                pubDate: "2025-04-15"
+                index: { id: %d }
+                info: {
+                    volume: "52"
+                    issue: "4"
+                    issueName: "Mutation Test Magazine Issue After Update"
+                }
+                """.formatted(existing.id(), pubIndexId));
+
+        assertThat(result.id()).isEqualTo(existing.id());
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.pubDate()).isEqualTo(LocalDate.of(2025, 4, 15));
+        assertThat(result.details()).isEqualTo(new MagDetailsResponse(
+                "52",
+                "4",
+                "Mutation Test Magazine Issue After Update"));
+        assertThat(countMagazineIssues(
+                pubIndexId,
+                LocalDate.of(2025, 3, 15),
+                "51",
+                "3",
+                "Mutation Test Magazine Issue Before Update")).isZero();
+        assertThat(countMagazineIssues(
+                pubIndexId,
+                LocalDate.of(2025, 4, 15),
+                "52",
+                "4",
+                "Mutation Test Magazine Issue After Update")).isOne();
+    }
+
+    @Test
     void addMagazineIssueWithOmittedOptionalFieldsCreatesPublication() {
         final long pubIndexId = pubIndexIdBySerialNumber("10456295");
 
