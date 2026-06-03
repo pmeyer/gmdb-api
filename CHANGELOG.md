@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.2.1...gmdb-api-v1.3.0) (2026-06-03)
+
+
+### Features
+
+* add publication id search criteria ([7500d80](https://github.com/pmeyer/gmdb-api/commit/7500d80f22600593872a3edb69f331ffc418962f))
+
 ## [1.2.1](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.2.0...gmdb-api-v1.2.1) (2026-05-24)
 
 
