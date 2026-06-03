@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.3.0...gmdb-api-v1.4.0) (2026-06-03)
+
+
+### Features
+
+* support publication issue and edition updates ([#58](https://github.com/pmeyer/gmdb-api/issues/58)) ([16f960d](https://github.com/pmeyer/gmdb-api/commit/16f960d281c6250f632252affa91d52d54b1a1a3))
+
 ## [1.3.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.2.1...gmdb-api-v1.3.0) (2026-06-03)
 
 
