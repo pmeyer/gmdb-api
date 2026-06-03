@@ -98,6 +98,40 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
     }
 
     @Test
+    void addBookEditionWithPubIdUpdatesExistingPublication() {
+        final long pubIndexId = pubIndexIdBySerialNumber("0898987660");
+        final var existing = addBookEdition("""
+                pubDate: "2025-05-01"
+                index: { id: %d }
+                info: {
+                    edition: "Mutation Book Edition Before Update"
+                }
+                """.formatted(pubIndexId));
+
+        final var result = addBookEdition("""
+                pubId: %d
+                pubDate: "2025-05-15"
+                index: { id: %d }
+                info: {
+                    edition: "Mutation Book Edition After Update"
+                }
+                """.formatted(existing.id(), pubIndexId));
+
+        assertThat(result.id()).isEqualTo(existing.id());
+        assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
+        assertThat(result.pubDate()).isEqualTo(LocalDate.of(2025, 5, 15));
+        assertThat(result.details()).isEqualTo(new BookDetailsResponse("Mutation Book Edition After Update"));
+        assertThat(countBookEditions(
+                pubIndexId,
+                LocalDate.of(2025, 5, 1),
+                "Mutation Book Edition Before Update")).isZero();
+        assertThat(countBookEditions(
+                pubIndexId,
+                LocalDate.of(2025, 5, 15),
+                "Mutation Book Edition After Update")).isOne();
+    }
+
+    @Test
     void addBookEditionWithOmittedOptionalFieldsCreatesPublication() {
         final long pubIndexId = pubIndexIdBySerialNumber("0898987660");
 

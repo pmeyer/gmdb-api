@@ -19,8 +19,9 @@ class BookInputTest {
         final BookEditionInput info = new BookEditionInput("First", null);
         final List<TranscriptionInput> transcriptions = List.of(new TranscriptionInput(new SongInput(2L, null), 12, null, List.of()));
 
-        final BookInput input = new BookInput(pubDate, index, info, transcriptions);
+        final BookInput input = new BookInput(10L, pubDate, index, info, transcriptions);
 
+        assertThat(input.id()).isEqualTo(10L);
         assertThat(input.pubDate()).isEqualTo(pubDate);
         assertThat(input.index()).isSameAs(index);
         assertThat(input.info()).isSameAs(info);
@@ -31,6 +32,7 @@ class BookInputTest {
     @Test
     void cascadesValidationToIndex() {
         final BookInput input = new BookInput(
+            null,
             LocalDate.of(2024, 1, 15),
             new PubIndexInput(null, null),
             new BookEditionInput("First", null),
@@ -45,6 +47,7 @@ class BookInputTest {
     @Test
     void cascadesValidationToTranscriptions() {
         final BookInput input = new BookInput(
+            null,
             LocalDate.of(2024, 1, 15),
             new PubIndexInput(1L, null),
             new BookEditionInput("First", null),

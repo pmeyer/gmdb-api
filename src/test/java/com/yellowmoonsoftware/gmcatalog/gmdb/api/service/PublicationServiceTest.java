@@ -9,6 +9,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.BookInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubIndexInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriptionInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InputValidationException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.BookDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.PubSearchResult;
@@ -31,6 +32,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -65,7 +67,7 @@ class PublicationServiceTest {
         when(cover.headers()).thenReturn(headers);
         final PubIndexInput index = new PubIndexInput(1L, null);
         final TranscriptionInput transcription = new TranscriptionInput(new SongInput(2L, null), 12, null, List.of());
-        final BookInput input = new BookInput(LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", cover), List.of(transcription));
+        final BookInput input = new BookInput(null, LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", cover), List.of(transcription));
         final PubIndexOut pubIndex = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
         final PubOut pubOut = new PubOut(10L, input.pubDate(), 1L, bookDetails(), null);
         final PubSearchResult result = new PubSearchResult(10L, "Guide", PubType.BOOK, pubOut.details(), input.pubDate(), "ISBN-1", 1L);
@@ -90,9 +92,62 @@ class PublicationServiceTest {
     }
 
     @Test
+    void addPubPassesPublicationIdToUpsertForUpdates() {
+        final PubIndexInput index = new PubIndexInput(1L, null);
+        final BookInput input = new BookInput(10L, LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", null), List.of());
+        final PubIndexOut pubIndex = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
+        final PubOut pubOut = new PubOut(10L, input.pubDate(), 1L, bookDetails(), null);
+        final PubSearchResult result = new PubSearchResult(10L, "Guide", PubType.BOOK, pubOut.details(), input.pubDate(), "ISBN-1", 1L);
+        when(pubIndexService.upsertPublicationIndex(index)).thenReturn(Mono.just(pubIndex));
+        when(pubMapper.upsertPublication(any())).thenReturn(Mono.just(pubOut));
+        when(pubMapper.getPub(10L)).thenReturn(Mono.just(result));
+
+        StepVerifier.create(publicationService.addPub(input))
+            .expectNext(result)
+            .verifyComplete();
+
+        verify(pubMapper).upsertPublication(org.mockito.ArgumentMatchers.argThat(pubIn -> pubIn.id().equals(10L)));
+        verify(pubMapper, times(2)).getPub(10L);
+        verifyNoInteractions(fileService, transcriptionService);
+    }
+
+    @Test
+    void addPubRejectsUnknownPublicationId() {
+        final PubIndexInput index = new PubIndexInput(1L, null);
+        final BookInput input = new BookInput(10L, LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", null), List.of());
+        when(pubMapper.getPub(10L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(publicationService.addPub(input))
+            .expectErrorSatisfies(error -> assertThat(error)
+                .isInstanceOf(InvalidInputException.class)
+                .hasMessage("Unknown publication ID: 10"))
+            .verify();
+
+        verify(pubMapper).getPub(10L);
+        verifyNoInteractions(pubIndexService, fileService, transcriptionService);
+    }
+
+    @Test
+    void addPubRejectsMismatchedExistingPublicationType() {
+        final PubIndexInput index = new PubIndexInput(1L, null);
+        final BookInput input = new BookInput(10L, LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", null), List.of());
+        when(pubMapper.getPub(10L))
+            .thenReturn(Mono.just(new PubSearchResult(10L, "Magazine", PubType.MAG, bookDetails(), input.pubDate(), "ISSN-1", 1L)));
+
+        StepVerifier.create(publicationService.addPub(input))
+            .expectErrorSatisfies(error -> assertThat(error)
+                .isInstanceOf(InputValidationException.class)
+                .hasMessageContaining("Pub type mismatch"))
+            .verify();
+
+        verify(pubMapper).getPub(10L);
+        verifyNoInteractions(pubIndexService, fileService, transcriptionService);
+    }
+
+    @Test
     void addPubRejectsMismatchedPublicationType() {
         final PubIndexInput index = new PubIndexInput(1L, null);
-        final BookInput input = new BookInput(LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", null), List.of());
+        final BookInput input = new BookInput(null, LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", null), List.of());
         when(pubIndexService.upsertPublicationIndex(index))
             .thenReturn(Mono.just(new PubIndexOut(1L, "Magazine", PubType.MAG, "ISSN-1")));
 

@@ -88,7 +88,7 @@ class MutationControllerTest {
 
     @Test
     void addMagazineIssueDelegatesToPublicationService() {
-        final MagazineInput input = new MagazineInput(LocalDate.of(2024, 1, 15), new PubIndexInput(1L, null), new MagazineIssueInput("12", "4", "Winter", null), List.of());
+        final MagazineInput input = new MagazineInput(null, LocalDate.of(2024, 1, 15), new PubIndexInput(1L, null), new MagazineIssueInput("12", "4", "Winter", null), List.of());
         final PubSearchResult output = pubSearchResult();
         when(publicationService.addPub(input)).thenReturn(Mono.just(output));
 
@@ -99,7 +99,7 @@ class MutationControllerTest {
 
     @Test
     void addBookEditionDelegatesToPublicationService() {
-        final BookInput input = new BookInput(LocalDate.of(2024, 1, 15), new PubIndexInput(1L, null), new BookEditionInput("First", null), List.of());
+        final BookInput input = new BookInput(null, LocalDate.of(2024, 1, 15), new PubIndexInput(1L, null), new BookEditionInput("First", null), List.of());
         final PubSearchResult output = pubSearchResult();
         when(publicationService.addPub(input)).thenReturn(Mono.just(output));
 

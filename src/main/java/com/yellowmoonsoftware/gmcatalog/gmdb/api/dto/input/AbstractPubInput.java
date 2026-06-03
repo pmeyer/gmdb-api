@@ -16,6 +16,7 @@ import java.util.List;
 @Getter
 @Accessors(fluent = true)
 public abstract class AbstractPubInput<P extends AbstractPubSpecificInput<D>, D extends PubDetails> {
+    final private Long id;
     final private LocalDate pubDate;
     @NonNull
     @Valid
@@ -27,4 +28,3 @@ public abstract class AbstractPubInput<P extends AbstractPubSpecificInput<D>, D 
 
     public abstract PubType supportedPubType();
 }
-

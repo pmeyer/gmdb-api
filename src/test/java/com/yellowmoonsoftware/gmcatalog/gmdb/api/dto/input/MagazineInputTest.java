@@ -19,8 +19,9 @@ class MagazineInputTest {
         final MagazineIssueInput info = new MagazineIssueInput("12", "4", "Winter", null);
         final List<TranscriptionInput> transcriptions = List.of(new TranscriptionInput(new SongInput(2L, null), 12, null, List.of()));
 
-        final MagazineInput input = new MagazineInput(pubDate, index, info, transcriptions);
+        final MagazineInput input = new MagazineInput(10L, pubDate, index, info, transcriptions);
 
+        assertThat(input.id()).isEqualTo(10L);
         assertThat(input.pubDate()).isEqualTo(pubDate);
         assertThat(input.index()).isSameAs(index);
         assertThat(input.info()).isSameAs(info);
@@ -31,6 +32,7 @@ class MagazineInputTest {
     @Test
     void cascadesValidationToIndex() {
         final MagazineInput input = new MagazineInput(
+            null,
             LocalDate.of(2024, 1, 15),
             new PubIndexInput(null, null),
             new MagazineIssueInput("12", "4", "Winter", null),
@@ -45,6 +47,7 @@ class MagazineInputTest {
     @Test
     void cascadesValidationToTranscriptions() {
         final MagazineInput input = new MagazineInput(
+            null,
             LocalDate.of(2024, 1, 15),
             new PubIndexInput(1L, null),
             new MagazineIssueInput("12", "4", "Winter", null),

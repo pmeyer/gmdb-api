@@ -32,13 +32,13 @@ class PubInTest {
     }
 
     @Test
-    void forNewPubMapsPublicationInput() {
+    void fromMapsPublicationInput() {
         final LocalDate pubDate = LocalDate.of(2024, 1, 15);
-        final BookInput input = new BookInput(pubDate, new PubIndexInput(1L, null), new BookEditionInput("First", null), List.of());
+        final BookInput input = new BookInput(10L, pubDate, new PubIndexInput(1L, null), new BookEditionInput("First", null), List.of());
 
-        final PubIn publication = PubIn.forNewPub(2L, input);
+        final PubIn publication = PubIn.from(2L, input);
 
-        assertThat(publication.id()).isNull();
+        assertThat(publication.id()).isEqualTo(10L);
         assertThat(publication.pubDate()).isEqualTo(pubDate);
         assertThat(publication.pubIdxId()).isEqualTo(2L);
         assertThat(publication.details()).isInstanceOfSatisfying(BookDetails.class,

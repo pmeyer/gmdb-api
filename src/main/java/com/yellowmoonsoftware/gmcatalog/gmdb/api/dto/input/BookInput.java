@@ -9,11 +9,12 @@ import java.util.List;
 
 public class BookInput extends AbstractPubInput<BookEditionInput, BookDetails> {
     @JsonCreator
-    public BookInput(final LocalDate pubDate,
+    public BookInput(final Long pubId,
+                     final LocalDate pubDate,
                      final PubIndexInput index,
                      final BookEditionInput info,
                      final List<TranscriptionInput> transcriptions) {
-        super(pubDate, index, info, transcriptions);
+        super(pubId, pubDate, index, info, transcriptions);
     }
 
     @Override
