@@ -17,7 +17,8 @@ See the [GraphQL API Guide](GRAPHQL_API.md) for operation, input, and response s
 
 This repository contains source code, database schema/migration logic, documentation, and development tooling for a
 personal cataloging application. It **does not include** copyrighted guitar tablature, transcription scans, magazine or book
-scans, album artwork, audio files, or other third-party media.
+scans, album artwork, audio files, or other third-party media. Resource files committed under integration tests are
+synthetic fixtures.
 
 The application is designed to manage metadata and privately supplied resource files for a user's own catalog. Any
 copyrighted materials referenced by metadata in the application remain the property of their respective copyright
