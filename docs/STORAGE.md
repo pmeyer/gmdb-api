@@ -1,5 +1,9 @@
 # Metadata and Resource Storage
 
+> Note: This document describes application storage _behavior_ only. This repository **does not include** copyrighted resource
+> files such as transcription scans, magazine/book scans, album artwork, or audio files. Any files added to a running 
+> instance are the responsibility of that instance’s user/operator.
+
 Aside from song transcription and publication metadata, the following files are stored:
 
 - an image of the magazine or book cover
