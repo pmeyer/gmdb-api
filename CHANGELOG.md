@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.1](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.4.0...gmdb-api-v1.4.1) (2026-06-10)
+
+
+### Bug Fixes
+
+* update platform dependencies ([13bff92](https://github.com/pmeyer/gmdb-api/commit/13bff92fa938d3f23bfa8dea75380f1ce9020b6f))
+
+
+### Documentation
+
+* add copyright disclaimer and broader project summary ([0af4fa5](https://github.com/pmeyer/gmdb-api/commit/0af4fa57cf94b544d2e6c07b9335c41d53f47adc))
+* update repository guidance ([54f7ba3](https://github.com/pmeyer/gmdb-api/commit/54f7ba38a1e9cf23724296fc8c060e4799d9bae4))
+
 ## [1.4.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.3.0...gmdb-api-v1.4.0) (2026-06-03)
 
 
