@@ -11,7 +11,7 @@
 The backend exposes a GraphQL API for searching the catalog and mutating publication, song, album, transcription, artist,
 transcriber, and resource metadata. It supports file uploads through the GraphQL multipart request specification.
 
-See the [GraphQL API Guide](GRAPHQL_API.md) for operation, input, and response semantics.
+See the [GraphQL API Guide](docs/GRAPHQL_API.md) for operation, input, and response semantics.
 
 ## Copyright and Third-Party Materials
 
@@ -30,8 +30,8 @@ rights to any third-party music, publications, artwork, transcriptions, tablatur
 
 ## Documentation
 
-- [GraphQL API Guide](GRAPHQL_API.md): query criteria, mutation upsert semantics, uploads, dates, ordering, and errors.
+- [GraphQL API Guide](docs/GRAPHQL_API.md): query criteria, mutation upsert semantics, uploads, dates, ordering, and errors.
 - [Data Model](docs/DATA_MODEL.md): relational entities and their catalog relationships.
 - [Metadata and Resource Storage](docs/STORAGE.md): resource IDs, file storage, and transactional consistency model.
-- [Development](docs/DEVELOPMENT.md): technology stack, Maven package credentials, and test execution.
+- [Development](docs/DEVELOPMENT.md): technology stack, repository guidelines, Maven package credentials, and test execution.
 - [Container Image](docs/CONTAINER.md): published image, Docker Compose usage, and runtime configuration.

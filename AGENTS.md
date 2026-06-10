@@ -26,7 +26,9 @@
 - Do not attempt to mock static methods or final classes, or other constructs where generally accepted mocking practices are not possible.
 
 ## Commit & Pull Request Guidelines
-- Use [convention commits](https://www.conventionalcommits.org/en/v1.0.0/#:~:text=The%20Conventional%20Commits%20specification%20is,automated%20tools%20on%20top%20of). 
+- Use [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#:~:text=The%20Conventional%20Commits%20specification%20is,automated%20tools%20on%20top%20of) for every commit, including normal commits, squash-merge commits, and merge commits.
+- Before merging a PR, verify that the final merge or squash commit subject is conventional (for example, `chore: prepare repository for public visibility`).
+- Prefer squash merges for large PRs so the main branch keeps a concise, reviewable history.
 - Group related edits together instead of squashing unrelated fixes.
 - PRs should describe context, list notable changes, and call out schema updates or required migrations. Link Jira/GitHub issues when available.
 
