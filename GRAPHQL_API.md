@@ -4,6 +4,8 @@ The GMDB API exposes a GraphQL endpoint for searching the catalog and for mutati
 transcription, artist, transcriber, and resource metadata. The endpoint is served at `/graphql`; GraphiQL is enabled by
 the application configuration for local exploration.
 
+The application does not provide authentication or authorization for GraphQL queries or mutations.
+
 ## General Semantics
 
 The API models a catalog of publications, songs, albums, artists, transcribers, and transcription files.
