@@ -65,6 +65,7 @@ Searches publication instances, including magazine issues and book editions.
 Criteria semantics:
 
 - `id` filters by publication id.
+- `pubIndexId` filters by publication index id, returning all issues or editions for that title.
 - `searchName` matches publication index name, magazine issue name, or book edition case-insensitively.
 - `type` filters by publication type.
 - `dateStart` and `dateEnd` apply inclusive publication date bounds.

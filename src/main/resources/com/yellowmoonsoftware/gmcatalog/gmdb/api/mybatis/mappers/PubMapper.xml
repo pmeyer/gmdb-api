@@ -114,6 +114,9 @@
             <if test="criteria.id != null">
                 and p.id = #{criteria.id}
             </if>
+            <if test="criteria.pubIndexId != null">
+                and pi.id = #{criteria.pubIndexId}
+            </if>
             <if test="criteria.hasTranscriptions">
                 and exists(select * from transcription t where t.pub_id = p.id)
             </if>

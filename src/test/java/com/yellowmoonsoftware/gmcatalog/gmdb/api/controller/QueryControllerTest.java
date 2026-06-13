@@ -82,7 +82,7 @@ class QueryControllerTest {
 
     @Test
     void pubSearchDelegatesToMapper() {
-        final PubSearchCriteria criteria = new PubSearchCriteria(1L, "guide", PubType.BOOK, null, null, null);
+        final PubSearchCriteria criteria = new PubSearchCriteria(1L, 2L, "guide", PubType.BOOK, null, null, true);
         final PubSearchResult result = new PubSearchResult(1L, "Guide", PubType.BOOK, new com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.BookDetails("First"), null, "ISBN-1", 2L);
         when(pubMapper.pubSearch(criteria)).thenReturn(Flux.just(result));
 

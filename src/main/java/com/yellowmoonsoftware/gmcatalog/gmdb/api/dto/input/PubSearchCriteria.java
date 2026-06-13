@@ -6,6 +6,7 @@ import java.time.LocalDate;
 
 public record PubSearchCriteria(
         Long id,
+        Long pubIndexId,
         String searchName,
         PubType type,
         LocalDate dateStart,
