@@ -442,6 +442,10 @@ input PubSearchCriteria {
     """
     id: Long
     """
+    Publication index id to match, returning all publications for that title.
+    """
+    pubIndexId: Long
+    """
     Case-insensitive pattern match against publication index name, magazine issue name, or book edition.
     """
     searchName: String
