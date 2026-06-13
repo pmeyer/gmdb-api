@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.4.1...gmdb-api-v1.5.0) (2026-06-13)
+
+
+### Features
+
+* filter publications by index ([fe6a625](https://github.com/pmeyer/gmdb-api/commit/fe6a62573bb3736768af5db8bcb3bfdd7a1fa6da))
+
 ## [1.4.1](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.4.0...gmdb-api-v1.4.1) (2026-06-10)
 
 
