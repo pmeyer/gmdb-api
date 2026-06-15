@@ -365,6 +365,39 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
     }
 
     @Test
+    void addBookEditionRejectsMissingRequiredInfo() {
+        assertRequestError("""
+                mutation {
+                    addBookEdition(
+                        bookInput: {
+                            pubDate: "2025-01-01"
+                            index: { id: 1 }
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
+    void addBookEditionRejectsInfoMissingRequiredEdition() {
+        assertRequestError("""
+                mutation {
+                    addBookEdition(
+                        bookInput: {
+                            pubDate: "2025-01-01"
+                            index: { id: 1 }
+                            info: { }
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """, "Validation error");
+    }
+
+    @Test
     void addPubCoverImageRejectsNullRequiredInput() {
         assertRequestError("""
                 mutation {

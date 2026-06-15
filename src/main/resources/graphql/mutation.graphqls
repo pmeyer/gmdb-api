@@ -115,7 +115,7 @@ input BookInput {
     """
     Book edition-specific metadata.
     """
-    info: BookEditionInput! = { }
+    info: BookEditionInput!
 
     """
     Optional transcriptions appearing in the book edition.
@@ -130,7 +130,7 @@ input BookEditionInput {
     """
     Edition name or number.
     """
-    edition: String
+    edition: String!
 
     """
     Optional book cover image upload. Supplying a file stores or replaces the publication cover resource.

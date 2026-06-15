@@ -45,6 +45,33 @@ class BookInputTest {
     }
 
     @Test
+    void validatesRequiredFields() {
+        final BookInput input = new BookInput(null, LocalDate.of(2024, 1, 15), null, null, List.of());
+
+        assertThat(ValidationTestSupport.validate(input))
+            .extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
+            .containsExactlyInAnyOrder(
+                tuple("index", "must not be null"),
+                tuple("info", "must not be null")
+            );
+    }
+
+    @Test
+    void cascadesValidationToInfo() {
+        final BookInput input = new BookInput(
+            null,
+            LocalDate.of(2024, 1, 15),
+            new PubIndexInput(1L, null),
+            new BookEditionInput(null, null),
+            List.of()
+        );
+
+        assertThat(ValidationTestSupport.validate(input))
+            .extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
+            .containsExactly(tuple("info.edition", "must not be null"));
+    }
+
+    @Test
     void cascadesValidationToTranscriptions() {
         final BookInput input = new BookInput(
             null,

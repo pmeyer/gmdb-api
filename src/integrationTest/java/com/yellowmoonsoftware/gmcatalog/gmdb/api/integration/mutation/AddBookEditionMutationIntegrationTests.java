@@ -138,6 +138,9 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
         final var result = addBookEdition("""
                 pubDate: "2025-07-01"
                 index: { id: %d }
+                info: {
+                    edition: "Mutation Book Edition Without Transcriptions"
+                }
                 """.formatted(pubIndexId));
 
         assertThat(result.id()).isPositive();
@@ -146,8 +149,11 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
         assertThat(result.pubDate()).isEqualTo(LocalDate.of(2025, 7, 1));
         assertThat(result.serialNumber()).isEqualTo("0898987660");
         assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
-        assertThat(result.details()).isEqualTo(new BookDetailsResponse(null));
-        assertThat(countBookEditionsWithNullEdition(pubIndexId, LocalDate.of(2025, 7, 1))).isOne();
+        assertThat(result.details()).isEqualTo(new BookDetailsResponse("Mutation Book Edition Without Transcriptions"));
+        assertThat(countBookEditions(
+                pubIndexId,
+                LocalDate.of(2025, 7, 1),
+                "Mutation Book Edition Without Transcriptions")).isOne();
     }
 
     @Test
@@ -156,6 +162,9 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
 
         final var result = addBookEdition("""
                 index: { id: %d }
+                info: {
+                    edition: "Mutation Book Edition Without Publication Date"
+                }
                 """.formatted(pubIndexId));
 
         assertThat(result.id()).isPositive();
@@ -164,8 +173,10 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
         assertThat(result.pubDate()).isNull();
         assertThat(result.serialNumber()).isEqualTo("0898987660");
         assertThat(result.pubIndexId()).isEqualTo(pubIndexId);
-        assertThat(result.details()).isEqualTo(new BookDetailsResponse(null));
-        assertThat(countBookEditionsWithNullPublicationDateAndNullEdition(pubIndexId)).isOne();
+        assertThat(result.details()).isEqualTo(new BookDetailsResponse("Mutation Book Edition Without Publication Date"));
+        assertThat(countBookEditionsWithNullPublicationDate(
+                pubIndexId,
+                "Mutation Book Edition Without Publication Date")).isOne();
     }
 
     @Test
@@ -407,27 +418,14 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
                 """.formatted(pubIndexId, pubDate, edition));
     }
 
-    private static int countBookEditionsWithNullEdition(
-            final long pubIndexId,
-            final LocalDate pubDate) {
-
-        return queryForInt(DATABASE, """
-                select count(*)
-                from gmdb.pub
-                where pub_idx_id = %d
-                    and pub_date = '%s'::date
-                    and details->>'edition' is null
-                """.formatted(pubIndexId, pubDate));
-    }
-
-    private static int countBookEditionsWithNullPublicationDateAndNullEdition(final long pubIndexId) {
+    private static int countBookEditionsWithNullPublicationDate(final long pubIndexId, final String edition) {
         return queryForInt(DATABASE, """
                 select count(*)
                 from gmdb.pub
                 where pub_idx_id = %d
                     and pub_date is null
-                    and details->>'edition' is null
-                """.formatted(pubIndexId));
+                    and details->>'edition' = '%s'
+                """.formatted(pubIndexId, edition));
     }
 
     private static int countBookCoverImageResourcesWithUploadMetadata(final long pubId) {

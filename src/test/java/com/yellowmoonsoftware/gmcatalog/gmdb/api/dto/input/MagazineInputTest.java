@@ -45,6 +45,33 @@ class MagazineInputTest {
     }
 
     @Test
+    void validatesRequiredFields() {
+        final MagazineInput input = new MagazineInput(null, LocalDate.of(2024, 1, 15), null, null, List.of());
+
+        assertThat(ValidationTestSupport.validate(input))
+            .extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
+            .containsExactlyInAnyOrder(
+                tuple("index", "must not be null"),
+                tuple("info", "must not be null")
+            );
+    }
+
+    @Test
+    void cascadesValidationToInfo() {
+        final MagazineInput input = new MagazineInput(
+            null,
+            LocalDate.of(2024, 1, 15),
+            new PubIndexInput(1L, null),
+            new MagazineIssueInput("12", "4", null, null),
+            List.of()
+        );
+
+        assertThat(ValidationTestSupport.validate(input))
+            .extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
+            .containsExactly(tuple("info.issueName", "must not be null"));
+    }
+
+    @Test
     void cascadesValidationToTranscriptions() {
         final MagazineInput input = new MagazineInput(
             null,
