@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.5.0...gmdb-api-v1.6.0) (2026-06-15)
+
+
+### Features
+
+* require book edition info ([53d55ce](https://github.com/pmeyer/gmdb-api/commit/53d55ce4bb85641d05347371a1fa93b011bfad52))
+
 ## [1.5.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.4.1...gmdb-api-v1.5.0) (2026-06-13)
 
 
