@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.6.0...gmdb-api-v1.7.0) (2026-06-18)
+
+
+### Features
+
+* require publication detail fields ([02bedd0](https://github.com/pmeyer/gmdb-api/commit/02bedd07012cb2560986bfb57d730be4b9758e5d))
+
 ## [1.6.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.5.0...gmdb-api-v1.6.0) (2026-06-15)
 
 
