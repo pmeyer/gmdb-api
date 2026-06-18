@@ -497,7 +497,7 @@ type MagDetails implements PubDetails {
     """
     Magazine issue display name.
     """
-    issueName: String
+    issueName: String!
 }
 
 """
@@ -511,7 +511,7 @@ type BookDetails implements PubDetails {
     """
     Book edition name or number.
     """
-    edition: String
+    edition: String!
 }
 
 """

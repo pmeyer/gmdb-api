@@ -8,7 +8,7 @@ import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class MutationSchemaTest {
+class GraphQlSchemaTest {
 
     @Test
     void bookEditionInputRequiresInfoAndEditionWithoutInfoDefault() throws IOException {
@@ -18,5 +18,14 @@ class MutationSchemaTest {
             .contains("info: BookEditionInput!\n")
             .contains("edition: String!\n")
             .doesNotContain("info: BookEditionInput! = { }");
+    }
+
+    @Test
+    void publicationDetailsRequireIssueNameAndEdition() throws IOException {
+        final String schema = Files.readString(Path.of("src/main/resources/graphql/query.graphqls"));
+
+        assertThat(schema)
+            .contains("issueName: String!\n")
+            .contains("edition: String!\n");
     }
 }
