@@ -2,6 +2,9 @@ spring:
   application:
     name: gmdb
   r2dbc:
+    url: ${GMDB_URL}
+    username: gmdb_app_user
+    password: ${GMDB_APP_USER_PASSWORD}
     pool:
       max-acquire-time: 30000
       max-size: 10

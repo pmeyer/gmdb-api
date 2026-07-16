@@ -1,4 +1,5 @@
 spring:
   r2dbc:
+    url: r2dbc:postgresql://localhost:1970/gmdb
     mybatis:
       r2dbc-url: r2dbc:postgresql://localhost:1970/gmdb

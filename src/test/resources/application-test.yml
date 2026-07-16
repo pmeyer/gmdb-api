@@ -1,5 +1,8 @@
 spring:
   r2dbc:
+    url: r2dbc:postgresql://localhost:1970/gmdb
+    username: gmdb_app_user
+    password: test_password
     mybatis:
       r2dbc-url: r2dbc:postgresql://localhost:1970/gmdb
 
