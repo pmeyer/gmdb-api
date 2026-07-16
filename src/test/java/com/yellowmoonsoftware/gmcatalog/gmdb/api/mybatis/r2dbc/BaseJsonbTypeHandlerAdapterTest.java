@@ -60,7 +60,7 @@ class BaseJsonbTypeHandlerAdapterTest {
         assertThatThrownBy(() -> adapter.setParameter(statement, context, new SelfReferencingPayload()))
             .isInstanceOf(PGDataConversionException.class)
             .hasMessage("Unable to convert object to JSON representation.")
-            .hasCauseInstanceOf(com.fasterxml.jackson.core.JsonProcessingException.class);
+            .hasCauseInstanceOf(tools.jackson.core.JacksonException.class);
     }
 
     @Test

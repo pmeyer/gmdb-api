@@ -1,8 +1,5 @@
 package com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.r2dbc;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.PGDataConversionException;
 import io.r2dbc.postgresql.codec.Json;
 import io.r2dbc.spi.Readable;
@@ -11,17 +8,13 @@ import io.r2dbc.spi.Statement;
 import lombok.extern.slf4j.Slf4j;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.parameter.ParameterHandlerContext;
 import pro.chenggang.project.reactive.mybatis.support.r2dbc.executor.type.R2dbcTypeHandlerAdapter;
-
-import java.io.IOException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 @Slf4j
 public class BaseJsonbTypeHandlerAdapter<T> implements R2dbcTypeHandlerAdapter<T> {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
-
-    static {
-        objectMapper.findAndRegisterModules();
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-    }
+    private static final ObjectMapper objectMapper = JsonMapper.builder().findAndAddModules().build();
 
     private final Class<T> type;
 
@@ -40,7 +33,7 @@ public class BaseJsonbTypeHandlerAdapter<T> implements R2dbcTypeHandlerAdapter<T
             log.debug("[{}] Binding parameter {} => JSONB", this.getClass().getSimpleName() ,parameter.getClass().getSimpleName());
             final String jsonString = objectMapper.writeValueAsString(parameter);
             statement.bind(parameterHandlerContext.getIndex(), Json.of(jsonString));
-        } catch (JsonProcessingException e) {
+        } catch (JacksonException e) {
             throw new PGDataConversionException("Unable to convert object to JSON representation.", e);
         }
     }
@@ -65,7 +58,7 @@ public class BaseJsonbTypeHandlerAdapter<T> implements R2dbcTypeHandlerAdapter<T
         return value.mapInputStream(i -> {
             try {
                 return objectMapper.readValue(i, type);
-            } catch (IOException e) {
+            } catch (JacksonException e) {
                 throw new PGDataConversionException("Unable to deserialize object from JSON string", e);
             }
         });

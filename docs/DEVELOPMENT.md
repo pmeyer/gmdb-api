@@ -2,8 +2,8 @@
 
 ## Technology Stack
 
-- Java 23
-- Spring Boot 3.5.x
+- Java 25
+- Spring Boot 4.1.x
 - Spring WebFlux
 - Spring GraphQL
 - MyBatis through `mybatis-r2dbc`
@@ -18,7 +18,7 @@ Primary source lives in `src/main/java/com/yellowmoonsoftware/gmcatalog/gmdb/api
 persistence and file IO. GraphQL schemas live in `src/main/resources/graphql/*.graphqls` and should be updated alongside
 Java resolvers. Tests belong in `src/test/java`, mirroring the main package structure when adding fixtures.
 
-Use Java 23, four-space indentation, and IDE-default import ordering. Prefer immutable `record` types for DTOs, keep
+Use Java 25, four-space indentation, and IDE-default import ordering. Prefer immutable `record` types for DTOs, keep
 Lombok annotations such as `@RequiredArgsConstructor` instead of adding manual boilerplate, and use Java streams for
 collection processing where practical. Controllers should return Reactor `Mono`/`Flux`; avoid blocking calls and use
 `ReactiveUtils.async(...)` when bridging blocking mapper work.

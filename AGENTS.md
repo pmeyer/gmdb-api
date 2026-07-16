@@ -8,7 +8,7 @@
 - Tests belong in `src/test/java`; mirror the main package structure when adding fixtures.
 
 ## Coding Style & Naming Conventions
-- Use Java 23, four-space indentation, and keep imports ordered via IDE defaults. Prefer immutable `record` types for DTOs, matching existing code.
+- Use Java 25, four-space indentation, and keep imports ordered via IDE defaults. Prefer immutable `record` types for DTOs, matching existing code.
 - Controllers return Reactor `Mono`/`Flux`; avoid blocking calls and lean on `ReactiveUtils.async(...)` when bridging blocking mappers.
 - Lombok annotations (`@RequiredArgsConstructor`, builder support) are standard—retain them instead of manual boilerplate.
 - GraphQL schema fields should map to camelCase resolver methods (e.g., `@SchemaMapping(field = "details")` → `details`).

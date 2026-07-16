@@ -103,6 +103,9 @@ public abstract class GmdbDatabaseIntegrationTestSupport {
             final DynamicPropertyRegistry registry,
             final GmdbIntegrationDatabase database,
             final Path fileRoot) {
+        registry.add("spring.r2dbc.url", database::r2dbcUrl);
+        registry.add("spring.r2dbc.username", () -> APP_USER);
+        registry.add("spring.r2dbc.password", () -> APP_USER_PASSWORD);
         registry.add("spring.r2dbc.mybatis.r2dbc-url", database::r2dbcUrl);
         registry.add("spring.r2dbc.mybatis.username", () -> APP_USER);
         registry.add("spring.r2dbc.mybatis.password", () -> APP_USER_PASSWORD);

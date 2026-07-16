@@ -14,7 +14,7 @@ import java.util.Map;
 
 final class GmdbLiquibaseMigrator {
 
-    static final String LIQUIBASE_VERSION = "1.3.2";
+    static final String LIQUIBASE_VERSION = "2.0.0";
 
     private static final String BOOTSTRAP_CHANGELOG = "db/changelog/bootstrap-changelog.xml";
     private static final String MIGRATE_CHANGELOG = "db/changelog/db-changelog.xml";
