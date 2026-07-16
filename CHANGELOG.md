@@ -1,5 +1,16 @@
 # Changelog
 
+## [2.0.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.7.0...gmdb-api-v2.0.0) (2026-07-16)
+
+
+### ⚠ BREAKING CHANGES
+
+* upgrade to Spring Boot 4.1 and Java 25
+
+### Features
+
+* upgrade to Spring Boot 4.1 and Java 25 ([20c553f](https://github.com/pmeyer/gmdb-api/commit/20c553f1f830b544580438214da946bfe3abc891))
+
 ## [1.7.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.6.0...gmdb-api-v1.7.0) (2026-06-18)
 
 
