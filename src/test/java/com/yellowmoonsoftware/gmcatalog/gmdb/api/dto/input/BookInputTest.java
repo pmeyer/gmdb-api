@@ -17,7 +17,8 @@ class BookInputTest {
         final LocalDate pubDate = LocalDate.of(2024, 1, 15);
         final PubIndexInput index = new PubIndexInput(1L, null);
         final BookEditionInput info = new BookEditionInput("First", null);
-        final List<TranscriptionInput> transcriptions = List.of(new TranscriptionInput(new SongInput(2L, null), 12, null, List.of()));
+        final List<TranscriptionInput> transcriptions = List.of(new TranscriptionInput(null,
+                new TranscriptionData(new SongInput(2L, null), 12, null, List.of())));
 
         final BookInput input = new BookInput(10L, pubDate, index, info, transcriptions);
 
@@ -78,11 +79,12 @@ class BookInputTest {
             LocalDate.of(2024, 1, 15),
             new PubIndexInput(1L, null),
             new BookEditionInput("First", null),
-            List.of(new TranscriptionInput(new SongInput(null, null), 12, null, List.of()))
+            List.of(new TranscriptionInput(null,
+                    new TranscriptionData(new SongInput(null, null), 12, null, List.of())))
         );
 
         assertThat(ValidationTestSupport.validate(input))
             .extracting(violation -> violation.getPropertyPath().toString(), ConstraintViolation::getMessage)
-            .containsExactly(tuple("transcriptions[0].song", "SongInput must have an ID or data"));
+            .containsExactly(tuple("transcriptions[0].data.song", "SongInput must have an ID or data"));
     }
 }

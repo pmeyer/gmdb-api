@@ -5,6 +5,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionDetails;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.TranscriptionInOut;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriberInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriptionData;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriptionInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.mybatis.mappers.PubMapper;
@@ -64,7 +65,8 @@ class TranscriptionServiceTest {
         when(file.headers()).thenReturn(headers);
         final SongInput songInput = new SongInput(1L, null);
         final List<TranscriberInput> transcribers = List.of(new TranscriberInput(2L, null));
-        final TranscriptionInput input = new TranscriptionInput(songInput, 12, file, transcribers);
+        final TranscriptionInput input = new TranscriptionInput(null,
+                new TranscriptionData(songInput, 12, file, transcribers));
         final TranscriptionInOut output = transcriptionOut();
         when(pubMapper.getPubId(20L)).thenReturn(Mono.just(20L));
         when(songService.upsertSong(songInput)).thenReturn(Mono.just(new SongOut(10L, "Opener", null, null, null)));
@@ -82,6 +84,7 @@ class TranscriptionServiceTest {
         verify(songService).upsertSong(songInput);
         verify(transcriptionMapper).upsertTranscription(captor.capture());
         assertThat(captor.getValue().songId()).isEqualTo(10L);
+        assertThat(captor.getValue().id()).isNull();
         assertThat(captor.getValue().pubId()).isEqualTo(20L);
         assertThat(captor.getValue().details().pageNumber()).isEqualTo(12);
         verify(fileService).put(file, ResourceSlug.TRANSCRIPTION, Map.of("id", output.details().resourceId()));
@@ -92,7 +95,8 @@ class TranscriptionServiceTest {
     @Test
     void upsertTranscriptionAllowsMissingFile() {
         final SongInput songInput = new SongInput(1L, null);
-        final TranscriptionInput input = new TranscriptionInput(songInput, 12, null, List.of());
+        final TranscriptionInput input = new TranscriptionInput(null,
+                new TranscriptionData(songInput, 12, null, List.of()));
         final TranscriptionInOut output = transcriptionOut();
         when(pubMapper.getPubId(20L)).thenReturn(Mono.just(20L));
         when(songService.upsertSong(songInput)).thenReturn(Mono.just(new SongOut(10L, "Opener", null, null, null)));
@@ -114,7 +118,8 @@ class TranscriptionServiceTest {
     @Test
     void upsertTranscriptionRejectsUnknownPublicationIdBeforeUpsertingSong() {
         final SongInput songInput = new SongInput(1L, null);
-        final TranscriptionInput input = new TranscriptionInput(songInput, 12, null, List.of());
+        final TranscriptionInput input = new TranscriptionInput(null,
+                new TranscriptionData(songInput, 12, null, List.of()));
         when(pubMapper.getPubId(20L)).thenReturn(Mono.empty());
 
         StepVerifier.create(transcriptionService.upsertTranscription(20L, input))
@@ -127,6 +132,80 @@ class TranscriptionServiceTest {
         verify(pubMapper).getPubId(20L);
         verifyNoMoreInteractions(pubMapper);
         verifyNoInteractions(songService, transcriptionMapper, fileService, transcriptionTranscriberService);
+    }
+
+    @Test
+    void upsertTranscriptionIncludesExistingTranscriptionInPublication() {
+        final TranscriptionInput input = new TranscriptionInput(1L, null);
+        final TranscriptionInOut existing = new TranscriptionInOut(
+                1L, 10L, 30L, new TranscriptionDetails(12), null);
+        final TranscriptionInOut output = transcriptionOut();
+        when(pubMapper.getPubId(20L)).thenReturn(Mono.just(20L));
+        when(transcriptionMapper.getTranscriptionId(1L)).thenReturn(Mono.just(1L));
+        when(transcriptionMapper.getTranscriptionById(1L)).thenReturn(Mono.just(existing));
+        when(transcriptionMapper.upsertTranscription(any(TranscriptionInOut.class))).thenReturn(Mono.just(output));
+
+        StepVerifier.create(transcriptionService.upsertTranscription(20L, input))
+                .expectNext(output)
+                .verifyComplete();
+
+        final ArgumentCaptor<TranscriptionInOut> captor = ArgumentCaptor.forClass(TranscriptionInOut.class);
+        verify(pubMapper).getPubId(20L);
+        verify(transcriptionMapper).getTranscriptionId(1L);
+        verify(transcriptionMapper).getTranscriptionById(1L);
+        verify(transcriptionMapper).upsertTranscription(captor.capture());
+        assertThat(captor.getValue().id()).isEqualTo(1L);
+        assertThat(captor.getValue().songId()).isEqualTo(10L);
+        assertThat(captor.getValue().pubId()).isEqualTo(20L);
+        assertThat(captor.getValue().details()).isSameAs(existing.details());
+        verifyNoInteractions(songService, fileService, transcriptionTranscriberService);
+        verifyNoMoreInteractions(pubMapper, transcriptionMapper);
+    }
+
+    @Test
+    void upsertTranscriptionUpdatesExistingTranscriptionWhenDataIsPresent() {
+        final SongInput songInput = new SongInput(2L, null);
+        final List<TranscriberInput> transcribers = List.of(new TranscriberInput(3L, null));
+        final TranscriptionInput input = new TranscriptionInput(1L,
+                new TranscriptionData(songInput, 18, null, transcribers));
+        final TranscriptionInOut output = new TranscriptionInOut(
+                1L, 11L, 20L, new TranscriptionDetails(18), null);
+        when(pubMapper.getPubId(20L)).thenReturn(Mono.just(20L));
+        when(transcriptionMapper.getTranscriptionId(1L)).thenReturn(Mono.just(1L));
+        when(songService.upsertSong(songInput)).thenReturn(Mono.just(new SongOut(11L, "Closer", null, null, null)));
+        when(transcriptionMapper.upsertTranscription(any(TranscriptionInOut.class))).thenReturn(Mono.just(output));
+        when(transcriptionTranscriberService.addTranscriptionTranscribers(1L, transcribers)).thenReturn(Mono.empty());
+
+        StepVerifier.create(transcriptionService.upsertTranscription(20L, input))
+                .expectNext(output)
+                .verifyComplete();
+
+        final ArgumentCaptor<TranscriptionInOut> captor = ArgumentCaptor.forClass(TranscriptionInOut.class);
+        verify(transcriptionMapper).upsertTranscription(captor.capture());
+        assertThat(captor.getValue().id()).isEqualTo(1L);
+        assertThat(captor.getValue().songId()).isEqualTo(11L);
+        assertThat(captor.getValue().pubId()).isEqualTo(20L);
+        assertThat(captor.getValue().details().pageNumber()).isEqualTo(18);
+        verify(transcriptionTranscriberService).addTranscriptionTranscribers(1L, transcribers);
+        verifyNoInteractions(fileService);
+    }
+
+    @Test
+    void upsertTranscriptionRejectsUnknownTranscriptionId() {
+        final TranscriptionInput input = new TranscriptionInput(99L, null);
+        when(pubMapper.getPubId(20L)).thenReturn(Mono.just(20L));
+        when(transcriptionMapper.getTranscriptionId(99L)).thenReturn(Mono.empty());
+
+        StepVerifier.create(transcriptionService.upsertTranscription(20L, input))
+                .expectErrorSatisfies(error -> assertThat(error)
+                        .isInstanceOf(InvalidInputException.class)
+                        .hasMessage("Unknown transcription ID: 99"))
+                .verify();
+
+        verify(pubMapper).getPubId(20L);
+        verify(transcriptionMapper).getTranscriptionId(99L);
+        verifyNoMoreInteractions(pubMapper, transcriptionMapper);
+        verifyNoInteractions(songService, fileService, transcriptionTranscriberService);
     }
 
     private static TranscriptionInOut transcriptionOut() {

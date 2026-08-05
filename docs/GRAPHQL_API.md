@@ -116,8 +116,13 @@ its details object.
 
 ### `addTranscription(pubId: Long!, transcriptionInput: TranscriptionInput!)`
 
-Creates or updates a transcription for an existing publication. The `pubId` must refer to an existing publication. The
-transcription is resolved by publication and song.
+Includes a transcription in an existing publication. The `pubId` must refer to an existing publication.
+`transcriptionInput` follows the API's ID-and-data pattern:
+
+- Supplying `id` alone references an existing transcription and includes it in the publication.
+- Supplying `id` and `data` updates the existing transcription while including it in the publication.
+- Supplying `data` without `id` creates a transcription and includes it in the publication.
+- At least one of `id` or `data` is required.
 
 Nested input can create, update, or reuse:
 
@@ -139,7 +144,7 @@ The API supports file uploads through the GraphQL multipart request specificatio
 - `BookEditionInput.cover`
 - `PubCoverImageInput.cover`
 - `AlbumData.coverArt`
-- `TranscriptionInput.file`
+- `TranscriptionData.file`
 
 Supplying an upload stores or replaces the corresponding resource and returns a relative URL in the appropriate response
 field:

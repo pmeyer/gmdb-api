@@ -51,9 +51,11 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: { id: %d }
-                    pageNumber: 44
-                    transcribers: [{ id: %d }]
+                    data: {
+                        song: { id: %d }
+                        pageNumber: 44
+                        transcribers: [{ id: %d }]
+                    }
                 }
                 """.formatted(pubId, songId, transcriberId));
 
@@ -74,9 +76,11 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: { id: %d }
-                    pageNumber: 45
-                    transcribers: [{ name: "Mutation Test Transcriber" }]
+                    data: {
+                        song: { id: %d }
+                        pageNumber: 45
+                        transcribers: [{ name: "Mutation Test Transcriber" }]
+                    }
                 }
                 """.formatted(pubId, songId));
 
@@ -94,7 +98,7 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     @Test
-    void addTranscriptionWithExistingSongAndPublicationUpdatesExistingTranscription() {
+    void addTranscriptionWithIdAndDataUpdatesExistingTranscription() {
         final long pubId = pubIdForGuitarWorldNovember2018();
         final long songId = songIdByTitleAndAlbum("Rocket Queen", "Appetite For Destruction");
         final long existingTranscriptionId = transcriptionId(songId, pubId);
@@ -103,11 +107,14 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: { id: %d }
-                    pageNumber: 97
-                    transcribers: [{ id: %d }]
+                    id: %d
+                    data: {
+                        song: { id: %d }
+                        pageNumber: 97
+                        transcribers: [{ id: %d }]
+                    }
                 }
-                """.formatted(pubId, songId, replacementTranscriberId));
+                """.formatted(pubId, existingTranscriptionId, songId, replacementTranscriberId));
 
         assertThat(result.id()).isEqualTo(existingTranscriptionId);
         assertThat(result.pageNumber()).isEqualTo(97);
@@ -122,6 +129,52 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
     }
 
     @Test
+    void addTranscriptionWithIdOnlyReferencesExistingTranscription() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final long songId = songIdByTitleAndAlbum("Rocket Queen", "Appetite For Destruction");
+        final long existingTranscriptionId = transcriptionId(songId, pubId);
+
+        final var result = addTranscription("""
+                pubId: %d
+                transcriptionInput: { id: %d }
+                """.formatted(pubId, existingTranscriptionId));
+
+        assertThat(result.id()).isEqualTo(existingTranscriptionId);
+        assertThat(result.song().id()).isEqualTo(songId);
+        assertThat(countTranscriptionsByIdAndPubId(existingTranscriptionId, pubId)).isOne();
+    }
+
+    @Test
+    void addTranscriptionWithIdOnlyReferencesExistingTranscriptionFromAnotherPublication() {
+        final long sourcePubId = pubIdForGuitarWorldNovember2018();
+        final long targetPubId = pubIdForGuitarWorldHoliday2018();
+
+        final var original = addTranscription("""
+                pubId: %d
+                transcriptionInput: {
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Cross-Publication Reference Song"
+                                artists: []
+                            }
+                        }
+                        pageNumber: 196
+                    }
+                }
+                """.formatted(sourcePubId));
+
+        final var result = addTranscription("""
+                pubId: %d
+                transcriptionInput: { id: %d }
+                """.formatted(targetPubId, original.id()));
+
+        assertThat(result).isEqualTo(original);
+        assertThat(countTranscriptionsByIdAndPubId(original.id(), sourcePubId)).isZero();
+        assertThat(countTranscriptionsByIdAndPubId(original.id(), targetPubId)).isOne();
+    }
+
+    @Test
     void addTranscriptionWithOmittedTranscribersCreatesTranscriptionWithoutAssociations() {
         final long pubId = pubIdForGuitarWorldNovember2018();
         final long albumId = albumIdByTitle("Appetite For Destruction");
@@ -129,17 +182,19 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Omitted Transcribers Song"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 101
-                                album: { id: %d }
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Omitted Transcribers Song"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 101
+                                    album: { id: %d }
+                                }
                             }
                         }
+                        pageNumber: 60
                     }
-                    pageNumber: 60
                 }
                 """.formatted(pubId, albumId));
 
@@ -162,18 +217,20 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var original = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Empty Transcribers Song"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 102
-                                album: { id: %d }
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Empty Transcribers Song"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 102
+                                    album: { id: %d }
+                                }
                             }
                         }
+                        pageNumber: 61
+                        transcribers: [{ id: %d }]
                     }
-                    pageNumber: 61
-                    transcribers: [{ id: %d }]
                 }
                 """.formatted(pubId, albumId, transcriberId));
 
@@ -185,11 +242,14 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: { id: %d }
-                    pageNumber: 62
-                    transcribers: []
+                    id: %d
+                    data: {
+                        song: { id: %d }
+                        pageNumber: 62
+                        transcribers: []
+                    }
                 }
-                """.formatted(pubId, songId));
+                """.formatted(pubId, original.id(), songId));
 
         assertThat(result.id()).isEqualTo(original.id());
         assertThat(result.pageNumber()).isEqualTo(62);
@@ -207,13 +267,15 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Standalone Song"
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Standalone Song"
+                            }
                         }
+                        pageNumber: 71
+                        transcribers: []
                     }
-                    pageNumber: 71
-                    transcribers: []
                 }
                 """.formatted(pubId));
 
@@ -239,18 +301,20 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Song"
-                            artists: [{ id: %d, roles: [PERFORMED_BY] }]
-                            albumTrack: {
-                                trackNumber: 99
-                                album: { id: %d }
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Song"
+                                artists: [{ id: %d, roles: [PERFORMED_BY] }]
+                                albumTrack: {
+                                    trackNumber: 99
+                                    album: { id: %d }
+                                }
                             }
                         }
+                        pageNumber: 55
+                        transcribers: [{ id: %d }]
                     }
-                    pageNumber: 55
-                    transcribers: [{ id: %d }]
                 }
                 """.formatted(pubId, artistId, albumId, transcriberId));
 
@@ -276,24 +340,26 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Natural Reuse Song"
-                            artists: [{
-                                data: {
-                                    name: "Guns N' Roses"
-                                    type: BAND
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Natural Reuse Song"
+                                artists: [{
+                                    data: {
+                                        name: "Guns N' Roses"
+                                        type: BAND
+                                    }
+                                    roles: [PERFORMED_BY]
+                                }]
+                                albumTrack: {
+                                    trackNumber: 100
+                                    album: { id: %d }
                                 }
-                                roles: [PERFORMED_BY]
-                            }]
-                            albumTrack: {
-                                trackNumber: 100
-                                album: { id: %d }
                             }
                         }
+                        pageNumber: 56
+                        transcribers: [{ name: "Andy Aledort" }]
                     }
-                    pageNumber: 56
-                    transcribers: [{ name: "Andy Aledort" }]
                 }
                 """.formatted(pubId, albumId));
 
@@ -324,29 +390,31 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Album Song"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 1
-                                album: {
-                                    data: {
-                                        title: "Mutation Test Album"
-                                        releaseDate: "2025-07-01"
-                                        primaryArtist: {
-                                            data: {
-                                                name: "Mutation Test Album Artist"
-                                                type: PERSON
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Album Song"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 1
+                                    album: {
+                                        data: {
+                                            title: "Mutation Test Album"
+                                            releaseDate: "2025-07-01"
+                                            primaryArtist: {
+                                                data: {
+                                                    name: "Mutation Test Album Artist"
+                                                    type: PERSON
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+                        pageNumber: 57
+                        transcribers: [{ id: %d }]
                     }
-                    pageNumber: 57
-                    transcribers: [{ id: %d }]
                 }
                 """.formatted(pubId, transcriberId));
 
@@ -471,7 +539,8 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final long existingTranscriptionId = transcriptionId(songId, pubId);
         final long transcriberId = transcriberIdByName("Jeff Perrin");
 
-        final var result = executeAddTranscriptionReplacingExistingFile(pubId, songId, transcriberId);
+        final var result = executeAddTranscriptionReplacingExistingFile(
+                pubId, existingTranscriptionId, songId, transcriberId);
 
         assertThat(result.id()).isEqualTo(existingTranscriptionId);
         assertThat(result.url()).contains(TRANSCRIPTION_REPLACEMENT_UPLOAD_FILENAME);
@@ -494,29 +563,31 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Album Upsert Song One"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 1
-                                album: {
-                                    data: {
-                                        title: "Mutation Test Album Upsert"
-                                        releaseDate: "2025-08-01"
-                                        primaryArtist: {
-                                            data: {
-                                                name: "Mutation Test Album Upsert Artist"
-                                                type: PERSON
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Album Upsert Song One"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 1
+                                    album: {
+                                        data: {
+                                            title: "Mutation Test Album Upsert"
+                                            releaseDate: "2025-08-01"
+                                            primaryArtist: {
+                                                data: {
+                                                    name: "Mutation Test Album Upsert Artist"
+                                                    type: PERSON
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+                        pageNumber: 58
+                        transcribers: [{ id: %d }]
                     }
-                    pageNumber: 58
-                    transcribers: [{ id: %d }]
                 }
                 """.formatted(pubId, transcriberId));
 
@@ -525,29 +596,31 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Album Upsert Song Two"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 2
-                                album: {
-                                    data: {
-                                        title: "Mutation Test Album Upsert"
-                                        releaseDate: "2025-08-02"
-                                        primaryArtist: {
-                                            data: {
-                                                name: "Mutation Test Album Upsert Artist"
-                                                type: PERSON
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Album Upsert Song Two"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 2
+                                    album: {
+                                        data: {
+                                            title: "Mutation Test Album Upsert"
+                                            releaseDate: "2025-08-02"
+                                            primaryArtist: {
+                                                data: {
+                                                    name: "Mutation Test Album Upsert Artist"
+                                                    type: PERSON
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+                        pageNumber: 59
+                        transcribers: [{ id: %d }]
                     }
-                    pageNumber: 59
-                    transcribers: [{ id: %d }]
                 }
                 """.formatted(pubId, transcriberId));
 
@@ -582,18 +655,20 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Transcriber Update Song One"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 103
-                                album: { id: %d }
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Transcriber Update Song One"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 103
+                                    album: { id: %d }
+                                }
                             }
                         }
+                        pageNumber: 63
+                        transcribers: [{ name: "Mutation Test Transcriber Update Target" }]
                     }
-                    pageNumber: 63
-                    transcribers: [{ name: "Mutation Test Transcriber Update Target" }]
                 }
                 """.formatted(pubId, albumId));
 
@@ -602,21 +677,23 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Transcriber Update Song Two"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 104
-                                album: { id: %d }
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Transcriber Update Song Two"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 104
+                                    album: { id: %d }
+                                }
                             }
                         }
+                        pageNumber: 64
+                        transcribers: [{
+                            id: %d
+                            name: "Mutation Test Transcriber Updated"
+                        }]
                     }
-                    pageNumber: 64
-                    transcribers: [{
-                        id: %d
-                        name: "Mutation Test Transcriber Updated"
-                    }]
                 }
                 """.formatted(pubId, albumId, transcriberId));
 
@@ -642,18 +719,20 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var original = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Song Update Target"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 105
-                                album: { id: %d }
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Song Update Target"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 105
+                                    album: { id: %d }
+                                }
                             }
                         }
+                        pageNumber: 65
+                        transcribers: []
                     }
-                    pageNumber: 65
-                    transcribers: []
                 }
                 """.formatted(pubId, albumId));
 
@@ -662,19 +741,21 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        id: %d
-                        data: {
-                            title: "Mutation Test Song Updated"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 106
-                                album: { id: %d }
+                    data: {
+                        song: {
+                            id: %d
+                            data: {
+                                title: "Mutation Test Song Updated"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 106
+                                    album: { id: %d }
+                                }
                             }
                         }
+                        pageNumber: 66
+                        transcribers: []
                     }
-                    pageNumber: 66
-                    transcribers: []
                 }
                 """.formatted(pubId, songId, albumId));
 
@@ -696,29 +777,31 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Album Id Update Song One"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 1
-                                album: {
-                                    data: {
-                                        title: "Mutation Test Album Id Update Target"
-                                        releaseDate: "2025-09-01"
-                                        primaryArtist: {
-                                            data: {
-                                                name: "Mutation Test Album Artist Update Target"
-                                                type: PERSON
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Album Id Update Song One"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 1
+                                    album: {
+                                        data: {
+                                            title: "Mutation Test Album Id Update Target"
+                                            releaseDate: "2025-09-01"
+                                            primaryArtist: {
+                                                data: {
+                                                    name: "Mutation Test Album Artist Update Target"
+                                                    type: PERSON
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+                        pageNumber: 67
+                        transcribers: []
                     }
-                    pageNumber: 67
-                    transcribers: []
                 }
                 """.formatted(pubId));
 
@@ -728,31 +811,33 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Album Id Update Song Two"
-                            artists: []
-                            albumTrack: {
-                                trackNumber: 2
-                                album: {
-                                    id: %d
-                                    data: {
-                                        title: "Mutation Test Album Id Updated"
-                                        releaseDate: "2025-09-02"
-                                        primaryArtist: {
-                                            id: %d
-                                            data: {
-                                                name: "Mutation Test Album Artist Updated"
-                                                type: PERSON
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Album Id Update Song Two"
+                                artists: []
+                                albumTrack: {
+                                    trackNumber: 2
+                                    album: {
+                                        id: %d
+                                        data: {
+                                            title: "Mutation Test Album Id Updated"
+                                            releaseDate: "2025-09-02"
+                                            primaryArtist: {
+                                                id: %d
+                                                data: {
+                                                    name: "Mutation Test Album Artist Updated"
+                                                    type: PERSON
+                                                }
                                             }
                                         }
                                     }
                                 }
                             }
                         }
+                        pageNumber: 68
+                        transcribers: []
                     }
-                    pageNumber: 68
-                    transcribers: []
                 }
                 """.formatted(pubId, albumId, artistId));
 
@@ -782,24 +867,26 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Song Artist Update Song One"
-                            artists: [{
-                                data: {
-                                    name: "Mutation Test Song Artist Update Target"
-                                    type: PERSON
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Song Artist Update Song One"
+                                artists: [{
+                                    data: {
+                                        name: "Mutation Test Song Artist Update Target"
+                                        type: PERSON
+                                    }
+                                    roles: [PERFORMED_BY]
+                                }]
+                                albumTrack: {
+                                    trackNumber: 107
+                                    album: { id: %d }
                                 }
-                                roles: [PERFORMED_BY]
-                            }]
-                            albumTrack: {
-                                trackNumber: 107
-                                album: { id: %d }
                             }
                         }
+                        pageNumber: 69
+                        transcribers: []
                     }
-                    pageNumber: 69
-                    transcribers: []
                 }
                 """.formatted(pubId, albumId));
 
@@ -808,25 +895,27 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
         final var result = addTranscription("""
                 pubId: %d
                 transcriptionInput: {
-                    song: {
-                        data: {
-                            title: "Mutation Test Song Artist Update Song Two"
-                            artists: [{
-                                id: %d
-                                data: {
-                                    name: "Mutation Test Song Artist Updated"
-                                    type: PERSON
+                    data: {
+                        song: {
+                            data: {
+                                title: "Mutation Test Song Artist Update Song Two"
+                                artists: [{
+                                    id: %d
+                                    data: {
+                                        name: "Mutation Test Song Artist Updated"
+                                        type: PERSON
+                                    }
+                                    roles: [PERFORMED_BY, WORDS_BY]
+                                }]
+                                albumTrack: {
+                                    trackNumber: 108
+                                    album: { id: %d }
                                 }
-                                roles: [PERFORMED_BY, WORDS_BY]
-                            }]
-                            albumTrack: {
-                                trackNumber: 108
-                                album: { id: %d }
                             }
                         }
+                        pageNumber: 70
+                        transcribers: []
                     }
-                    pageNumber: 70
-                    transcribers: []
                 }
                 """.formatted(pubId, artistId, albumId));
 
@@ -878,31 +967,33 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     "variables": {
                         "pubId": %d,
                         "transcriptionInput": {
-                            "song": {
-                                "data": {
-                                    "title": "Mutation Test Album Art Upload Song",
-                                    "artists": [],
-                                    "albumTrack": {
-                                        "trackNumber": 7,
-                                        "album": {
-                                            "data": {
-                                                "title": "Mutation Test Album Art Upload",
-                                                "coverArt": null,
-                                                "releaseDate": "2025-10-01"
+                            "data": {
+                                "song": {
+                                    "data": {
+                                        "title": "Mutation Test Album Art Upload Song",
+                                        "artists": [],
+                                        "albumTrack": {
+                                            "trackNumber": 7,
+                                            "album": {
+                                                "data": {
+                                                    "title": "Mutation Test Album Art Upload",
+                                                    "coverArt": null,
+                                                    "releaseDate": "2025-10-01"
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            },
-                            "pageNumber": 72,
-                            "transcribers": [{ "id": %d }]
+                                },
+                                "pageNumber": 72,
+                                "transcribers": [{ "id": %d }]
+                            }
                         }
                     }
                 }
                 """.formatted(pubId, transcriberId));
         multipartBodyBuilder.part("map", """
                 {
-                    "0": ["variables.transcriptionInput.song.data.albumTrack.album.data.coverArt"]
+                    "0": ["variables.transcriptionInput.data.song.data.albumTrack.album.data.coverArt"]
                 }
                 """);
         multipartBodyBuilder.part("0", new FileSystemResource(albumArtUploadPath()))
@@ -938,22 +1029,24 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     "variables": {
                         "pubId": %d,
                         "transcriptionInput": {
-                            "song": {
-                                "data": {
-                                    "title": "Mutation Test Transcription Upload Song",
-                                    "artists": []
-                                }
-                            },
-                            "pageNumber": 74,
-                            "file": null,
-                            "transcribers": [{ "id": %d }]
+                            "data": {
+                                "song": {
+                                    "data": {
+                                        "title": "Mutation Test Transcription Upload Song",
+                                        "artists": []
+                                    }
+                                },
+                                "pageNumber": 74,
+                                "file": null,
+                                "transcribers": [{ "id": %d }]
+                            }
                         }
                     }
                 }
                 """.formatted(pubId, transcriberId));
         multipartBodyBuilder.part("map", """
                 {
-                    "0": ["variables.transcriptionInput.file"]
+                    "0": ["variables.transcriptionInput.data.file"]
                 }
                 """);
         multipartBodyBuilder.part("0", new FileSystemResource(transcriptionUploadPath()))
@@ -990,32 +1083,34 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     "variables": {
                         "pubId": %d,
                         "transcriptionInput": {
-                            "song": {
-                                "data": {
-                                    "title": "Mutation Test Existing Album Art Replacement Song",
-                                    "artists": [],
-                                    "albumTrack": {
-                                        "trackNumber": 8,
-                                        "album": {
-                                            "id": %d,
-                                            "data": {
-                                                "title": "Appetite For Destruction",
-                                                "coverArt": null,
-                                                "releaseDate": "1987-07-21"
+                            "data": {
+                                "song": {
+                                    "data": {
+                                        "title": "Mutation Test Existing Album Art Replacement Song",
+                                        "artists": [],
+                                        "albumTrack": {
+                                            "trackNumber": 8,
+                                            "album": {
+                                                "id": %d,
+                                                "data": {
+                                                    "title": "Appetite For Destruction",
+                                                    "coverArt": null,
+                                                    "releaseDate": "1987-07-21"
+                                                }
                                             }
                                         }
                                     }
-                                }
-                            },
-                            "pageNumber": 73,
-                            "transcribers": [{ "id": %d }]
+                                },
+                                "pageNumber": 73,
+                                "transcribers": [{ "id": %d }]
+                            }
                         }
                     }
                 }
                 """.formatted(pubId, albumId, transcriberId));
         multipartBodyBuilder.part("map", """
                 {
-                    "0": ["variables.transcriptionInput.song.data.albumTrack.album.data.coverArt"]
+                    "0": ["variables.transcriptionInput.data.song.data.albumTrack.album.data.coverArt"]
                 }
                 """);
         multipartBodyBuilder.part("0", new FileSystemResource(albumArtUploadPath(ALBUM_ART_REPLACEMENT_UPLOAD_FILENAME)))
@@ -1042,6 +1137,7 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
 
     private TranscriptionResponse executeAddTranscriptionReplacingExistingFile(
             final long pubId,
+            final long transcriptionId,
             final long songId,
             final long transcriberId) {
 
@@ -1052,17 +1148,20 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     "variables": {
                         "pubId": %d,
                         "transcriptionInput": {
-                            "song": { "id": %d },
-                            "pageNumber": 99,
-                            "file": null,
-                            "transcribers": [{ "id": %d }]
+                            "id": %d,
+                            "data": {
+                                "song": { "id": %d },
+                                "pageNumber": 99,
+                                "file": null,
+                                "transcribers": [{ "id": %d }]
+                            }
                         }
                     }
                 }
-                """.formatted(pubId, songId, transcriberId));
+                """.formatted(pubId, transcriptionId, songId, transcriberId));
         multipartBodyBuilder.part("map", """
                 {
-                    "0": ["variables.transcriptionInput.file"]
+                    "0": ["variables.transcriptionInput.data.file"]
                 }
                 """);
         multipartBodyBuilder.part("0", new FileSystemResource(transcriptionUploadPath(TRANSCRIPTION_REPLACEMENT_UPLOAD_FILENAME)))
@@ -1138,6 +1237,16 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     inner join gmdb.pub_idx pi on p.pub_idx_id = pi.id
                 where pi.serial_number = '10456295'
                     and p.details->>'issueName' = 'November 2018'
+                """);
+    }
+
+    private static long pubIdForGuitarWorldHoliday2018() {
+        return queryForLong(DATABASE, """
+                select p.id
+                from gmdb.pub p
+                    inner join gmdb.pub_idx pi on p.pub_idx_id = pi.id
+                where pi.serial_number = '10456295'
+                    and p.details->>'issueName' = 'Holiday 2018'
                 """);
     }
 
@@ -1249,6 +1358,15 @@ class AddTranscriptionMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                 from gmdb.transcriber
                 where name = '%s'
                 """.formatted(name.replace("'", "''")));
+    }
+
+    private static int countTranscriptionsByIdAndPubId(final long transcriptionId, final long pubId) {
+        return queryForInt(DATABASE, """
+                select count(*)
+                from gmdb.transcription
+                where id = %d
+                    and pub_id = %d
+                """.formatted(transcriptionId, pubId));
     }
 
     private static int countTranscriptions(

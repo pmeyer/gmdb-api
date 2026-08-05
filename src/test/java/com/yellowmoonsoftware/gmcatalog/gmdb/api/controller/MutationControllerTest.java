@@ -11,6 +11,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.MagazineIssueInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubCoverImageInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubIndexInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriptionData;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriptionInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.output.BookDetails;
@@ -70,7 +71,8 @@ class MutationControllerTest {
 
     @Test
     void addTranscriptionMapsServiceOutputToGraphQlTranscription() {
-        final TranscriptionInput input = new TranscriptionInput(new SongInput(1L, null), 12, null, List.of());
+        final TranscriptionInput input = new TranscriptionInput(null,
+                new TranscriptionData(new SongInput(1L, null), 12, null, List.of()));
         final TranscriptionInOut output = new TranscriptionInOut(2L, 1L, 3L, new TranscriptionDetails(12), null);
         when(transcriptionService.upsertTranscription(3L, input)).thenReturn(Mono.just(output));
 

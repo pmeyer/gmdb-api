@@ -7,7 +7,7 @@
         using (
             values (#{transcription.id}::bigint, #{transcription.songId}::bigint, #{transcription.pubId}::bigint, #{transcription.details})
         ) as s(id, song_id, pub_id, details)
-        on (t.id = s.id) or (t.song_id = s.song_id and t.pub_id = s.pub_id)
+        on (t.id = s.id) or (s.id is null and t.song_id = s.song_id and t.pub_id = s.pub_id)
         when matched then
             update set song_id = s.song_id,
                        pub_id = s.pub_id,
@@ -16,6 +16,10 @@
             insert (song_id, pub_id, details) values (s.song_id, s.pub_id, s.details)
         returning
             t.id, t.song_id, t.pub_id, t.details, merge_action() as action
+    </select>
+
+    <select id="getTranscriptionId" resultType="long">
+        select id from transcription where id = #{id}
     </select>
 
     <select id="getTranscriptionById"

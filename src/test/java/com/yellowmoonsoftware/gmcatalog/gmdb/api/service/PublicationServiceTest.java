@@ -8,6 +8,7 @@ import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.BookEditionInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.BookInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.PubIndexInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.SongInput;
+import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriptionData;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.TranscriptionInput;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InvalidInputException;
 import com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.validation.InputValidationException;
@@ -66,7 +67,8 @@ class PublicationServiceTest {
         when(cover.filename()).thenReturn("cover.jpg");
         when(cover.headers()).thenReturn(headers);
         final PubIndexInput index = new PubIndexInput(1L, null);
-        final TranscriptionInput transcription = new TranscriptionInput(new SongInput(2L, null), 12, null, List.of());
+        final TranscriptionInput transcription = new TranscriptionInput(null,
+                new TranscriptionData(new SongInput(2L, null), 12, null, List.of()));
         final BookInput input = new BookInput(null, LocalDate.of(2024, 1, 15), index, new BookEditionInput("First", cover), List.of(transcription));
         final PubIndexOut pubIndex = new PubIndexOut(1L, "Guide", PubType.BOOK, "ISBN-1");
         final PubOut pubOut = new PubOut(10L, input.pubDate(), 1L, bookDetails(), null);
