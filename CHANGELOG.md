@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.0.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v2.0.0...gmdb-api-v3.0.0) (2026-08-05)
+
+
+### ⚠ BREAKING CHANGES
+
+* TranscriptionInput now accepts id and nested TranscriptionData fields.
+
+### Features
+
+* support transcription input references ([c212822](https://github.com/pmeyer/gmdb-api/commit/c212822a7cb826475ba4efdd88ca352be61f9319))
+
 ## [2.0.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v1.7.0...gmdb-api-v2.0.0) (2026-07-16)
 
 
