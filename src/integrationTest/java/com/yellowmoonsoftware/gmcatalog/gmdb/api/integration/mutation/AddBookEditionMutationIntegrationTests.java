@@ -239,9 +239,11 @@ class AddBookEditionMutationIntegrationTests extends GmdbGraphQlMutationIntegrat
                     edition: "Mutation Book Edition With Transcription"
                 }
                 transcriptions: [{
-                    song: { id: %d }
-                    pageNumber: 21
-                    transcribers: [{ id: %d }]
+                    data: {
+                        song: { id: %d }
+                        pageNumber: 21
+                        transcribers: [{ id: %d }]
+                    }
                 }]
                 """.formatted(pubIndexId, songId, transcriberId));
 

@@ -276,9 +276,11 @@ class AddMagazineIssueMutationIntegrationTests extends GmdbGraphQlMutationIntegr
                     issueName: "Mutation Test Magazine With Transcription"
                 }
                 transcriptions: [{
-                    song: { id: %d }
-                    pageNumber: 72
-                    transcribers: [{ id: %d }]
+                    data: {
+                        song: { id: %d }
+                        pageNumber: 72
+                        transcribers: [{ id: %d }]
+                    }
                 }]
                 """.formatted(pubIndexId, songId, transcriberId));
 

@@ -11,6 +11,7 @@ import java.util.Set;
 @Mapper
 public interface TranscriptionMapper {
     Mono<TranscriptionInOut> upsertTranscription(@Param("transcription") final TranscriptionInOut transcription);
+    Mono<Long> getTranscriptionId(@Param("id") final Long id);
     Mono<TranscriptionInOut> getTranscriptionById(@Param("id") final Long id);
     Flux<TranscriptionInOut> getSongTranscriptionBySongIds(@Param("songIds") final Set<Long> songIds);
     Flux<TranscriptionInOut> getSongTranscriptionsByPubIds(@Param("pubIds") final Set<Long> pubIds);

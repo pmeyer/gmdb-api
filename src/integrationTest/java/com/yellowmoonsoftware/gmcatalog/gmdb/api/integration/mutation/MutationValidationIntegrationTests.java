@@ -128,8 +128,10 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                 mutation {
                     addTranscription(
                         transcriptionInput: {
-                            song: { id: 1 }
-                            pageNumber: 12
+                            data: {
+                                song: { id: 1 }
+                                pageNumber: 12
+                            }
                         }
                     ) {
                         id
@@ -147,8 +149,10 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: { id: 1 }
-                            pageNumber: null
+                            data: {
+                                song: { id: 1 }
+                                pageNumber: null
+                            }
                         }
                     ) {
                         id
@@ -182,8 +186,10 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: null
-                            pageNumber: 12
+                            data: {
+                                song: null
+                                pageNumber: 12
+                            }
                         }
                     ) {
                         id
@@ -201,12 +207,14 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    artists: [{ id: 1, roles: [PERFORMED_BY] }]
+                            data: {
+                                song: {
+                                    data: {
+                                        artists: [{ id: 1, roles: [PERFORMED_BY] }]
+                                    }
                                 }
+                                pageNumber: 12
                             }
-                            pageNumber: 12
                         }
                     ) {
                         id
@@ -224,13 +232,15 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "Negative Test Missing Artist Roles"
-                                    artists: [{ id: 1 }]
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "Negative Test Missing Artist Roles"
+                                        artists: [{ id: 1 }]
+                                    }
                                 }
+                                pageNumber: 12
                             }
-                            pageNumber: 12
                         }
                     ) {
                         id
@@ -248,15 +258,17 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "Negative Test Missing Track Number"
-                                    albumTrack: {
-                                        album: { id: 1 }
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "Negative Test Missing Track Number"
+                                        albumTrack: {
+                                            album: { id: 1 }
+                                        }
                                     }
                                 }
+                                pageNumber: 12
                             }
-                            pageNumber: 12
                         }
                     ) {
                         id
@@ -274,20 +286,22 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "Negative Test Missing Album Title"
-                                    albumTrack: {
-                                        trackNumber: 1
-                                        album: {
-                                            data: {
-                                                releaseDate: "2025-01-01"
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "Negative Test Missing Album Title"
+                                        albumTrack: {
+                                            trackNumber: 1
+                                            album: {
+                                                data: {
+                                                    releaseDate: "2025-01-01"
+                                                }
                                             }
                                         }
                                     }
                                 }
+                                pageNumber: 12
                             }
-                            pageNumber: 12
                         }
                     ) {
                         id
@@ -305,18 +319,20 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "Negative Test Missing Artist Type"
-                                    artists: [{
-                                        data: {
-                                            name: "Negative Test Artist Missing Type"
-                                        }
-                                        roles: [PERFORMED_BY]
-                                    }]
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "Negative Test Missing Artist Type"
+                                        artists: [{
+                                            data: {
+                                                name: "Negative Test Artist Missing Type"
+                                            }
+                                            roles: [PERFORMED_BY]
+                                        }]
+                                    }
                                 }
+                                pageNumber: 12
                             }
-                            pageNumber: 12
                         }
                     ) {
                         id
@@ -444,14 +460,78 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: { }
-                            pageNumber: 12
+                            data: {
+                                song: { }
+                                pageNumber: 12
+                            }
                         }
                     ) {
                         id
                     }
                 }
                 """.formatted(pubId), "SongInput must have an ID or data");
+    }
+
+    @Test
+    void addTranscriptionRejectsInputWithoutIdOrData() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: { }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "TranscriptionInput must have an ID or data");
+    }
+
+    @Test
+    void addTranscriptionRejectsUnknownTranscriptionReference() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: { id: 999999999 }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId), "Unknown transcription ID: 999999999");
+    }
+
+    @Test
+    void addTranscriptionRejectsUnknownTranscriptionIdAndDataBeforeUpsert() {
+        final long pubId = pubIdForGuitarWorldNovember2018();
+        final String songTitle = "Negative Test Unknown Transcription ID";
+
+        assertValidationError("""
+                mutation {
+                    addTranscription(
+                        pubId: %d
+                        transcriptionInput: {
+                            id: 999999999
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "%s"
+                                        artists: []
+                                    }
+                                }
+                                pageNumber: 992
+                            }
+                        }
+                    ) {
+                        id
+                    }
+                }
+                """.formatted(pubId, songTitle), "Unknown transcription ID: 999999999");
+        assertThat(countSongsByTitle(songTitle)).isZero();
+        assertThat(countTranscriptionsByPubIdAndPageNumber(pubId, 992)).isZero();
     }
 
     @Test
@@ -463,8 +543,10 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: { id: 999999999 }
-                            pageNumber: 991
+                            data: {
+                                song: { id: 999999999 }
+                                pageNumber: 991
+                            }
                         }
                     ) {
                         id
@@ -484,13 +566,15 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                id: 999999999
-                                data: {
-                                    title: "%s"
+                            data: {
+                                song: {
+                                    id: 999999999
+                                    data: {
+                                        title: "%s"
+                                    }
                                 }
+                                pageNumber: 992
                             }
-                            pageNumber: 992
                         }
                     ) {
                         id
@@ -511,9 +595,11 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: { id: %d }
-                            pageNumber: 12
-                            transcribers: [{ }]
+                            data: {
+                                song: { id: %d }
+                                pageNumber: 12
+                                transcribers: [{ }]
+                            }
                         }
                     ) {
                         id
@@ -532,9 +618,11 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: { id: %d }
-                            pageNumber: 999
-                            transcribers: [{ id: 999999999 }]
+                            data: {
+                                song: { id: %d }
+                                pageNumber: 999
+                                transcribers: [{ id: 999999999 }]
+                            }
                         }
                     ) {
                         id
@@ -555,12 +643,14 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: { id: %d }
-                            pageNumber: 1000
-                            transcribers: [{
-                                id: 999999999
-                                name: "%s"
-                            }]
+                            data: {
+                                song: { id: %d }
+                                pageNumber: 1000
+                                transcribers: [{
+                                    id: 999999999
+                                    name: "%s"
+                                }]
+                            }
                         }
                     ) {
                         id
@@ -580,13 +670,15 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "Negative Test Song Artist"
-                                    artists: [{ roles: [PERFORMED_BY] }]
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "Negative Test Song Artist"
+                                        artists: [{ roles: [PERFORMED_BY] }]
+                                    }
                                 }
+                                pageNumber: 12
                             }
-                            pageNumber: 12
                         }
                     ) {
                         id
@@ -605,16 +697,18 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "%s"
-                                    artists: [{
-                                        id: 999999999
-                                        roles: [PERFORMED_BY]
-                                    }]
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "%s"
+                                        artists: [{
+                                            id: 999999999
+                                            roles: [PERFORMED_BY]
+                                        }]
+                                    }
                                 }
+                                pageNumber: 995
                             }
-                            pageNumber: 995
                         }
                     ) {
                         id
@@ -636,20 +730,22 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "%s"
-                                    artists: [{
-                                        id: 999999999
-                                        data: {
-                                            name: "%s"
-                                            type: PERSON
-                                        }
-                                        roles: [PERFORMED_BY]
-                                    }]
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "%s"
+                                        artists: [{
+                                            id: 999999999
+                                            data: {
+                                                name: "%s"
+                                                type: PERSON
+                                            }
+                                            roles: [PERFORMED_BY]
+                                        }]
+                                    }
                                 }
+                                pageNumber: 996
                             }
-                            pageNumber: 996
                         }
                     ) {
                         id
@@ -670,16 +766,18 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "Negative Test Album"
-                                    albumTrack: {
-                                        trackNumber: 1
-                                        album: { }
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "Negative Test Album"
+                                        albumTrack: {
+                                            trackNumber: 1
+                                            album: { }
+                                        }
                                     }
                                 }
+                                pageNumber: 12
                             }
-                            pageNumber: 12
                         }
                     ) {
                         id
@@ -698,16 +796,18 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "%s"
-                                    albumTrack: {
-                                        trackNumber: 1
-                                        album: { id: 999999999 }
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "%s"
+                                        albumTrack: {
+                                            trackNumber: 1
+                                            album: { id: 999999999 }
+                                        }
                                     }
                                 }
+                                pageNumber: 993
                             }
-                            pageNumber: 993
                         }
                     ) {
                         id
@@ -729,21 +829,23 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "%s"
-                                    albumTrack: {
-                                        trackNumber: 1
-                                        album: {
-                                            id: 999999999
-                                            data: {
-                                                title: "%s"
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "%s"
+                                        albumTrack: {
+                                            trackNumber: 1
+                                            album: {
+                                                id: 999999999
+                                                data: {
+                                                    title: "%s"
+                                                }
                                             }
                                         }
                                     }
                                 }
+                                pageNumber: 994
                             }
-                            pageNumber: 994
                         }
                     ) {
                         id
@@ -764,21 +866,23 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "Negative Test Album Artist"
-                                    albumTrack: {
-                                        trackNumber: 1
-                                        album: {
-                                            data: {
-                                                title: "Negative Test Album Artist Album"
-                                                primaryArtist: { }
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "Negative Test Album Artist"
+                                        albumTrack: {
+                                            trackNumber: 1
+                                            album: {
+                                                data: {
+                                                    title: "Negative Test Album Artist Album"
+                                                    primaryArtist: { }
+                                                }
                                             }
                                         }
                                     }
                                 }
+                                pageNumber: 12
                             }
-                            pageNumber: 12
                         }
                     ) {
                         id
@@ -798,21 +902,23 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "%s"
-                                    albumTrack: {
-                                        trackNumber: 1
-                                        album: {
-                                            data: {
-                                                title: "%s"
-                                                primaryArtist: { id: 999999999 }
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "%s"
+                                        albumTrack: {
+                                            trackNumber: 1
+                                            album: {
+                                                data: {
+                                                    title: "%s"
+                                                    primaryArtist: { id: 999999999 }
+                                                }
                                             }
                                         }
                                     }
                                 }
+                                pageNumber: 997
                             }
-                            pageNumber: 997
                         }
                     ) {
                         id
@@ -836,27 +942,29 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: %d
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "%s"
-                                    albumTrack: {
-                                        trackNumber: 1
-                                        album: {
-                                            data: {
-                                                title: "%s"
-                                                primaryArtist: {
-                                                    id: 999999999
-                                                    data: {
-                                                        name: "%s"
-                                                        type: PERSON
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "%s"
+                                        albumTrack: {
+                                            trackNumber: 1
+                                            album: {
+                                                data: {
+                                                    title: "%s"
+                                                    primaryArtist: {
+                                                        id: 999999999
+                                                        data: {
+                                                            name: "%s"
+                                                            type: PERSON
+                                                        }
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
+                                pageNumber: 998
                             }
-                            pageNumber: 998
                         }
                     ) {
                         id
@@ -1172,12 +1280,14 @@ class MutationValidationIntegrationTests extends GmdbGraphQlMutationIntegrationT
                     addTranscription(
                         pubId: 999999999
                         transcriptionInput: {
-                            song: {
-                                data: {
-                                    title: "%s"
+                            data: {
+                                song: {
+                                    data: {
+                                        title: "%s"
+                                    }
                                 }
+                                pageNumber: 12
                             }
-                            pageNumber: 12
                         }
                     ) {
                         id

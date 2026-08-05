@@ -190,10 +190,25 @@ input PubCoverImageInput {
 }
 
 """
-Input for adding or updating a transcription for a song in a publication. The transcription is uniquely resolved by the
-song and publication.
+Identifies a transcription by id or supplies data for a new or updated transcription. A referenced transcription is
+included in the parent publication. When data is supplied with an id, the existing transcription is updated.
 """
 input TranscriptionInput {
+    """
+    Existing transcription id.
+    """
+    id: Long
+
+    """
+    Data for a new transcription or for updating the referenced transcription.
+    """
+    data: TranscriptionData
+}
+
+"""
+Data for a transcription within a publication.
+"""
+input TranscriptionData {
     """
     Existing or new song being transcribed.
     """
