@@ -29,9 +29,16 @@
 
     <select id="getAlbumsByIds" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.AlbumOut">
         select id, title, details, primary_artist_id, null as action from album where
-        <foreach collection="albumIds" item="id" open="id in(" separator="," close=")">
-            #{id}
-        </foreach>
+        <choose>
+            <when test="albumIds != null and !albumIds.isEmpty()">
+                <foreach collection="albumIds" item="id" open="id in(" separator="," close=")">
+                    #{id}
+                </foreach>
+            </when>
+            <otherwise>
+                1 = 0
+            </otherwise>
+        </choose>
     </select>
 
     <select id="albumSearch" parameterType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.input.AlbumSearchCriteria" resultType="com.yellowmoonsoftware.gmcatalog.gmdb.api.dto.db.AlbumOut">
@@ -102,8 +109,15 @@
             ) as d on true
                  left join artist aa on a.primary_artist_id = aa.id
         where
-        <foreach collection="albumIds" item="id" open="a.id in(" separator="," close=")">
-            #{id}
-        </foreach>
+            <choose>
+                <when test="albumIds != null and !albumIds.isEmpty()">
+                    <foreach collection="albumIds" item="id" open="a.id in(" separator="," close=")">
+                        #{id}
+                    </foreach>
+                </when>
+                <otherwise>
+                    1 = 0
+                </otherwise>
+            </choose>
     </select>
  </mapper>
