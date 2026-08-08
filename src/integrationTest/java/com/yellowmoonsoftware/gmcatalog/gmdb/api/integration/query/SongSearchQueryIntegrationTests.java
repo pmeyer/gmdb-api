@@ -104,6 +104,27 @@ class SongSearchQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestSup
     }
 
     @Test
+    void songSearchReturnsNullAlbumForSongWithoutAlbum() {
+        final var results = graphQlTester.document("""
+                        query {
+                            songSearch(criteria: { titleSearch: "^Standalone Song Without Album$" }) {
+                                title
+                                album {
+                                    id
+                                }
+                            }
+                        }
+                        """)
+                .execute()
+                .path("songSearch")
+                .entityList(SongWithAlbumResponse.class)
+                .get();
+
+        assertThat(results).containsExactly(
+                new SongWithAlbumResponse("Standalone Song Without Album", null));
+    }
+
+    @Test
     void songSearchWithAlbumsReturnsSongsAppearingOnSuppliedAlbums() {
         final var greatestHitsId = queryForInt(DATABASE, """
                 select id
@@ -357,6 +378,7 @@ class SongSearchQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestSup
                 songTitle("Rocket Queen"),
                 songTitle("Runnin' Down a Dream"),
                 songTitle("Something In The Air"),
+                songTitle("Standalone Song Without Album"),
                 songTitle("Substitute"),
                 songTitle("The Waiting"),
                 songTitle("You Got Lucky"));
@@ -389,5 +411,11 @@ class SongSearchQueryIntegrationTests extends GmdbGraphQlQueryIntegrationTestSup
     }
 
     private record SongTitleResponse(String title) {
+    }
+
+    private record SongWithAlbumResponse(String title, AlbumIdResponse album) {
+    }
+
+    private record AlbumIdResponse(Long id) {
     }
 }

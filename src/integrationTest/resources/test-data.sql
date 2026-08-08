@@ -416,6 +416,9 @@ with songs as (
 insert into song(title,details,album_id)
 select s.song, jsonb_build_object('trackNumber', s.track) , a.id from songs s inner join album a on s.album = a.title;
 
+insert into song(title, details, album_id)
+values ('Standalone Song Without Album', '{}'::jsonb, null);
+
 
 -- Insert pub/pub_idx
 with pubs as (
