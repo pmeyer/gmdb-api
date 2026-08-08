@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.1](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v3.0.0...gmdb-api-v3.0.1) (2026-08-08)
+
+
+### Bug Fixes
+
+* handle empty album ID sets ([585b983](https://github.com/pmeyer/gmdb-api/commit/585b9836523eb55c2e43feeb1636640c9b061a4c))
+
 ## [3.0.0](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v2.0.0...gmdb-api-v3.0.0) (2026-08-05)
 
 
