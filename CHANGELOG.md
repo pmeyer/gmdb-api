@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.2](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v3.0.1...gmdb-api-v3.0.2) (2026-08-13)
+
+
+### Miscellaneous Chores
+
+* release gmdb-api 3.0.2 ([37c3f2c](https://github.com/pmeyer/gmdb-api/commit/37c3f2cd6be3a0ec67c879f15d67e58625cad4dc))
+
 ## [3.0.1](https://github.com/pmeyer/gmdb-api/compare/gmdb-api-v3.0.0...gmdb-api-v3.0.1) (2026-08-08)
 
 
